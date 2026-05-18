@@ -1,6 +1,16 @@
 -- Stores the screen dimen of the last tapped MosaicMenuItem so
 -- showReaderCoroutine can position the banner over that specific cover cell.
 local _last_cover_dimen = nil
+-- _banner_active: true while a banner is on screen + doShowReader is running.
+-- Blocks any showReaderCoroutine call that arrives BEFORE doShowReader finishes.
+local _banner_active = false
+-- _last_banner_seq: the _tap_seq value when the last banner was shown.
+-- Blocks same-tap duplicate calls that arrive AFTER doShowReader finishes
+-- (e.g. a DOM-version reload KOReader schedules during reader init).
+-- Those calls are delegated to _orig so the reload happens without a banner.
+local _last_banner_seq = 0
+-- Sequence counter: incremented on every onTapSelect call to correlate logs.
+local _tap_seq = 0
 
 -- Walk a widget tree (depth-first) to find the first rendered blitbuffer (_bb).
 local function _find_cover_bb(w, depth)
@@ -86,25 +96,164 @@ local function apply_opening_banner()
 
         if type(MosaicMenuItem.onTapSelect) ~= "function" then return end
 
+        -- Match browser_cover_mosaic_uniform constants (kept in sync).
+        local Size = require("ui/size")
+        local _UNIFORM_BORDER = Size.border.thin or 1
+        local _UNIFORM_UNDERLINE_RESERVE = 6
+        local function _uniform_aspect()
+            local s = _G.G_reader_settings and G_reader_settings:readSetting("uniform_cover_ratio") or "2:3"
+            local n, d = tostring(s):match("(%d+):(%d+)")
+            return (tonumber(n) or 2) / (tonumber(d) or 3)
+        end
+        -- Compute the rect of the actual painted cover for a tapped MosaicMenuItem.
+        -- Primary source: _zen_cover_dimen, a snapshot of the cover widget's .dimen
+        -- taken inside our paintTo wrapper (the only moment it is guaranteed to be
+        -- set for all variants). Falls back to flag+cell-math for items that have
+        -- not been painted yet (e.g. still-loading covers).
+        local function find_cover_frame(item)
+            local t = item[1] and item[1][1] and item[1][1][1]
+            if not t then return nil end
+            if t.bordersize ~= nil then return t end
+            local inner = t[2] and t[2][1] and t[2][1][1]
+            if inner and inner.bordersize ~= nil then return inner end
+            return nil
+        end
+
+        local function _cover_rect(self_item, strip_h)
+            -- Primary: exact screen rect captured after paintTo.
+            local snap = self_item._zen_cover_dimen
+            if snap and snap.w and snap.w > 0 then
+                return { x = snap.x, y = snap.y, w = snap.w, h = snap.h, variant = "from-dimen" }
+            end
+
+            local id = self_item.dimen
+            if not id then return nil end
+            strip_h = strip_h or 0
+            local cell_w      = id.w
+            local cell_h_inner = id.h - strip_h
+            if cell_w <= 0 or cell_h_inner <= 0 then return nil end
+
+            -- Secondary: read actual width/height from the cover widget's constructor
+            -- fields. These are set at build time (no paintTo needed) and give the
+            -- correct position for both FakeCover (7/8 width, full height) and real
+            -- covers (image-sized FrameContainer). More accurate than the uniform
+            -- computation for FakeCover, which is NOT a 2:3 aspect-ratio widget.
+            local cover_widget = find_cover_frame(self_item)
+            if cover_widget
+               and cover_widget.width  and cover_widget.width  > 0
+               and cover_widget.height and cover_widget.height > 0
+            then
+                local cw = cover_widget.width
+                local ch = cover_widget.height
+                local cx = id.x + math.floor((cell_w      - cw) / 2)
+                local cy = id.y + math.floor((cell_h_inner - ch) / 2)
+                logger.warn("zen-ui banner: _cover_rect from-widget" ..
+                    " cw=" .. cw .. " ch=" .. ch ..
+                    " cx=" .. cx .. " cy=" .. cy ..
+                    " bottom_row=" .. (cy + ch - 1) ..
+                    " right_edge=" .. (cx + cw - 1))
+                return { x = cx, y = cy, w = cw, h = ch, variant = "from-widget" }
+            end
+
+            -- Tertiary: if uniform cover mode is active, compute the uniform rect.
+            -- Correct for uniform-resized real covers; FakeCover should have been
+            -- caught by the from-widget path above, so this is a last resort.
+            if MosaicMenuItem._zen_mosaic_uniform_patched == true then
+                local border    = _UNIFORM_BORDER
+                local max_img_w = cell_w - 2 * border
+                local max_img_h = cell_h_inner - 2 * border - _UNIFORM_UNDERLINE_RESERVE
+                if max_img_w > 0 and max_img_h > 0 then
+                    local ar = _uniform_aspect()
+                    local cw, ch
+                    if max_img_w / max_img_h > ar then
+                        ch = max_img_h
+                        cw = math.floor(max_img_h * ar)
+                    else
+                        cw = max_img_w
+                        ch = math.floor(max_img_w / ar)
+                    end
+                    local frame_w = cw + 2 * border
+                    local frame_h = ch + 2 * border
+                    local vpad   = math.floor((cell_h_inner - frame_h) / 2)
+                    return {
+                        x = id.x + math.floor((cell_w - frame_w) / 2),
+                        y = id.y + vpad,
+                        w = frame_w,
+                        h = frame_h,
+                        variant = "uniform",
+                    }
+                end
+            end
+
+            -- No usable rect found.
+            return nil
+        end
+
+        -- Wrap paintTo to snapshot the cover widget's actual screen rect.
+        -- cover.dimen is only set during paintTo, so this is the only reliable
+        -- moment to read exact position/size regardless of cover variant.
+        local orig_paintTo = MosaicMenuItem.paintTo
+        if type(orig_paintTo) == "function" then
+            MosaicMenuItem.paintTo = function(self_item, bb, x, y)
+                orig_paintTo(self_item, bb, x, y)
+                local cover = find_cover_frame(self_item)
+                local d = cover and cover.dimen
+                if d and d.w and d.w > 0 then
+                    self_item._zen_cover_dimen = { x = d.x, y = d.y, w = d.w, h = d.h }
+                    -- Diagnostic: log FakeCover capture so we can compare with rounded patch.
+                    if not self_item._has_cover_image then
+                        local id = self_item.dimen
+                        logger.warn("zen-ui banner: [paintTo wrap] FakeCover captured" ..
+                            " dx=" .. d.x .. " dy=" .. d.y ..
+                            " dw=" .. d.w .. " dh=" .. d.h ..
+                            " bottom_row=" .. (d.y + d.h - 1) ..
+                            " right_edge=" .. (d.x + d.w - 1) ..
+                            " cover.width=" .. tostring(cover.width) ..
+                            " cover.height=" .. tostring(cover.height) ..
+                            " cover.bordersize=" .. tostring(cover.bordersize) ..
+                            " cell_w=" .. tostring(id and id.w) ..
+                            " cell_h=" .. tostring(id and id.h))
+                    end
+                end
+            end
+        end
+
         local orig_tap = MosaicMenuItem.onTapSelect
         MosaicMenuItem.onTapSelect = function(self_item, ...)
+            _tap_seq = _tap_seq + 1
+            local seq = _tap_seq
+            logger.warn("zen-ui banner: [mosaic onTapSelect #" .. seq .. "]" ..
+                " is_directory=" .. tostring(self_item.is_directory) ..
+                " _has_cover_image=" .. tostring(self_item._has_cover_image) ..
+                " _zen_strip_h=" .. tostring(self_item._zen_strip_h) ..
+                " _banner_active=" .. tostring(_banner_active))
             -- Skip directories: a folder tap navigates the browser with no reader
             -- opening, so storing the dimen leaves a stale value that bleeds into
             -- the next book open (especially with folder-profile list mode).
             if not self_item.is_directory then
-                -- self[1][1][1]: FrameContainer holding the cover image
-                -- (UnderlineContainer → CenterContainer → FrameContainer).
+                -- self[1][1][1]: FrameContainer/FakeCover inside CenterContainer.
                 local cover_frame = self_item[1] and self_item[1][1] and self_item[1][1][1]
                 local d = cover_frame and cover_frame.dimen
-                if d and d.x and d.w then
-                    _last_cover_dimen = { x = d.x, y = d.y, w = d.w, h = d.h }
-                elseif self_item.dimen then
-                    _last_cover_dimen = {
-                        x = self_item.dimen.x,
-                        y = self_item.dimen.y,
-                        w = self_item.dimen.w,
-                        h = self_item.dimen.h,
-                    }
+                logger.warn("zen-ui banner: [#" .. seq .. "] cover_frame=" ..
+                    tostring(cover_frame ~= nil) ..
+                    " frame_dimen=" .. tostring(d ~= nil) ..
+                    (d and (" dx=" .. tostring(d.x) .. " dy=" .. tostring(d.y) ..
+                            " dw=" .. tostring(d.w) .. " dh=" .. tostring(d.h)) or "") ..
+                    " item_dimen=" .. tostring(self_item.dimen ~= nil) ..
+                    (self_item.dimen and (" iw=" .. tostring(self_item.dimen.w) ..
+                                         " ih=" .. tostring(self_item.dimen.h)) or ""))
+                -- Use paintTo-snapshotted dimen if available (_zen_cover_dimen),
+                -- with flag+cell-math as fallback for items not yet painted.
+                local strip_h = self_item._zen_strip_h or 0
+                local rect = _cover_rect(self_item, strip_h)
+                if rect then
+                    _last_cover_dimen = { x = rect.x, y = rect.y, w = rect.w, h = rect.h }
+                    logger.warn("zen-ui banner: [#" .. seq .. "] rect variant=" .. tostring(rect.variant) ..
+                        " strip_h=" .. tostring(strip_h) ..
+                        " -> x=" .. tostring(rect.x) .. " y=" .. tostring(rect.y) ..
+                        " w=" .. tostring(rect.w) .. " h=" .. tostring(rect.h))
+                else
+                    logger.warn("zen-ui banner: [#" .. seq .. "] no rect (no dimen)")
                 end
                 -- Bright covers have low lum values on eink (0=white), so dark banner when lum < 128.
                 -- Default to dark when no cover bb is available (placeholder cell).
@@ -113,15 +262,20 @@ local function apply_opening_banner()
                     if cover_bb then
                         local lum = _sample_bottom_luminance(cover_bb)
                         _last_cover_dimen.dark_banner = lum == nil or lum < 128
+                        logger.warn("zen-ui banner: [#" .. seq .. "] lum=" .. tostring(lum) ..
+                            " dark_banner=" .. tostring(_last_cover_dimen.dark_banner))
                     else
                         _last_cover_dimen.dark_banner = true
+                        logger.warn("zen-ui banner: [#" .. seq .. "] no cover_bb -> dark_banner=true")
                     end
                 end
             else
                 -- Navigating into a folder: discard any previously stored dimen
                 -- so it cannot bleed into a subsequent book open in list mode.
+                logger.warn("zen-ui banner: [#" .. seq .. "] is_directory=true -> clearing _last_cover_dimen")
                 _last_cover_dimen = nil
             end
+            logger.warn("zen-ui banner: [#" .. seq .. "] calling orig_tap")
             return orig_tap(self_item, ...)
         end
     end
@@ -147,6 +301,12 @@ local function apply_opening_banner()
 
         local orig_tap = ListMenuItem.onTapSelect
         ListMenuItem.onTapSelect = function(self_item, ...)
+            _tap_seq = _tap_seq + 1
+            local seq = _tap_seq
+            logger.warn("zen-ui banner: [list onTapSelect #" .. seq .. "]" ..
+                " is_directory=" .. tostring(self_item.is_directory) ..
+                " _has_cover_image=" .. tostring(self_item._has_cover_image) ..
+                " _banner_active=" .. tostring(_banner_active))
             if not self_item.is_directory and self_item.dimen then
                 -- Pin the banner to the bottom edge of the tapped list row.
                 -- Flag as list mode so the banner can be offset past the cover art.
@@ -158,7 +318,13 @@ local function apply_opening_banner()
                     is_list    = true,
                     dark_banner = true,  -- list mode always dark
                 }
+                logger.warn("zen-ui banner: [#" .. seq .. "] list set dimen" ..
+                    " x=" .. tostring(self_item.dimen.x) ..
+                    " y=" .. tostring(self_item.dimen.y) ..
+                    " w=" .. tostring(self_item.dimen.w) ..
+                    " h=" .. tostring(self_item.dimen.h))
             else
+                logger.warn("zen-ui banner: [#" .. seq .. "] list clearing _last_cover_dimen")
                 _last_cover_dimen = nil
             end
             return orig_tap(self_item, ...)
@@ -221,6 +387,9 @@ local function apply_opening_banner()
     function OpeningBanner:paintTo(bb, x, y)
         self.dimen.x = x
         self.dimen.y = y
+        logger.warn("zen-ui banner: paintTo x=" .. tostring(x) .. " y=" .. tostring(y) ..
+            " w=" .. tostring(self.dimen.w) .. " h=" .. tostring(self.dimen.h) ..
+            " dark=" .. tostring(self.dark_banner))
         local bg = self.dark_banner and Blitbuffer.COLOR_BLACK or Blitbuffer.COLOR_WHITE
         local fg = self.dark_banner and Blitbuffer.COLOR_WHITE or Blitbuffer.COLOR_BLACK
         local w, h = self.dimen.w, self.dimen.h
@@ -235,6 +404,20 @@ local function apply_opening_banner()
         -- 3. Border (after masking so it is never erased)
         _draw_border(bb, x, y, w, h, r, fg)
 
+        -- Diagnostic: log coordinates so they can be compared with zen-ui rounded logs.
+        if r > 0 then
+            local cut_samples = {}
+            for _i = 0, math.min(4, r - 1) do
+                local inner = math.sqrt(r * r - (r - _i) * (r - _i))
+                local cut   = math.ceil(r - inner)
+                cut_samples[#cut_samples + 1] = "j=" .. _i .. ":cut=" .. cut
+            end
+            logger.warn("zen-ui banner: paintTo r=" .. r ..
+                " bottom_row=" .. (y + h - 1) ..
+                " right_edge=" .. (x + w - 1) ..
+                " cuts=[" .. table.concat(cut_samples, " ") .. "]")
+        end
+
         local tw = TextWidget:new{
             text      = self.label or _("Opening"),
             face      = Font:getFace("cfont", Screen:scaleBySize(7)),
@@ -248,13 +431,59 @@ local function apply_opening_banner()
         tw:free()
     end
 
-    -- Patch showReaderCoroutine
-    local _orig = ReaderUI.showReaderCoroutine
+    -- Patch showReaderCoroutine.
+    -- We do NOT call the original on the duplicate-tap path: the original
+    -- shows its own "Opening file '%1'." InfoMessage which the user would
+    -- perceive as a second banner overlapping ours. Instead, on a duplicate
+    -- same-tap call we run doShowReader directly (no InfoMessage).
+    local function _show_reader_no_banner(self, file, provider, seamless)
+        UIManager:nextTick(function()
+            local co = coroutine.create(function()
+                self:doShowReader(file, provider, seamless)
+            end)
+            local ok, err = coroutine.resume(co)
+            if err ~= nil or ok == false then
+                io.stderr:write("[!] doShowReader coroutine crashed:\n")
+                io.stderr:write(debug.traceback(co, err, 1))
+                Device:setIgnoreInput(false)
+                local Input = require("device/input")
+                Input:inhibitInputUntil(0.2)
+                local InfoMessage = require("ui/widget/infomessage")
+                UIManager:show(InfoMessage:new{
+                    text = _("No reader engine for this file or invalid file."),
+                })
+                self:showFileManager(file)
+            end
+        end)
+    end
 
     ReaderUI.showReaderCoroutine = function(self, file, provider, seamless)
+        logger.warn("zen-ui banner: showReaderCoroutine called seamless=" .. tostring(seamless)
+            .. " _banner_active=" .. tostring(_banner_active)
+            .. " has_dimen=" .. tostring(_last_cover_dimen ~= nil)
+            .. " file=" .. tostring(file))
+        logger.warn("zen-ui banner: call stack\n" .. (debug.traceback("", 2) or ""))
         if seamless then
-            return _orig(self, file, provider, seamless)
+            -- Seamless reloads must keep KOReader's behavior (invisible InfoMessage).
+            return _show_reader_no_banner(self, file, provider, seamless)
         end
+        -- While the banner is already on screen + doShowReader is running,
+        -- skip entirely: the first call's nextTick will open the reader.
+        if _banner_active then
+            logger.warn("zen-ui banner: GUARD HIT (banner active) - skipping")
+            return
+        end
+        -- KOReader calls showReaderCoroutine more than once per tap in some
+        -- cases (e.g. a DOM-version reload scheduled via nextTick during
+        -- reader init). After the first banner for a given tap, run the
+        -- reload via our InfoMessage-free path so no second banner appears.
+        if _last_banner_seq == _tap_seq then
+            logger.warn("zen-ui banner: GUARD HIT (same tap seq=" .. _tap_seq .. ") -> silent reopen")
+            return _show_reader_no_banner(self, file, provider, seamless)
+        end
+        _last_banner_seq = _tap_seq
+        logger.warn("zen-ui banner: setting _banner_active=true seq=" .. _tap_seq)
+        _banner_active = true
 
         local banner_h = Screen:scaleBySize(28)
         local cover    = _last_cover_dimen
@@ -262,6 +491,11 @@ local function apply_opening_banner()
 
         local bx, by, bw
         if cover then
+            logger.warn("zen-ui banner: cover consumed" ..
+                " cx=" .. tostring(cover.x) .. " cy=" .. tostring(cover.y) ..
+                " cw=" .. tostring(cover.w) .. " ch=" .. tostring(cover.h) ..
+                " is_list=" .. tostring(cover.is_list) ..
+                " dark=" .. tostring(cover.dark_banner))
             by = cover.y + cover.h - banner_h
             if cover.is_list then
                 -- In list mode the cover art is a square thumbnail whose width
@@ -279,7 +513,11 @@ local function apply_opening_banner()
             bx = 0
             by = Screen:getHeight() - banner_h
             bw = Screen:getWidth()
+            logger.warn("zen-ui banner: no cover -> fallback full-width bw=" .. tostring(bw))
         end
+        logger.warn("zen-ui banner: showing at bx=" .. tostring(bx) ..
+            " by=" .. tostring(by) .. " bw=" .. tostring(bw) ..
+            " bh=" .. tostring(banner_h))
 
         local plug = _plugin or rawget(_G, "__ZEN_UI_PLUGIN")
         local round_bottom = cover and not cover.is_list
@@ -302,12 +540,26 @@ local function apply_opening_banner()
             -- prevents _gated_quit from firing (UIManager stack never empties),
             -- causing KOReader to hang when the user quits from any menu.
             UIManager:close(banner)
+            logger.warn("zen-ui banner: nextTick fired")
 
+            -- Keep _banner_active=true until doShowReader completes so any
+            -- spurious second showReaderCoroutine call is blocked by the guard.
             logger.dbg("zen-ui: creating coroutine for showing reader")
             local co = coroutine.create(function()
                 self:doShowReader(file, provider, seamless)
             end)
             local ok, err = coroutine.resume(co)
+            -- Reset AFTER doShowReader finishes. Sync _last_banner_seq to the
+            -- CURRENT _tap_seq (not just the value when the banner was shown) so
+            -- any tap that arrived during loading (incrementing _tap_seq) doesn't
+            -- bypass the same-seq guard for subsequent reloads. Also discard any
+            -- stale _last_cover_dimen that a mid-load tap may have written.
+            _banner_active = false
+            _last_banner_seq = _tap_seq
+            _last_cover_dimen = nil
+            logger.warn("zen-ui banner: doShowReader coroutine done" ..
+                " ok=" .. tostring(ok) ..
+                " _banner_active=false _last_banner_seq=" .. tostring(_last_banner_seq))
             if err ~= nil or ok == false then
                 io.stderr:write("[!] doShowReader coroutine crashed:\n")
                 io.stderr:write(debug.traceback(co, err, 1))

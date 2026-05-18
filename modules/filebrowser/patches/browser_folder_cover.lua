@@ -35,56 +35,6 @@ local function apply_browser_folder_cover()
     local _ = require("gettext")
     local Screen = Device.screen
 
-    local _COVER_EXTS = { ".jpg", ".jpeg", ".png", ".webp", ".gif" }
-
-    -- Primary: visible cover.* files; fallback: hidden .cover.*
-    local function findCover(dir_path)
-        for _i, ext in ipairs(_COVER_EXTS) do
-            local fname = dir_path .. "/cover" .. ext
-            if util.fileExists(fname) then return fname end
-        end
-        for _i, ext in ipairs(_COVER_EXTS) do
-            local fname = dir_path .. "/.cover" .. ext
-            if util.fileExists(fname) then return fname end
-        end
-    end
-
-    -- Finds cover1-4.* files for gallery/stack modes.
-    -- cover.* / .cover.* are interchangeable with cover1.*.
-    local function findGalleryCovers(dir_path)
-        local result = {}
-        for i = 1, 4 do
-            for _i, ext in ipairs(_COVER_EXTS) do
-                local fname = dir_path .. "/cover" .. i .. ext
-                if util.fileExists(fname) then
-                    result[i] = fname
-                    break
-                end
-            end
-        end
-        if not result[1] then
-            result[1] = findCover(dir_path)
-        end
-        return result
-    end
-
-    -- Loads cover file paths as {data, w, h} entries for Cover.makeCover covers_data.
-    local function loadCoverFiles(gfiles)
-        local RenderImage = require("ui/renderimage")
-        local result = {}
-        for i = 1, 4 do
-            if gfiles[i] then
-                local ok, bb = pcall(function()
-                    return RenderImage:renderImageFile(gfiles[i], false)
-                end)
-                if ok and bb then
-                    table.insert(result, { data = bb, w = bb:getWidth(), h = bb:getHeight() })
-                end
-            end
-        end
-        return #result > 0 and result or nil
-    end
-
     local function getMenuItem(menu, ...)
         local function findItem(sub_items, texts)
             local find = {}
@@ -295,7 +245,7 @@ local function apply_browser_folder_cover()
     }
 
     local function placeholderBg()
-        return Screen.night_mode and Blitbuffer.COLOR_WHITE or Blitbuffer.COLOR_LIGHT_GRAY
+        return Blitbuffer.COLOR_LIGHT_GRAY
     end
 
     local function getCornerRadius()
@@ -797,33 +747,12 @@ local function apply_browser_folder_cover()
                 return
             end
 
-            -- Cover files: explicit images feed into the makeCover pipeline (respects all settings).
-            local _file_covers_data
-            if settings.gallery_mode.get() or settings.stack_mode.get() then
-                local gfiles = findGalleryCovers(dir_path)
-                if gfiles[1] or gfiles[2] or gfiles[3] or gfiles[4] then
-                    _file_covers_data = loadCoverFiles(gfiles)
-                end
-            end
-            if not _file_covers_data then
-                local cover_file = findCover(dir_path)
-                if cover_file then
-                    _file_covers_data = loadCoverFiles({ cover_file })
-                end
-            end
-
             local _fm = require("apps/filemanager/filemanager").instance
             local _main_chooser = _fm and _fm.file_chooser
             local _chooser = _main_chooser
                 or (self.menu.genItemTableFromPath and self.menu)
-            if not _chooser then
-                if not _file_covers_data then
-                    self._foldercover_processed = true
-                    return
-                end
-            end
 
-            -- Use unified makeCover - handles everything
+            -- Use unified makeCover - auto-detects cover files and collects book covers
             local border = Folder.face.border_size
             local max_w = self.width - 2 * border
             local bh = self.height - 2 * border
@@ -835,7 +764,6 @@ local function apply_browser_folder_cover()
                 max_w = max_w,
                 max_h = bh,
                 folder_name = folder_name,
-                covers_data = _file_covers_data,
             })
 
             -- Pass the cover widget to _setFolderCover
@@ -1101,33 +1029,12 @@ local function apply_browser_folder_cover()
                     local dir_path = self.entry and self.entry.path
                     if not dir_path then return end
 
-                    -- Cover files: explicit images feed into the makeCover pipeline (respects all settings).
-                    local _file_covers_data
-                    if settings.gallery_mode.get() or settings.stack_mode.get() then
-                        local gfiles = findGalleryCovers(dir_path)
-                        if gfiles[1] or gfiles[2] or gfiles[3] or gfiles[4] then
-                            _file_covers_data = loadCoverFiles(gfiles)
-                        end
-                    end
-                    if not _file_covers_data then
-                        local cover_file = findCover(dir_path)
-                        if cover_file then
-                            _file_covers_data = loadCoverFiles({ cover_file })
-                        end
-                    end
-
                     local _fm_inst = require("apps/filemanager/filemanager").instance
                     local _main_ch = _fm_inst and _fm_inst.file_chooser
                     local _chooser = _main_ch
                         or (self.menu.genItemTableFromPath and self.menu)
-                    if not _chooser then
-                        if not _file_covers_data then
-                            self._foldercover_processed = true
-                            return
-                        end
-                    end
 
-                    -- Use unified makeCover - handles everything
+                    -- Use unified makeCover - auto-detects cover files and collects book covers
                     local folder_name = dir_path:match("([^/]+)/?$") or dir_path
                     folder_name = BD.directory(folder_name)
 
@@ -1145,7 +1052,6 @@ local function apply_browser_folder_cover()
                         max_w = cover_w + 2 * border_size,
                         max_h = max_img + 2 * border_size,
                         folder_name = folder_name,
-                        covers_data = _file_covers_data,
                     })
 
                     if cover_widget then

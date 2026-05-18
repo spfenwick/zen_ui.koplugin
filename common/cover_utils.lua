@@ -34,7 +34,7 @@ function CoverUtils.getMode()
     if is_gallery then
         return "gallery", 4, true
     elseif is_stack then
-        return "stack", 3, true
+        return "stack", 4, true
     else
         return "normal", 1, false
     end
@@ -233,6 +233,52 @@ function CoverUtils.scaleCover(cover_bb, src_w, src_h, target_w, target_h)
     return scaled_bb, target_w, target_h
 end
 -- ============================================================
+-- Explicit cover file detection and loading
+-- ============================================================
+
+function CoverUtils.loadExplicitCovers(path, mode)
+    local util = require("util")
+    local RenderImage = require("ui/renderimage")
+    local EXTS = { ".jpg", ".jpeg", ".png", ".webp", ".gif" }
+
+    local function findAny(dir, stem)
+        for _i, ext in ipairs(EXTS) do
+            local f = dir .. "/" .. stem .. ext
+            if util.fileExists(f) then return f end
+        end
+    end
+
+    local files = {}
+    if mode == "gallery" or mode == "stack" then
+        for i = 1, 4 do
+            local f = findAny(path, "cover" .. i)
+            if f then files[i] = f end
+        end
+    end
+    -- Slot 1 fallback: cover.ext / .cover.ext (applies to all modes)
+    if not files[1] then
+        files[1] = findAny(path, "cover") or findAny(path, ".cover")
+    end
+
+    local any = false
+    for i = 1, 4 do if files[i] then any = true; break end end
+    if not any then return nil end
+
+    local result = {}
+    for i = 1, 4 do
+        if files[i] then
+            local ok, bb = pcall(function()
+                return RenderImage:renderImageFile(files[i], false)
+            end)
+            if ok and bb then
+                table.insert(result, { data = bb, w = bb:getWidth(), h = bb:getHeight() })
+            end
+        end
+    end
+    return #result > 0 and result or nil
+end
+
+-- ============================================================
 -- Collect covers from directory
 -- ============================================================
 
@@ -240,6 +286,7 @@ function CoverUtils.collect(dir_path, chooser, max_covers, need_copy, entries)
     local covers = {}
 
     if not entries then
+        if not chooser then return covers end
         chooser._dummy = true
         entries = chooser:genItemTableFromPath(dir_path)
         chooser._dummy = false
@@ -250,18 +297,25 @@ function CoverUtils.collect(dir_path, chooser, max_covers, need_copy, entries)
     local ok, BookInfoManager = pcall(require, "bookinfomanager")
     if not ok then return covers end
 
+    local _img_exts = { jpg=1, jpeg=1, png=1, webp=1, gif=1 }
     for _i, entry in ipairs(entries) do
         if (entry.is_file or entry.file) and #covers < max_covers then
             local fpath = entry.path or entry.file
-            local bookinfo = BookInfoManager:getBookInfo(fpath, true)
-
-            if bookinfo and bookinfo.cover_bb and bookinfo.has_cover
-                    and bookinfo.cover_fetched and not bookinfo.ignore_cover then
-                local cover_bb = need_copy and bookinfo.cover_bb:copy() or bookinfo.cover_bb
-                table.insert(covers, { data = cover_bb, w = bookinfo.cover_w, h = bookinfo.cover_h })
+            -- skip folder cover image files (cover.png, .cover.png, cover1.jpg, etc.)
+            local _fname = (fpath:match("([^/]+)$") or ""):lower()
+            local _fext  = _fname:match("%.([^%.]+)$")
+            if _fext and _img_exts[_fext] and _fname:match("^%.?cover%d*%.") then
+                -- not a book; skip
             else
-                local cover_bb, pw, ph = CoverUtils.genCover(fpath, 200, 300)
-                table.insert(covers, { data = cover_bb, w = pw, h = ph })
+                local bookinfo = BookInfoManager:getBookInfo(fpath, true)
+                if bookinfo and bookinfo.cover_bb and bookinfo.has_cover
+                        and bookinfo.cover_fetched and not bookinfo.ignore_cover then
+                    local cover_bb = need_copy and bookinfo.cover_bb:copy() or bookinfo.cover_bb
+                    table.insert(covers, { data = cover_bb, w = bookinfo.cover_w, h = bookinfo.cover_h })
+                else
+                    local cover_bb, pw, ph = CoverUtils.genCover(fpath, 200, 300)
+                    table.insert(covers, { data = cover_bb, w = pw, h = ph })
+                end
             end
         end
     end
@@ -273,7 +327,13 @@ end
 -- DRAWING FUNCTIONS
 -- ============================================================
 
-function CoverUtils.drawGallery(covers, portrait_w, portrait_h, border)
+-- FrameContainer bg for covers: LIGHT_GRAY in both modes. In dark mode the
+-- screen inverts it once → appears dark gray, matching gallery blank spaces.
+local function coverBg()
+    return Blitbuffer.COLOR_LIGHT_GRAY
+end
+
+function CoverUtils.drawGallery(covers, portrait_w, portrait_h, border, bg_fn)
     local sep = 1
     local half_w = math.floor((portrait_w - sep) / 2)
     local half_w2 = portrait_w - sep - half_w
@@ -315,7 +375,7 @@ function CoverUtils.drawGallery(covers, portrait_w, portrait_h, border)
         end
     end
 
-    local bg = Blitbuffer.COLOR_LIGHT_GRAY
+    local bg = bg_fn and bg_fn() or coverBg()
     local dimen = { w = portrait_w + 2 * border, h = portrait_h + 2 * border }
 
     return FrameContainer:new{
@@ -353,13 +413,14 @@ function CoverUtils.drawGallery(covers, portrait_w, portrait_h, border)
     }
 end
 
-function CoverUtils.drawStack(covers, portrait_w, portrait_h, border)
+function CoverUtils.drawStack(covers, portrait_w, portrait_h, border, bg_fn)
     local CenterContainer = require("ui/widget/container/centercontainer")
     local FrameContainer = require("ui/widget/container/framecontainer")
     local ImageWidget = require("ui/widget/imagewidget")
+    local VerticalSpan = require("ui/widget/verticalspan")
 
     local stack_count = #covers
-    local bg = Blitbuffer.COLOR_LIGHT_GRAY
+    local bg = bg_fn and bg_fn() or coverBg()
     local dimen = { w = portrait_w + 2 * border, h = portrait_h + 2 * border }
 
     if stack_count == 0 then
@@ -377,37 +438,83 @@ function CoverUtils.drawStack(covers, portrait_w, portrait_h, border)
         }
     end
 
-    local final_bb = Blitbuffer.new(portrait_w, portrait_h)
-    final_bb:fill(Blitbuffer.COLOR_WHITE)
-
-    local book_width = portrait_w * 0.85
-    local book_height = book_width * (portrait_h / portrait_w)
-    local base_x = math.floor((portrait_w - book_width) / 2)
-    local base_y = math.floor((portrait_h - book_height) / 2)
-
-    local offsets
+    -- Single book: render full-size like a normal cover, no stacking.
     if stack_count == 1 then
-        offsets = { { x = 0, y = 6 } }
-    elseif stack_count == 2 then
-        offsets = { { x = 8, y = 0 }, { x = -8, y = 12 } }
-    else
-        offsets = { { x = 12, y = 0 }, { x = 0, y = 6 }, { x = -12, y = 12 } }
+        local cover = covers[1]
+        local scaled_bb, sw, sh = CoverUtils.scaleCover(cover.data, cover.w, cover.h, portrait_w, portrait_h)
+        return FrameContainer:new{
+            padding = 0,
+            bordersize = border,
+            width = dimen.w,
+            height = dimen.h,
+            background = bg,
+            CenterContainer:new{
+                dimen = { w = portrait_w, h = portrait_h },
+                ImageWidget:new{
+                    image = scaled_bb,
+                    image_disposable = true,
+                    width = sw,
+                    height = sh,
+                },
+            },
+            overlap_align = "center",
+        }
     end
 
-    for i = math.min(stack_count, 3), 1, -1 do
-        local cover = covers[i]
-        local offset_idx = math.min(stack_count - i + 1, #offsets)
-        local offset = offsets[offset_idx] or { x = 0, y = 0 }
+    -- Multi-book stack rendered into a single Blitbuffer so the entire cell
+    -- (background + covers) is repainted atomically. OverlapGroup would only
+    -- repaint the cover ImageWidgets on partial repaints (page turns), leaving
+    -- white gaps where the background should show through.
+    local final_bb = Blitbuffer.new(portrait_w, portrait_h)
+    -- The outer ImageWidget has original_in_nightmode=true (default): in night mode
+    -- it software-pre-inverts final_bb, then the screen inverts again → double inversion
+    -- = identity. Fill with the desired display color directly.
+    -- Gallery blank spaces = FrameContainer bg (COLOR_LIGHT_GRAY = 0xCC) inverted once
+    -- by the screen → 0x33. This fill is inverted twice (identity), so fill with 0x33
+    -- = COLOR_LIGHT_GRAY:invert() for an exact match.
+    local ok_dev, dev = pcall(require, "device")
+    local night = ok_dev and dev.screen and dev.screen.night_mode
+    local fill_color = night and Blitbuffer.COLOR_LIGHT_GRAY:invert() or bg
+    final_bb:fill(fill_color)
 
+    local book_width  = math.floor(portrait_w * 0.72)
+    local book_height = math.floor(book_width * (portrait_h / portrait_w))
+    local base_x = math.floor((portrait_w - book_width) / 2)
+    local base_y = math.floor((portrait_h - book_height) / 2)
+    local step_x = math.floor(base_x / 2)
+    local step_y = math.floor(base_y / 2)
+
+    local n = math.min(stack_count, 4)
+    local offsets
+    if n == 2 then
+        offsets = { { x = step_x, y = -step_y }, { x = -step_x, y = step_y } }
+    elseif n == 3 then
+        offsets = { { x = step_x, y = -step_y }, { x = 0, y = 0 }, { x = -step_x, y = step_y } }
+    else
+        -- 4 covers: outer pair at ±step, inner pair at ±step/3.
+        local s3x = math.floor(step_x / 3)
+        local s3y = math.floor(step_y / 3)
+        offsets = {
+            { x =  step_x, y = -step_y },
+            { x =  s3x,    y = -s3y    },
+            { x = -s3x,    y =  s3y    },
+            { x = -step_x, y =  step_y },
+        }
+    end
+
+    -- Paint back-to-front into final_bb; inner widgets skip pre-inversion so
+    -- the outer ImageWidget handles night mode for the whole buffer uniformly.
+    for i = n, 1, -1 do
+        local cover = covers[i]
+        local off = offsets[n - i + 1] or { x = 0, y = 0 }
         local scaled_bb, sw, sh = CoverUtils.scaleCover(cover.data, cover.w, cover.h, book_width, book_height)
-        local img_widget = ImageWidget:new{
+        local img = ImageWidget:new{
             image = scaled_bb,
             width = sw,
             height = sh,
-            -- don't pre-invert: outer ImageWidget handles night mode inversion
-            original_in_nightmode = false,
+            original_in_nightmode = false, -- outer ImageWidget handles night mode
         }
-        img_widget:paintTo(final_bb, base_x + offset.x, base_y + offset.y)
+        img:paintTo(final_bb, base_x + off.x, base_y + off.y)
     end
 
     return FrameContainer:new{
@@ -423,6 +530,8 @@ function CoverUtils.drawStack(covers, portrait_w, portrait_h, border)
                 image_disposable = true,
                 width = portrait_w,
                 height = portrait_h,
+                -- original_in_nightmode=true (default): pre-inverts final_bb in night mode;
+                -- combined with screen inversion → double → fill and covers appear correctly.
             },
         },
         overlap_align = "center",
@@ -572,7 +681,18 @@ function CoverUtils.makeCover(path, chooser, options)
 
     local covers = options.covers_data
     if not covers or #covers == 0 then
+        -- Auto-detect explicit cover image files (cover.png, cover1.png, etc.)
+        covers = CoverUtils.loadExplicitCovers(path, mode)
+    end
+    if not covers or #covers == 0 then
         covers = CoverUtils.collect(path, chooser, max_covers, need_copy)
+    elseif #covers < max_covers then
+        -- Fewer explicit covers than needed; fill remaining slots from books.
+        local combined = {}
+        for _i, c in ipairs(covers) do table.insert(combined, c) end
+        local extra = CoverUtils.collect(path, chooser, max_covers - #combined, need_copy)
+        for _i, c in ipairs(extra) do table.insert(combined, c) end
+        covers = combined
     end
 
     local folder_name = options.folder_name or (path:match("([^/]+)/?$") or path):gsub("/$", "")
@@ -587,7 +707,7 @@ function CoverUtils.makeCover(path, chooser, options)
     local cover_widget = nil
 
     local scaled_covers = {}
-    for _, c in ipairs(covers) do
+    for _i, c in ipairs(covers) do
         if c.w ~= portrait_w or c.h ~= portrait_h then
             local scaled_bb, sw, sh = CoverUtils.scaleCover(c.data, c.w, c.h, portrait_w, portrait_h)
             table.insert(scaled_covers, { data = scaled_bb, w = sw, h = sh })

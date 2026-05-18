@@ -229,9 +229,9 @@ local function apply_browser_cover_badges()
                 self.menu.name == "filemanager"
                 or self.menu.name == "history"
                 or self.menu._zen_tab_id
-                or self.menu._zen_coll_list    
+                or self.menu._zen_coll_list
                 or is_collection
-                    or is_search) 
+                    or is_search)
             -- Clear the full cell to white before painting so that portrait
             -- covers (which are narrower than the cell) don't leave ghost pixels
             -- from a previously painted full-width placeholder in the margins.

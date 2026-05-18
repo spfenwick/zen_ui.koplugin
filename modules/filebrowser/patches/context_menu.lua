@@ -236,9 +236,10 @@ local function apply_context_menu()
                 local fake_chooser = {
                     genItemTableFromPath = function()
                         local entries = {}
-                        for _, fpath in ipairs(group_files) do
+                        for _i, fpath in ipairs(group_files) do
                             table.insert(entries, { path = fpath, is_file = true })
                         end
+                        table.sort(entries, function(a, b) return (a.path or "") < (b.path or "") end)
                         return entries
                     end
                 }
@@ -760,33 +761,34 @@ local function apply_context_menu()
                     local lfs = require("libs/libkoreader-lfs")
                     local DocReg = require("document/documentregistry")
 
-                    -- Build fake chooser for this folder
-                    local fake_chooser = {
-                        genItemTableFromPath = function()
-                            local entries = {}
-                            local function collect_books(dir, depth)
-                                if depth > 5 then return end
+                    -- Use real FileChooser so cover order/scope matches the browser
+                    local _fm = require("apps/filemanager/filemanager")
+                    local _cover_chooser = _fm.instance and _fm.instance.file_chooser
+                    if not _cover_chooser then
+                        -- Fallback: non-recursive immediate-dir listing
+                        _cover_chooser = {
+                            genItemTableFromPath = function(_, dir)
+                                local entries = {}
                                 local ok_d, it, obj = pcall(lfs.dir, dir)
-                                if not ok_d then return end
-                                for fname in it, obj do
-                                    if fname ~= "." and fname ~= ".." and not fname:match("^%.") then
-                                        local fpath = dir .. "/" .. fname
-                                        local mode = lfs.attributes(fpath, "mode")
-                                        if mode == "file" and DocReg:hasProvider(fpath) then
-                                            table.insert(entries, { path = fpath, is_file = true })
-                                        elseif mode == "directory" then
-                                            collect_books(fpath, depth + 1)
+                                if ok_d then
+                                    for fname in it, obj do
+                                        if fname ~= "." and fname ~= ".." then
+                                            local fpath = dir .. "/" .. fname
+                                            if lfs.attributes(fpath, "mode") == "file"
+                                                    and DocReg:hasProvider(fpath) then
+                                                table.insert(entries, { path = fpath, is_file = true })
+                                            end
                                         end
                                     end
                                 end
+                                table.sort(entries, function(a, b) return (a.path or "") < (b.path or "") end)
+                                return entries
                             end
-                            collect_books(file, 0)
-                            return entries
-                        end
-                    }
+                        }
+                    end
 
                     -- Use unified makeCover for folder
-                    local cover_widget, mode, scenario = Cover.makeCover(file, fake_chooser, {
+                    local cover_widget, mode, scenario = Cover.makeCover(file, _cover_chooser, {
                         is_folder = true,
                         max_w = cover_max_w,
                         max_h = cover_max_h,
@@ -799,7 +801,25 @@ local function apply_context_menu()
                 end
 
                     if cover_widget then
-                        local n_books = #(fake_chooser:genItemTableFromPath())
+                        -- Count books recursively for the display label
+                        local n_books = 0
+                        local function _cnt(dir, depth)
+                            if depth > 5 then return end
+                            local ok_d, it, obj = pcall(lfs.dir, dir)
+                            if not ok_d then return end
+                            for fname in it, obj do
+                                if fname ~= "." and fname ~= ".." and not fname:match("^%.") then
+                                    local fpath = dir .. "/" .. fname
+                                    local fmode = lfs.attributes(fpath, "mode")
+                                    if fmode == "file" and DocReg:hasProvider(fpath) then
+                                        n_books = n_books + 1
+                                    elseif fmode == "directory" then
+                                        _cnt(fpath, depth + 1)
+                                    end
+                                end
+                            end
+                        end
+                        _cnt(file, 0)
                         local folder_count_str = n_books > 0
                             and (n_books == 1 and _("1 book") or (tostring(n_books) .. " " .. _("books")))
                             or nil

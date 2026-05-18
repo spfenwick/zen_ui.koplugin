@@ -1763,9 +1763,18 @@ local function apply_navbar()
     -- covers_fullscreen) and never paints the FM books view at all -- no flash, no artifacts.
     local orig_showFiles = FileManager.showFiles
     function FileManager:showFiles(path, focused_file, selected_files)
-        -- When restore is disabled, drop focused_file so KOReader doesn't scroll
-        -- the file browser to the page containing the last-opened book.
+        -- When restore is disabled, open at library root immediately (no double render).
         local effective_focused = is_restore_enabled() and focused_file or nil
+        if not is_restore_enabled() then
+            local home_dir = require("common/paths").getHomeDir()
+            if home_dir then
+                path = home_dir
+                -- reset saved scroll position so page 1 is shown
+                if self.file_chooser and self.file_chooser.path_items then
+                    self.file_chooser.path_items[home_dir] = nil
+                end
+            end
+        end
         orig_showFiles(self, path, effective_focused, selected_files)
         local state = rawget(_G, "__ZEN_UI_LIBRARY_STATE")
         if not is_restore_enabled() then
