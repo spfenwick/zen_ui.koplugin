@@ -424,93 +424,31 @@ local function apply_browser_list_item_layout()
                 end
             end
 
-            -- ── Step 2: main_w based on status only → left side takes priority
-            local main_w_first = math.max(1, self.width - left_offset - status_nat_w - 2 * pad_right)
+            -- ── Step 2: right column width (status + pages; tags move to left) ─
+            local wright_w = status_nat_w
 
-            -- ── Step 3: measure natural title/author widths (single-line probe)
-            local nat_left_w = 0
-            do
-                local tw = TextWidget:new{
-                    text    = title,
-                    face    = Font:getFace("cfont", fs_title),
-                    bold    = true,
-                    padding = 0,
-                }
-                nat_left_w = tw:getWidth()
-                tw:free()
-                if authors then
-                    local authors_flat = authors:gsub("\n", " ")
-                    local aw = TextWidget:new{
-                        text    = authors_flat,
-                        face    = Font:getFace("cfont", fs_meta),
-                        padding = 0,
-                    }
-                    nat_left_w = math.max(nat_left_w, aw:getWidth())
-                    aw:free()
-                end
-            end
-            -- Actual left occupation = min of natural width and allocated space
-            local actual_left_w = math.min(nat_left_w, main_w_first)
-
-            -- ── Step 4: tags expand left into unused title space ─────────────
-            -- Tags right-edge aligns with status right-edge: cap at the wider of
-            -- status_nat_w and the unused space left of the actual title content.
-            local wright_tags, wright_w = nil, status_nat_w
-            if tags_str then
-                local fs_tags = math.max(7, fs_right - 2)
-                local tags_avail_w = self.width - left_offset - actual_left_w - 2 * pad_right
-                -- Never wider than status line (keeps right edges flush)
-                local tags_max_w = math.max(1, math.max(status_nat_w, tags_avail_w))
-                -- But hard-cap to status_nat_w so tags don't push right column wider
-                tags_max_w = math.min(tags_max_w, math.max(status_nat_w,
-                    self.width - left_offset - actual_left_w - 2 * pad_right))
-                tags_max_w = math.max(1, tags_max_w)
-                wright_tags = TextWidget:new{
-                    text      = tags_str,
-                    face      = Font:getFace("cfont", fs_tags),
-                    fgcolor   = Blitbuffer.COLOR_GRAY_3,
-                    padding   = 0,
-                    max_width = tags_max_w,
-                }
-                -- Column width = max of status and rendered tag width, but
-                -- never wider than what avail space allows (left takes priority)
-                local tags_rendered_w = wright_tags:getWidth()
-                wright_w = math.min(
-                    math.max(status_nat_w, tags_rendered_w),
-                    self.width - left_offset - actual_left_w - 2 * pad_right
-                )
-                wright_w = math.max(status_nat_w, wright_w)
-            end
-
-            -- ── Page count (below tags) ──────────────────────────────────────
-            -- Optional "N pp" line at the bottom of the right column.
-            -- We probe its natural width first so that wright_w (and therefore
-            -- main_w) accounts for it — titles will truncate before the page
-            -- count text is clipped.
-            -- Page count always shown in list-detailed mode; show_page_count setting
-            -- only gates the mosaic pill badge (browser_page_count.lua).
+            -- ── Page count (below status in right column) ────────────────────
             local wright_pages
             if pages and pages > 0 and not self.do_filename_only then
+                local fs_pages = math.max(7, fs_right - 2)
+                local pages_str = zen_utils.formatPageCount(pages, true)
                 local pages_probe = TextWidget:new{
-                    text    = zen_utils.formatPageCount(pages, true),
-                    face    = Font:getFace("cfont", math.max(7, fs_right - 2)),
+                    text    = pages_str,
+                    face    = Font:getFace("cfont", fs_pages),
                     padding = 0,
                 }
                 local pages_nat_w = pages_probe:getWidth()
                 pages_probe:free()
-                -- Expand the right column to fit the page count so the title
-                -- area shrinks rather than the page count text being cut off.
                 wright_w = math.max(wright_w, pages_nat_w)
                 wright_pages = TextWidget:new{
-                    text      = zen_utils.formatPageCount(pages, true),
-                    face      = Font:getFace("cfont", math.max(7, fs_right - 2)),
+                    text      = pages_str,
+                    face      = Font:getFace("cfont", fs_pages),
                     fgcolor   = Blitbuffer.COLOR_GRAY_3,
                     padding   = 0,
                     max_width = wright_w,
                 }
             end
 
-            -- Final main_w: left gets its space; only shrinks if tags > status width
             local main_w = math.max(1, self.width - left_offset - wright_w - 2 * pad_right)
 
             -- ── Text stack (title / authors / series) ────────────────────────
@@ -528,21 +466,47 @@ local function apply_browser_list_item_layout()
                 }
             end
 
-            local wtitle   = make_text_line(title,        "cfont", true)
-            local wauthors = authors   and make_text_line(authors,   "cfont", false) or nil
-            local wseries  = series_str and make_text_line(series_str, "cfont", false) or nil
+            local wtitle = make_text_line(title, "cfont", true)
 
-            -- Shrink title font until title + meta fits in dimen_h
-            local title_h   = wtitle:getSize().h
-            local authors_h = wauthors and wauthors:getSize().h or 0
-            local series_h  = wseries  and wseries:getSize().h  or 0
-            local total_h   = title_h + authors_h + series_h
+            -- Authors: single line, truncated with ellipsis
+            local wauthors
+            if authors then
+                wauthors = TextWidget:new{
+                    text      = authors:gsub("\n", " "),
+                    face      = Font:getFace("cfont", fs_meta),
+                    max_width = main_w,
+                    fgcolor   = fgcolor,
+                    padding   = 0,
+                }
+            end
+
+            -- Tags: single line under author, left column
+            local wtags_left
+            if tags_str then
+                wtags_left = TextWidget:new{
+                    text      = tags_str,
+                    face      = Font:getFace("cfont", math.max(7, fs_meta - 2)),
+                    max_width = main_w,
+                    fgcolor   = Blitbuffer.COLOR_GRAY_3,
+                    padding   = 0,
+                }
+            end
+
+            local wseries = series_str and make_text_line(series_str, "cfont", false) or nil
+
+            -- Constrain variable-height widgets (title, series) to available space
+            local authors_h  = wauthors   and wauthors:getSize().h   or 0
+            local tags_lh    = wtags_left and wtags_left:getSize().h  or 0
+            local series_h   = wseries    and wseries:getSize().h     or 0
+            local title_h    = wtitle:getSize().h
+            local total_h    = title_h + authors_h + tags_lh + series_h
 
             if total_h > dimen_h then
-                -- Drop to single lines for each to fit
-                for _, w in ipairs{wtitle, wauthors, wseries} do
+                local n_var   = 1 + (wseries and 1 or 0)
+                local budget  = math.floor(math.max(1, dimen_h - authors_h - tags_lh) / n_var)
+                for _i, w in ipairs({wtitle, wseries}) do
                     if w then
-                        w.height = math.floor(dimen_h / (wauthors and wseries and 3 or wauthors and 2 or 1))
+                        w.height = budget
                         w.height_adjust = true
                         w.height_overflow_show_ellipsis = true
                         w:free(true)
@@ -553,8 +517,9 @@ local function apply_browser_list_item_layout()
 
             local text_stack = VerticalGroup:new{ align = "left" }
             table.insert(text_stack, wtitle)
-            if wauthors then table.insert(text_stack, wauthors) end
-            if wseries  then table.insert(text_stack, wseries)  end
+            if wauthors   then table.insert(text_stack, wauthors)   end
+            if wtags_left then table.insert(text_stack, wtags_left) end
+            if wseries    then table.insert(text_stack, wseries)    end
 
             local wmain = LeftContainer:new{
                 dimen = { w = self.width, h = dimen_h },
@@ -578,10 +543,9 @@ local function apply_browser_list_item_layout()
                 table.insert(widget, 1, wleft)
             end
 
-            if wright_status or wright_tags or wright_pages then
+            if wright_status or wright_pages then
                 local right_stack = VerticalGroup:new{ align = "right" }
                 if wright_status then table.insert(right_stack, wright_status) end
-                if wright_tags   then table.insert(right_stack, wright_tags)   end
                 if wright_pages  then table.insert(right_stack, wright_pages)  end
                 table.insert(widget, RightContainer:new{
                     dimen = row_dimen,

@@ -30,7 +30,7 @@ function CoverUtils.getMode()
     local G = rawget(_G, "G_reader_settings")
     local is_gallery = G and G:isTrue("folder_gallery_mode") or false
     local is_stack = G and G:isTrue("folder_stack_mode") or false
-    
+
     if is_gallery then
         return "gallery", 4, true
     elseif is_stack then
@@ -71,7 +71,7 @@ end
 function CoverUtils.genCover(filepath, target_w, target_h)
     local ratio = CoverUtils.getRatio()
     local width, height
-    
+
     if target_w and target_h then
         width, height = CoverUtils.calcDims(target_w, target_h)
     elseif target_w then
@@ -79,12 +79,12 @@ function CoverUtils.genCover(filepath, target_w, target_h)
     else
         width, height = CoverUtils.calcDims(9999, target_h or 300)
     end
-    
+
     -- Get metadata
     local ok, BookInfoManager = pcall(require, "bookinfomanager")
     local title = ""
     local authors = ""
-    
+
     if ok then
         local bookinfo = BookInfoManager:getBookInfo(filepath, true)
         if bookinfo and not bookinfo.ignore_meta then
@@ -95,7 +95,7 @@ function CoverUtils.genCover(filepath, target_w, target_h)
             end
         end
     end
-    
+
     -- Fallback to filename
     if title == "" then
         local fname = filepath:match("([^/]+)$") or ""
@@ -103,17 +103,17 @@ function CoverUtils.genCover(filepath, target_w, target_h)
         fname = fname:gsub("%.[^%.]+$", "")
         title = fname
     end
-    
+
     if title == "" then title = _("Unknown") end
     if authors == "" then authors = _("Unknown Author") end
-    
+
     -- Create canvas
     local final_bb = Blitbuffer.new(width, height, Blitbuffer.TYPE_BBRGB32)
-    
+
     local split_y = math.floor(height * 2 / 3)
     local lighter_color = Blitbuffer.ColorRGB32(212, 220, 243, 255)
     local darker_color = Blitbuffer.ColorRGB32(130, 159, 227, 255)
-    
+
     for y = 0, split_y - 1 do
         for x = 0, width - 1 do
             final_bb:setPixel(x, y, lighter_color)
@@ -124,19 +124,19 @@ function CoverUtils.genCover(filepath, target_w, target_h)
             final_bb:setPixel(x, y, darker_color)
         end
     end
-    
+
     local title_area_h = split_y - 10
     local author_area_h = height - split_y - 10
     local max_text_width = width - 16
-    
+
     local title_color = Blitbuffer.ColorRGB32(1, 68, 142, 255)
     local authors_color = Blitbuffer.ColorRGB32(8, 51, 93, 255)
-    
+
     -- Title widget
     local title_font_size = 20
     local min_title_font = 10
     local title_widget = nil
-    
+
     while title_font_size >= min_title_font do
         if title_widget then title_widget:free() end
         local face = Font:getFace("ffont", title_font_size)
@@ -152,7 +152,7 @@ function CoverUtils.genCover(filepath, target_w, target_h)
         if title_widget:getSize().h <= title_area_h then break end
         title_font_size = title_font_size - 1
     end
-    
+
     if title_widget:getSize().h > title_area_h then
         title_widget:free()
         local face = Font:getFace("ffont", min_title_font)
@@ -170,12 +170,12 @@ function CoverUtils.genCover(filepath, target_w, target_h)
         }
     end
     title_widget.handleEvent = function() return false end
-    
+
     -- Author widget
     local authors_font_size = 16
     local min_authors_font = 6
     local authors_widget = nil
-    
+
     while authors_font_size >= min_authors_font do
         if authors_widget then authors_widget:free() end
         local face = Font:getFace("ffont", authors_font_size)
@@ -190,7 +190,7 @@ function CoverUtils.genCover(filepath, target_w, target_h)
         if authors_widget:getSize().h <= author_area_h then break end
         authors_font_size = authors_font_size - 1
     end
-    
+
     if authors_widget and authors_widget:getSize().h > author_area_h then
         authors_widget:free()
         local face = Font:getFace("ffont", min_authors_font)
@@ -209,18 +209,18 @@ function CoverUtils.genCover(filepath, target_w, target_h)
     if authors_widget then
         authors_widget.handleEvent = function() return false end
     end
-    
+
     -- Paint
     local title_y = math.max(5, (split_y - title_widget:getSize().h) / 2)
     title_widget:paintTo(final_bb, math.max(0, (width - title_widget:getSize().w) / 2), title_y)
     title_widget:free()
-    
+
     if authors_widget then
         local authors_y = split_y + math.max(5, (author_area_h - authors_widget:getSize().h) / 2)
         authors_widget:paintTo(final_bb, math.max(0, (width - authors_widget:getSize().w) / 2), authors_y)
         authors_widget:free()
     end
-    
+
     return final_bb, width, height
 end
 
@@ -238,23 +238,23 @@ end
 
 function CoverUtils.collect(dir_path, chooser, max_covers, need_copy, entries)
     local covers = {}
-    
+
     if not entries then
         chooser._dummy = true
         entries = chooser:genItemTableFromPath(dir_path)
         chooser._dummy = false
     end
-    
+
     if not entries then return covers end
-    
+
     local ok, BookInfoManager = pcall(require, "bookinfomanager")
     if not ok then return covers end
-    
-    for _, entry in ipairs(entries) do
+
+    for _i, entry in ipairs(entries) do
         if (entry.is_file or entry.file) and #covers < max_covers then
             local fpath = entry.path or entry.file
             local bookinfo = BookInfoManager:getBookInfo(fpath, true)
-            
+
             if bookinfo and bookinfo.cover_bb and bookinfo.has_cover
                     and bookinfo.cover_fetched and not bookinfo.ignore_cover then
                 local cover_bb = need_copy and bookinfo.cover_bb:copy() or bookinfo.cover_bb
@@ -265,7 +265,7 @@ function CoverUtils.collect(dir_path, chooser, max_covers, need_copy, entries)
             end
         end
     end
-    
+
     return covers
 end
 
@@ -285,7 +285,7 @@ function CoverUtils.drawGallery(covers, portrait_w, portrait_h, border)
         { w = half_w,  h = half_h2 },
         { w = half_w2, h = half_h2 },
     }
-    
+
     local CenterContainer = require("ui/widget/container/centercontainer")
     local FrameContainer = require("ui/widget/container/framecontainer")
     local HorizontalGroup = require("ui/widget/horizontalgroup")
@@ -293,7 +293,7 @@ function CoverUtils.drawGallery(covers, portrait_w, portrait_h, border)
     local LineWidget = require("ui/widget/linewidget")
     local VerticalGroup = require("ui/widget/verticalgroup")
     local VerticalSpan = require("ui/widget/verticalspan")
-    
+
     local cells = {}
     for i = 1, 4 do
         local c = covers[i]
@@ -314,10 +314,10 @@ function CoverUtils.drawGallery(covers, portrait_w, portrait_h, border)
             }
         end
     end
-    
+
     local bg = Blitbuffer.COLOR_LIGHT_GRAY
     local dimen = { w = portrait_w + 2 * border, h = portrait_h + 2 * border }
-    
+
     return FrameContainer:new{
         padding = 0,
         bordersize = border,
@@ -357,11 +357,11 @@ function CoverUtils.drawStack(covers, portrait_w, portrait_h, border)
     local CenterContainer = require("ui/widget/container/centercontainer")
     local FrameContainer = require("ui/widget/container/framecontainer")
     local ImageWidget = require("ui/widget/imagewidget")
-    
+
     local stack_count = #covers
     local bg = Blitbuffer.COLOR_LIGHT_GRAY
     local dimen = { w = portrait_w + 2 * border, h = portrait_h + 2 * border }
-    
+
     if stack_count == 0 then
         return FrameContainer:new{
             padding = 0,
@@ -376,15 +376,15 @@ function CoverUtils.drawStack(covers, portrait_w, portrait_h, border)
             overlap_align = "center",
         }
     end
-    
+
     local final_bb = Blitbuffer.new(portrait_w, portrait_h)
     final_bb:fill(Blitbuffer.COLOR_WHITE)
-    
+
     local book_width = portrait_w * 0.85
     local book_height = book_width * (portrait_h / portrait_w)
     local base_x = math.floor((portrait_w - book_width) / 2)
     local base_y = math.floor((portrait_h - book_height) / 2)
-    
+
     local offsets
     if stack_count == 1 then
         offsets = { { x = 0, y = 6 } }
@@ -393,32 +393,23 @@ function CoverUtils.drawStack(covers, portrait_w, portrait_h, border)
     else
         offsets = { { x = 12, y = 0 }, { x = 0, y = 6 }, { x = -12, y = 12 } }
     end
-    
+
     for i = math.min(stack_count, 3), 1, -1 do
         local cover = covers[i]
         local offset_idx = math.min(stack_count - i + 1, #offsets)
         local offset = offsets[offset_idx] or { x = 0, y = 0 }
-        
+
         local scaled_bb, sw, sh = CoverUtils.scaleCover(cover.data, cover.w, cover.h, book_width, book_height)
         local img_widget = ImageWidget:new{
             image = scaled_bb,
             width = sw,
             height = sh,
+            -- don't pre-invert: outer ImageWidget handles night mode inversion
+            original_in_nightmode = false,
         }
         img_widget:paintTo(final_bb, base_x + offset.x, base_y + offset.y)
     end
-    
-    local plugin_root = require("common/plugin_root")
-    local folder_icon_width = portrait_w
-    local folder_icon_height = folder_icon_width * 0.65
-    local folder_icon = ImageWidget:new{
-        file = plugin_root .. "/icons/folder.png",
-        width = folder_icon_width,
-        height = folder_icon_height,
-        alpha = true,
-    }
-    folder_icon:paintTo(final_bb, 0, portrait_h - folder_icon_height)
-    
+
     return FrameContainer:new{
         padding = 0,
         bordersize = border,
@@ -429,6 +420,7 @@ function CoverUtils.drawStack(covers, portrait_w, portrait_h, border)
             dimen = { w = portrait_w, h = portrait_h },
             ImageWidget:new{
                 image = final_bb,
+                image_disposable = true,
                 width = portrait_w,
                 height = portrait_h,
             },
@@ -442,15 +434,15 @@ function CoverUtils.drawNoImage(folder_name, portrait_w, portrait_h, border)
     local FrameContainer = require("ui/widget/container/framecontainer")
     local ImageWidget = require("ui/widget/imagewidget")
     local TextBoxWidget = require("ui/widget/textboxwidget")
-    
+
     local final_bb = Blitbuffer.new(portrait_w, portrait_h, Blitbuffer.TYPE_BBRGB32)
     local bg = Blitbuffer.COLOR_WHITE
     final_bb:fill(bg)
-    
+
     local font_size = 20
     local min_font = 10
     local text_widget = nil
-    
+
     while font_size >= min_font do
         if text_widget then text_widget:free() end
         local face = Font:getFace("cfont", font_size)
@@ -468,9 +460,9 @@ function CoverUtils.drawNoImage(folder_name, portrait_w, portrait_h, border)
         end
         font_size = font_size - 1
     end
-    
+
     text_widget.handleEvent = function() return false end
-    
+
     if text_widget:getSize().h > portrait_h - 10 then
         text_widget:free()
         local face = Font:getFace("cfont", min_font)
@@ -488,13 +480,13 @@ function CoverUtils.drawNoImage(folder_name, portrait_w, portrait_h, border)
         }
         text_widget.handleEvent = function() return false end
     end
-    
+
     local y = (portrait_h - text_widget:getSize().h) / 2
     text_widget:paintTo(final_bb, (portrait_w - text_widget:getSize().w) / 2, y)
     text_widget:free()
-    
+
     local dimen = { w = portrait_w + 2 * border, h = portrait_h + 2 * border }
-    
+
     return FrameContainer:new{
         padding = 0,
         bordersize = border,
@@ -517,10 +509,10 @@ function CoverUtils.drawSingle(cover_data, portrait_w, portrait_h, border)
     local CenterContainer = require("ui/widget/container/centercontainer")
     local FrameContainer = require("ui/widget/container/framecontainer")
     local ImageWidget = require("ui/widget/imagewidget")
-    
+
     local bg = Blitbuffer.COLOR_LIGHT_GRAY
     local dimen = { w = portrait_w + 2 * border, h = portrait_h + 2 * border }
-    
+
     return FrameContainer:new{
         padding = 0,
         bordersize = border,
@@ -545,20 +537,20 @@ end
 
 function CoverUtils.makeCover(path, chooser, options)
     options = options or {}
-    
+
     -- Handle single book file
     if not options.is_folder then
         local ok, BookInfoManager = pcall(require, "bookinfomanager")
-        
+
         local target_w = options.width or 200
         local target_h = options.height or 300
-        
+
         -- Always use calcDims to get correct dimensions
         local final_w, final_h = CoverUtils.calcDims(target_w, target_h)
-        
+
         if ok then
             local bookinfo = BookInfoManager:getBookInfo(path, true)
-            
+
             if bookinfo and bookinfo.cover_bb and bookinfo.has_cover
                     and bookinfo.cover_fetched and not bookinfo.ignore_cover then
                 local scaled_bb, sw, sh = CoverUtils.scaleCover(
@@ -569,31 +561,31 @@ function CoverUtils.makeCover(path, chooser, options)
                 return cover_bb, final_w, final_h, "single", "real_cover"
             end
         end
-        
+
         local cover_bb = CoverUtils.genCover(path, final_w, final_h)
         return cover_bb, final_w, final_h, "single", "placeholder"
     end
-    
+
     -- Handle folder
     local mode, max_covers, need_copy = CoverUtils.getMode()
     if options.max_covers then max_covers = options.max_covers end
-    
+
     local covers = options.covers_data
     if not covers or #covers == 0 then
         covers = CoverUtils.collect(path, chooser, max_covers, need_copy)
     end
-    
+
     local folder_name = options.folder_name or (path:match("([^/]+)/?$") or path):gsub("/$", "")
     folder_name = BD.directory(folder_name)
-    
+
     local border = 2
     local max_w = options.max_w or 200
     local max_h = options.max_h or 300
-    
+
     local portrait_w, portrait_h = CoverUtils.calcDims(max_w, max_h)
-    
+
     local cover_widget = nil
-    
+
     local scaled_covers = {}
     for _, c in ipairs(covers) do
         if c.w ~= portrait_w or c.h ~= portrait_h then
@@ -603,7 +595,7 @@ function CoverUtils.makeCover(path, chooser, options)
             table.insert(scaled_covers, { data = c.data, w = c.w, h = c.h })
         end
     end
-    
+
     if #scaled_covers > 0 then
         if mode == "gallery" then
             cover_widget = CoverUtils.drawGallery(scaled_covers, portrait_w, portrait_h, border)
@@ -614,7 +606,7 @@ function CoverUtils.makeCover(path, chooser, options)
         end
         return cover_widget, mode, "folder_covers", scaled_covers
     end
-    
+
     cover_widget = CoverUtils.drawNoImage(folder_name, portrait_w, portrait_h, border)
     return cover_widget, mode, "empty_folder", nil
 end

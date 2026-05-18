@@ -191,9 +191,11 @@ local function apply_context_menu()
             if item.is_go_up then return end
 
             if zen_plugin then
+                local features = zen_plugin.config and zen_plugin.config.features
                 local lc = zen_plugin.config and zen_plugin.config.lockdown
-                if type(lc) == "table" and lc.disable_context_menu == true then
-                    return orig_showFileDialog(self_fc, item)
+                if type(features) == "table" and features.lockdown_mode == true
+                        and type(lc) == "table" and lc.disable_context_menu == true then
+                    return  -- suppress context menu entirely in lockdown
                 end
             end
 
@@ -210,12 +212,12 @@ local function apply_context_menu()
                 local dlg_w    = math.floor(math.min(Screen:getWidth(), Screen:getHeight()) * 0.9)
                 local avail_w  = dlg_w - 2 * (SizeR.border.window + SizeR.padding.button)
                                         - 2 * (SizeR.padding.default + SizeR.margin.default)
-                
+
                 -- Calculate cover dimensions respecting uniform_cover_ratio
                 local ratio = Cover.getRatio()
                 local cover_max_h = Screen:scaleBySize(140)
                 local cover_max_w = math.floor(cover_max_h * ratio)
-                
+
                 local Blitbuffer      = require("ffi/blitbuffer")
                 local CenterContainer = require("ui/widget/container/centercontainer")
                 local Font            = require("ui/font")
@@ -229,7 +231,7 @@ local function apply_context_menu()
                 local TextWidget      = require("ui/widget/textwidget")
                 local VerticalGroup   = require("ui/widget/verticalgroup")
                 local VerticalSpan    = require("ui/widget/verticalspan")
-                
+
                 -- Build fake chooser for group files
                 local fake_chooser = {
                     genItemTableFromPath = function()
@@ -240,7 +242,7 @@ local function apply_context_menu()
                         return entries
                     end
                 }
-                
+
                 -- Use unified makeCover for folder (gallery mode)
                 local cover_widget, mode, scenario = Cover.makeCover(group_name, fake_chooser, {
                     is_folder = true,
@@ -248,7 +250,7 @@ local function apply_context_menu()
                     max_h = cover_max_h,
                     folder_name = group_name,
                 })
-                
+
                 -- Apply rounded corners
                 if cover_widget and _zen_apply_rounded_cover then
                     _zen_apply_rounded_cover(cover_widget, border)
@@ -265,7 +267,7 @@ local function apply_context_menu()
                         VerticalSpan:new{ width = 1 },
                     },
                 }
-                
+
                 -- Apply rounded corners
                 local plug = zen_plugin or rawget(_G, "__ZEN_UI_PLUGIN")
                 if plug and type(plug.config) == "table"
@@ -506,7 +508,7 @@ local function apply_context_menu()
                 local dlg_w = math.floor(math.min(Screen:getWidth(), Screen:getHeight()) * 0.9)
                 local avail_w = dlg_w - 2 * (SizeR.border.window + SizeR.padding.button)
                                        - 2 * (SizeR.padding.default + SizeR.margin.default)
-                
+
                 -- Calculate cover dimensions respecting uniform_cover_ratio
                 local ratio = Cover.getRatio()
                 local cover_max_h = Screen:scaleBySize(140)
@@ -723,14 +725,14 @@ local function apply_context_menu()
                                 and bookinfo.description ~= "" then
                                 book_description = bookinfo.description
                             end
-                            
+
                             -- Use unified makeCover for single book (with proper scaling)
                             local cover_bb, w, h, mode, scenario = Cover.makeCover(file, nil, {
                                 is_folder = false,
                                 width = cover_max_w,
                                 height = cover_max_h,
                             })
-                            
+
                             if cover_bb then
                                 -- cover_bb is already scaled to target dimensions, so sf = 1.0
                                 dialog_cover_widget = makeSideBySide(
@@ -757,7 +759,7 @@ local function apply_context_menu()
                     local folder_name_str = BD.directory(name)
                     local lfs = require("libs/libkoreader-lfs")
                     local DocReg = require("document/documentregistry")
-                    
+
                     -- Build fake chooser for this folder
                     local fake_chooser = {
                         genItemTableFromPath = function()
@@ -782,7 +784,7 @@ local function apply_context_menu()
                             return entries
                         end
                     }
-                    
+
                     -- Use unified makeCover for folder
                     local cover_widget, mode, scenario = Cover.makeCover(file, fake_chooser, {
                         is_folder = true,
@@ -795,7 +797,7 @@ local function apply_context_menu()
                 if cover_widget and _zen_apply_rounded_cover then
                     _zen_apply_rounded_cover(cover_widget, border)
                 end
-                   
+
                     if cover_widget then
                         local n_books = #(fake_chooser:genItemTableFromPath())
                         local folder_count_str = n_books > 0
@@ -804,7 +806,7 @@ local function apply_context_menu()
                         dialog_title = folder_count_str
                             and (folder_name_str .. "\n" .. folder_count_str)
                             or folder_name_str
-                        
+
                         local framed_h = cover_max_h + 2 * border
                         local text_col_w = math.max(avail_w - cover_max_w - 2 * border - gap, Screen:scaleBySize(60))
                         local vstack = VerticalGroup:new{ align = "left" }
@@ -822,7 +824,7 @@ local function apply_context_menu()
                                 max_width = text_col_w,
                             })
                         end
-                        
+
                         dialog_cover_widget = LeftContainer:new{
                             dimen = Geom:new{ w = avail_w, h = framed_h },
                             HorizontalGroup:new{
