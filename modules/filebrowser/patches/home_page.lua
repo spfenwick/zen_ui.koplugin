@@ -129,7 +129,7 @@ local function ensure_strip_module_cfg(dcfg, module_id)
     mcfg.order = normalize_order(mcfg.order)
     if mcfg.interactive == nil then mcfg.interactive = true end
     if mcfg.two_rows == nil then mcfg.two_rows = false end
-    if type(mcfg.count) ~= "number" then mcfg.count = mcfg.two_rows and 10 or 5 end
+    if type(mcfg.count) ~= "number" then mcfg.count = mcfg.two_rows and 8 or 4 end
     if mcfg.two_rows then
         if mcfg.count < 2 then mcfg.count = 2 end
         if mcfg.count > 10 then mcfg.count = 10 end
@@ -169,6 +169,29 @@ local function load_zen_config()
     if ok and type(cfg) == "table" then
         return cfg
     end
+end
+
+local function mosaic_titles_enabled()
+    local cfg = load_zen_config()
+    return type(cfg) == "table"
+        and type(cfg.mosaic_title_strip) == "table"
+        and cfg.mosaic_title_strip.show_title == true
+end
+
+local function unique_user_preset_name(base)
+    if not PresetStore.find("home", base) then return base end
+    local i = 2
+    while PresetStore.find("home", base .. " " .. i) do
+        i = i + 1
+    end
+    return base .. " " .. i
+end
+
+local function editable_name_for_builtin(preset_name)
+    if preset_name == HomePresets.DEFAULT_PRESET_NAME then
+        return HomePresets.CUSTOM_PRESET_NAME
+    end
+    return tostring(preset_name or HomePresets.CUSTOM_PRESET_NAME) .. " custom"
 end
 
 local function ensure_home_cfg()
@@ -247,23 +270,23 @@ local function ensure_home_cfg()
     end
     ensure_home_widget_cfg(dcfg)
 
+    -- When the active preset is still a builtin (e.g. first load of the default),
+    -- derive an editable custom preset so the mosaic "Show title below cover"
+    -- setting can drive strip book titles. Builtins pin show_strip_titles=false,
+    -- so the value only takes effect on a persisted user copy.
+    if HomePresets.isBuiltinPresetName(dcfg.active_preset) and mosaic_titles_enabled() then
+        HomePresets.applyMosaicTitlesToStrips(dcfg, true)
+        local name = unique_user_preset_name(editable_name_for_builtin(dcfg.active_preset))
+        dcfg.active_preset = name
+        dcfg.title = name
+        local state = HomePresets.captureHomePage(dcfg)
+        state.title = name
+        PresetStore.save("home", name, state)
+        PresetStore.setActivePreset("home", name)
+        PresetStore.saveSettings("home", dcfg)
+    end
+
     return dcfg
-end
-
-local function unique_user_preset_name(base)
-    if not PresetStore.find("home", base) then return base end
-    local i = 2
-    while PresetStore.find("home", base .. " " .. i) do
-        i = i + 1
-    end
-    return base .. " " .. i
-end
-
-local function editable_name_for_builtin(preset_name)
-    if preset_name == HomePresets.DEFAULT_PRESET_NAME then
-        return HomePresets.CUSTOM_PRESET_NAME
-    end
-    return tostring(preset_name or HomePresets.CUSTOM_PRESET_NAME) .. " custom"
 end
 
 local function save_home_settings(dcfg)

@@ -310,12 +310,12 @@ function M.build_strip(ctx, source_key)
     local per_row
     local count
     if two_rows then
-        count = tonumber(module_cfg.count) or 10
+        count = tonumber(module_cfg.count) or 8
         if count < 2 then count = 2 end
         if count > 10 then count = 10 end
         per_row = math.ceil(count / 2)
     else
-        count = tonumber(module_cfg.count) or 5
+        count = tonumber(module_cfg.count) or 4
         if count < 3 then count = 3 end
         if count > 5 then count = 5 end
         per_row = count

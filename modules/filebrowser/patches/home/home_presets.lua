@@ -103,7 +103,7 @@ local DEFAULT_HOME_PAGE = {
             show_module_title = false,
         },
         strip_custom = {
-            count = 5,
+            count = 4,
             interactive = true,
             order = "default",
             paths = {},
@@ -111,14 +111,14 @@ local DEFAULT_HOME_PAGE = {
             show_strip_titles = false,
         },
         strip_recent = {
-            count = 5,
+            count = 4,
             interactive = true,
             order = "default",
             show_module_title = false,
             show_strip_titles = false,
         },
         strip_tbr = {
-            count = 5,
+            count = 4,
             interactive = true,
             order = "default",
             show_module_title = false,
@@ -231,7 +231,7 @@ local BOOKSHELF_HOME_PAGE = {
             show_module_title = false,
         },
         strip_custom = {
-            count = 5,
+            count = 4,
             interactive = true,
             order = "default",
             paths = {},
@@ -241,7 +241,7 @@ local BOOKSHELF_HOME_PAGE = {
             two_rows = false,
         },
         strip_recent = {
-            count = 5,
+            count = 8,
             interactive = true,
             order = "default",
             show_badges = false,
@@ -250,7 +250,7 @@ local BOOKSHELF_HOME_PAGE = {
             two_rows = true,
         },
         strip_tbr = {
-            count = 5,
+            count = 4,
             interactive = true,
             order = "default",
             show_badges = false,
@@ -297,7 +297,6 @@ function M.defaultHomePage()
     page.active_preset = M.DEFAULT_PRESET_NAME
     return page
 end
-
 function M.getBuiltinPresets()
     return {
         {
@@ -333,6 +332,20 @@ function M.captureHomePage(dcfg)
         out[key] = deepcopy(dcfg[key])
     end
     return out
+end
+
+local STRIP_MODULE_IDS = { "strip_recent", "strip_custom", "strip_tbr" }
+
+-- Mirror the library "Show title below cover (mosaic)" setting onto the strip
+-- widgets' show_strip_titles. Builtin presets pin show_strip_titles=false, so a
+-- preset derived from a builtin only picks up titles when this runs at derivation.
+function M.applyMosaicTitlesToStrips(dcfg, show_titles)
+    if type(dcfg) ~= "table" or type(dcfg.modules) ~= "table" then return end
+    for _i, id in ipairs(STRIP_MODULE_IDS) do
+        if type(dcfg.modules[id]) == "table" then
+            dcfg.modules[id].show_strip_titles = show_titles == true
+        end
+    end
 end
 
 function M.applyHomePagePreset(dcfg, preset)

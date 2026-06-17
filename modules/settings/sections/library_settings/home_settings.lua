@@ -101,7 +101,7 @@ local function ensure_strip_cfg(dcfg, module_id)
     mcfg.order = normalize_order(mcfg.order)
     if mcfg.interactive == nil then mcfg.interactive = true end
     if mcfg.two_rows == nil then mcfg.two_rows = false end
-    if type(mcfg.count) ~= "number" then mcfg.count = mcfg.two_rows and 10 or 5 end
+    if type(mcfg.count) ~= "number" then mcfg.count = mcfg.two_rows and 8 or 4 end
     if mcfg.two_rows then
         if mcfg.count < 2 then mcfg.count = 2 end
         if mcfg.count > 10 then mcfg.count = 10 end
@@ -282,6 +282,11 @@ function M.build(ctx)
         local name = unique_user_preset_name(editable_name_for_builtin(preset_name))
         dcfg.active_preset = name
         dcfg.title = name
+        if type(config) == "table"
+                and type(config.mosaic_title_strip) == "table"
+                and config.mosaic_title_strip.show_title == true then
+            HomePresets.applyMosaicTitlesToStrips(dcfg, true)
+        end
         local state = HomePresets.captureHomePage(dcfg)
         state.title = name
         PresetStore.save("home", name, state)
@@ -721,16 +726,16 @@ function M.build(ctx)
                 callback = function()
                     mcfg.two_rows = mcfg.two_rows ~= true
                     if mcfg.two_rows then
-                        mcfg.count = 10
+                        mcfg.count = 8
                     else
-                        mcfg.count = 5
+                        mcfg.count = 4
                     end
                     save_home("reinit")
                 end,
             },
             {
                 text_func = function()
-                    return _("Books shown: ") .. tostring(mcfg.count or 5)
+                    return _("Books shown: ") .. tostring(mcfg.count or 4)
                 end,
                 keep_menu_open = true,
                 callback = function()
@@ -738,7 +743,7 @@ function M.build(ctx)
                     local is_two = mcfg.two_rows == true
                     UIManager:show(SpinWidget:new{
                         title_text = _("Books shown"),
-                        value = mcfg.count or (is_two and 10 or 5),
+                        value = mcfg.count or (is_two and 8 or 4),
                         value_min = is_two and 2 or 3,
                         value_max = is_two and 10 or 5,
                         callback = function(spin)
