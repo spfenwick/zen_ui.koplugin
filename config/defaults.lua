@@ -179,7 +179,7 @@ local defaults = {
         font_size = 18,
     },
     zen_scroll_bar = {
-        style              = "dots",     -- "bar" | "dots" | "page_number"
+        style              = "page_number",  -- "bar" | "dots" | "page_number"
         page_number_format = "total",  -- "current" | "total"
         hold_skip          = "ends",       -- "10" | "20" | "ends"
     },

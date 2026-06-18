@@ -66,7 +66,7 @@ function M.getStyle()
         local s = p.config.zen_scroll_bar.style
         if s == "dots" or s == "bar" or s == "page_number" then return s end
     end
-    return "bar"
+    return "page_number"
 end
 
 function M.getPageFormat()
