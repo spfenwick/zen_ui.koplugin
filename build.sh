@@ -10,15 +10,6 @@ if [[ "$PLUGIN_DIR_NAME" != *.koplugin ]]; then
   exit 1
 fi
 
-WITH_DICT=0
-DICT_SOURCE=""
-for arg in "$@"; do
-  case "$arg" in
-    --with-dict)    WITH_DICT=1 ;;
-    --with-dict=*)  WITH_DICT=1; DICT_SOURCE="${arg#--with-dict=}" ;;
-  esac
-done
-
 for cmd in rsync zip mktemp; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     echo "Error: required command not found: $cmd" >&2
@@ -71,26 +62,6 @@ rsync -a \
   --exclude '__pycache__' \
   --exclude '.*' \
   "$REPO_ROOT/" "$STAGE_DIR/"
-
-if [[ "$WITH_DICT" -eq 1 ]]; then
-  DICT_DEST="$STAGE_DIR/modules/settings/dict_installer.lua"
-  if [[ "$DICT_SOURCE" == http://* || "$DICT_SOURCE" == https://* ]]; then
-    if ! command -v curl >/dev/null 2>&1; then
-      echo "Error: curl is required for --with-dict URL downloads" >&2; exit 1
-    fi
-    echo "  Downloading dict_installer.lua from: $DICT_SOURCE"
-    curl -fsSL "$DICT_SOURCE" -o "$DICT_DEST" || { echo "Error: failed to download dict_installer.lua" >&2; exit 1; }
-  else
-    DICT_REPO="${DICT_SOURCE:-$REPO_ROOT/../dictionary_installer}"
-    DICT_REPO="$(cd "$DICT_REPO" && pwd)"
-    DICT_SRC="$DICT_REPO/dict_installer.lua"
-    if [[ ! -f "$DICT_SRC" ]]; then
-      echo "Error: dict_installer.lua not found at $DICT_SRC" >&2; exit 1
-    fi
-    cp "$DICT_SRC" "$DICT_DEST"
-    echo "  Included dictionary installer from: $DICT_REPO"
-  fi
-fi
 
 UNICODE_LIST="$(mktemp "$STAGE_PARENT/nerd-font-unicodes.XXXXXX")"
 unicode_escape_re='\\u\{([0-9A-Fa-f]+)\}'

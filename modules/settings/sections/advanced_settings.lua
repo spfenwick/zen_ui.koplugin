@@ -160,29 +160,6 @@ function M.build(ctx)
         end,
     })
 
-    local ok_dict, dict_installer = pcall(require, "modules/settings/dict_installer")
-    if ok_dict and dict_installer then
-        table.insert(items, {
-            text = _("Install dictionary"),
-            sub_item_table = {
-                {
-                    text     = _("Short Oxford English (26 MB)"),
-                    callback = function()
-                        dict_installer.install(_("Short Oxford English"), dict_installer.SHORT_OXFORD,
-                            _("This may take a few minutes. Please wait."))
-                    end,
-                },
-                {
-                    text     = _("Regular Oxford English (203 MB)"),
-                    callback = function()
-                        dict_installer.install(_("Regular Oxford English"), dict_installer.REGULAR_OXFORD,
-                            _("This is a large file and may take a few minutes. Please wait."))
-                    end,
-                },
-            },
-        })
-    end
-
     table.insert(items, {
         text = _("Plugin management"),
         sub_item_table_func = function()
