@@ -5,6 +5,11 @@ local function apply_book_status()
     -- than hooking onEndOfBook ourselves.
     G_reader_settings:saveSetting("end_document_action", "book_status")
 
+    -- Auto-mark the book as finished (summary.status = "complete") when the
+    -- reader hits the end. ReaderStatus:onEndOfBook checks this before showing
+    -- the Book Status widget, so it opens with "Finished" already selected.
+    G_reader_settings:saveSetting("end_document_auto_mark", true)
+
     -- Always use the Zen UI custom Book Status layout (home + close buttons, cleaner stats)
     local BookStatusWidget = require("ui/widget/bookstatuswidget")
     local library_navigation = require("common/library_navigation")

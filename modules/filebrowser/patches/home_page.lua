@@ -16,6 +16,61 @@ local _home_menu = nil
 local _home_inject_navbar = nil
 local _zen_shared = nil
 local _zen_plugin = nil
+local _home_book_cache = {}
+local _home_book_cache_order = {}
+local HOME_BOOK_CACHE_MAX = 32
+
+local function free_cached_book(book)
+    if book and book.cover_bb and book.cover_bb.free then
+        pcall(function() book.cover_bb:free() end)
+    end
+end
+
+local function clone_cached_book(book)
+    if type(book) ~= "table" then return nil end
+    local out = {}
+    for k, v in pairs(book) do
+        if k ~= "cover_bb" then out[k] = v end
+    end
+    if book.cover_bb and book.cover_bb.copy then
+        out.cover_bb = book.cover_bb:copy()
+    end
+    return out
+end
+
+local function get_home_book_cache_key(path)
+    local ok_lfs, lfs = pcall(require, "libs/libkoreader-lfs")
+    local file_mtime = ok_lfs and lfs.attributes(path, "modification") or 0
+    return table.concat({
+        path,
+        tostring(file_mtime or 0),
+    }, "|")
+end
+
+local function invalidate_home_book_cache(path)
+    if type(path) ~= "string" or path == "" then return end
+    local prefix = path .. "|"
+    for key, book in pairs(_home_book_cache) do
+        if key:sub(1, #prefix) == prefix then
+            free_cached_book(book)
+            _home_book_cache[key] = nil
+        end
+    end
+end
+
+local function cache_home_book(key, book)
+    local old = _home_book_cache[key]
+    if old then free_cached_book(old) end
+    _home_book_cache[key] = clone_cached_book(book)
+    _home_book_cache_order[#_home_book_cache_order + 1] = key
+    while #_home_book_cache_order > HOME_BOOK_CACHE_MAX do
+        local evict = table.remove(_home_book_cache_order, 1)
+        if evict and evict ~= key then
+            free_cached_book(_home_book_cache[evict])
+            _home_book_cache[evict] = nil
+        end
+    end
+end
 
 local function refresh_shared_state()
     if _zen_plugin then
@@ -497,7 +552,9 @@ local function build_data_provider(cfg, dcfg)
     end
 
     local function get_history()
-        if history_cached then return history_cached end
+        if history_cached then
+            return history_cached
+        end
         history_cached = {}
         local ok_rh, ReadHistory = pcall(require, "readhistory")
         if not ok_rh or not ReadHistory then
@@ -527,6 +584,11 @@ local function build_data_provider(cfg, dcfg)
 
     local function get_book(path)
         if not path then return nil end
+        local cache_key = get_home_book_cache_key(path)
+        local cached = _home_book_cache[cache_key]
+        if cached then
+            return clone_cached_book(cached)
+        end
         local ok_bim, BookInfoManager = pcall(require, "bookinfomanager")
         local cover_bb, title, authors, pages, description
         if ok_bim and BookInfoManager then
@@ -580,7 +642,7 @@ local function build_data_provider(cfg, dcfg)
             title = (path:match("([^/]+)$") or path):gsub("%.[^%.]+$", "")
         end
 
-        return {
+        local book = {
             path = path,
             title = title,
             authors = authors or "",
@@ -592,6 +654,8 @@ local function build_data_provider(cfg, dcfg)
             time_left_secs = time_left_secs,
             description = description,
         }
+        cache_home_book(cache_key, book)
+        return book
     end
 
     local function sort_files_like_tbr(files)
@@ -647,7 +711,9 @@ local function build_data_provider(cfg, dcfg)
     end
 
     local function get_tbr_paths()
-        if tbr_cached then return tbr_cached end
+        if tbr_cached then
+            return tbr_cached
+        end
         tbr_cached = {}
         local ok_db, db = pcall(require, "common/db_bookinfo")
         if ok_db and db and type(db.getTBRBooks) == "function" then
@@ -1680,6 +1746,11 @@ function M.showHomeView(injectNavbar)
 
     refresh_shared_state()
     _home_inject_navbar = injectNavbar
+    local last_read_file = rawget(_G, "__ZEN_UI_LAST_READ_FILE")
+    if last_read_file then
+        _G.__ZEN_UI_LAST_READ_FILE = nil
+        invalidate_home_book_cache(last_read_file)
+    end
     local cfg = load_zen_config()
     if type(cfg) ~= "table" then return end
     local dcfg = ensure_home_cfg()

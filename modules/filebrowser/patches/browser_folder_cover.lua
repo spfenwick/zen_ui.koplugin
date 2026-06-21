@@ -24,7 +24,9 @@ local function apply_browser_folder_cover()
     local TopContainer = require("ui/widget/container/topcontainer")
     local VerticalGroup = require("ui/widget/verticalgroup")
     local VerticalSpan = require("ui/widget/verticalspan")
+    local ffiUtil = require("ffi/util")
     local lfs = require("libs/libkoreader-lfs")
+    local logger = require("logger")
     local paths = require("common/paths")
     local library_font = require("modules/filebrowser/patches/library_font")
     local utils = require("common/utils")
@@ -69,72 +71,9 @@ local function apply_browser_folder_cover()
         return table.concat(keys, "")
     end
 
-    -- Performance tracking
-    local _perf = {
-        page_t0          = nil,
-        update_calls     = 0,
-        update_time      = 0,
-        orig_update_time = 0,
-        extra_getbi_time = 0,
-        ancestor_calls   = 0,
-        ancestor_hits    = 0,
-        ancestor_time    = 0,
-        collect_calls    = 0,
-        collect_time     = 0,
-        paint_tw_calls   = 0,
-        gen_item_time    = 0,
-        getlistitem_calls = 0,
-        getlistitem_time  = 0,
-        lfsdir_scans     = 0,
-        lfsdir_time      = 0,
-    }
-
-    local function _perf_dump(tag)
-        local logger = require("logger")
-        local total = _perf.update_calls > 0 and _perf.update_time or 0
-        logger.dbg(string.format(
-            "[zen-perf] %s | items=%d update=%.1fms (orig=%.1fms extra_getbi=%.1fms)"
-            .. " | ancestor: calls=%d hits=%d time=%.1fms"
-            .. " | collect: calls=%d time=%.1fms"
-            .. " | paintTo TW allocs=%d"
-            .. " | genItemTable=%.1fms getListItem: calls=%d time=%.1fms"
-            .. " | lfsdir: scans=%d time=%.1fms",
-            tag,
-            _perf.update_calls,
-            total * 1000,
-            _perf.orig_update_time * 1000,
-            _perf.extra_getbi_time * 1000,
-            _perf.ancestor_calls,
-            _perf.ancestor_hits,
-            _perf.ancestor_time * 1000,
-            _perf.collect_calls,
-            _perf.collect_time * 1000,
-            _perf.paint_tw_calls,
-            _perf.gen_item_time * 1000,
-            _perf.getlistitem_calls,
-            _perf.getlistitem_time * 1000,
-            _perf.lfsdir_scans,
-            _perf.lfsdir_time * 1000
-        ))
-    end
-
-    local function _perf_reset()
-        _perf.page_t0          = os.clock()
-        _perf.update_calls     = 0
-        _perf.update_time      = 0
-        _perf.orig_update_time = 0
-        _perf.extra_getbi_time = 0
-        _perf.ancestor_calls   = 0
-        _perf.ancestor_hits    = 0
-        _perf.ancestor_time    = 0
-        _perf.collect_calls    = 0
-        _perf.collect_time     = 0
-        _perf.paint_tw_calls   = 0
-        _perf.gen_item_time    = 0
-        _perf.getlistitem_calls = 0
-        _perf.getlistitem_time  = 0
-        _perf.lfsdir_scans     = 0
-        _perf.lfsdir_time      = 0
+    local function covers_suppressed(menu)
+        return (menu and menu.no_refresh_covers == true)
+            or rawget(_G, "__ZEN_UI_SUPPRESS_FILEMANAGER_COVERS") == true
     end
 
     local orig_FileChooser_getListItem = FileChooser.getListItem
@@ -150,17 +89,123 @@ local function apply_browser_folder_cover()
         return features.automatic_series_grouping ~= false
     end
 
+    local function _is_special_item(item)
+        return item.is_go_up or (item.path and item.path:sub(-2) == "/.")
+    end
+
+    local function _canonical_path(path)
+        if not path then return nil end
+        return paths.normPath((ffiUtil.realpath(path) or path):gsub("/$", ""))
+    end
+
+    -- Build a path(real)->history time map. Used to sort the access ("recently
+    -- read") collation by ReadHistory time -- the same source the home strip uses,
+    -- and what the user perceives as "recently read order".
+    local function _history_time_map()
+        local map = {}
+        local ok_rh, ReadHistory = pcall(require, "readhistory")
+        if not ok_rh or not ReadHistory then return map end
+        pcall(function() ReadHistory:reload(false) end)
+        for _i, entry in ipairs(ReadHistory.hist or {}) do
+            local p = entry and entry.file
+            if type(p) == "string" and p ~= "" then
+                map[p] = entry.time
+                local real = _canonical_path(p)
+                if real then map[real] = entry.time end
+            end
+        end
+        return map
+    end
+
+    local function _hist_time(map, item)
+        if not (map and item and item.path) then return nil end
+        return map[item.path] or map[_canonical_path(item.path)]
+    end
+
+    -- Re-sort an access-collated item table by a unified recency key:
+    --   * read books  -> ReadHistory time (same source as the home strip)
+    --   * unread books -> file modification time (mtime)
+    --
+    -- Why mtime, not atime, for the unread fallback: atime ("access") is bumped by
+    -- cover/metadata extraction scans, so a never-read book that was just scanned
+    -- floats to the top wrongly. mtime is the file's write/copy time -- it is NOT
+    -- touched by reads (those write the .sdr sidecar, not the book) nor by cover
+    -- scans -- so a freshly added/copied book gets mtime ~= now and sorts to the
+    -- front, while an old book that merely got scanned keeps its old mtime.
+    --
+    -- For read books we also overwrite attr.access with the history time so the
+    -- "last read date" mandatory column shows the true read date.
+    local function _mtime_value(item)
+        return item and item.attr and item.attr.modification or 0
+    end
+
+    local function _apply_history_order(fc, item_table, collate)
+        if type(item_table) ~= "table" then return item_table end
+        local map = _history_time_map()
+        local reverse = G_reader_settings:isTrue("reverse_collate")
+        local mixed = collate.can_collate_mixed and G_reader_settings:isTrue("collate_mixed")
+
+        for _i, item in ipairs(item_table) do
+            if not _is_special_item(item) then
+                local is_dir = item.attr and item.attr.mode == "directory"
+                local h = (not is_dir) and _hist_time(map, item) or nil
+                if h then
+                    item.attr = item.attr or {}
+                    item.attr.access = h
+                    if collate.mandatory_func ~= nil then
+                        item.mandatory = fc:getMenuItemMandatory(item, collate)
+                    end
+                end
+                item._zen_sort_key = h or _mtime_value(item)
+            end
+        end
+
+        local function cmp(a, b)
+            local ka, kb = a._zen_sort_key or 0, b._zen_sort_key or 0
+            if ka == kb then
+                return tostring(a.text or ""):lower() < tostring(b.text or ""):lower()
+            end
+            if reverse then return ka < kb end
+            return ka > kb
+        end
+
+        local head, dirs, files = {}, {}, {}
+        for _i, item in ipairs(item_table) do
+            if _is_special_item(item) then
+                head[#head + 1] = item
+            elseif item.attr and item.attr.mode == "directory" then
+                dirs[#dirs + 1] = item
+            else
+                files[#files + 1] = item
+            end
+        end
+
+        local out = {}
+        for _i, item in ipairs(head) do out[#out + 1] = item end
+        if mixed then
+            -- dirs and files sort together by recency
+            local body = {}
+            for _i, item in ipairs(dirs) do body[#body + 1] = item end
+            for _i, item in ipairs(files) do body[#body + 1] = item end
+            table.sort(body, cmp)
+            for _i, item in ipairs(body) do out[#out + 1] = item end
+        else
+            -- dirs keep their existing (name) order; only files reorder by recency
+            table.sort(files, cmp)
+            for _i, item in ipairs(dirs) do out[#out + 1] = item end
+            for _i, item in ipairs(files) do out[#out + 1] = item end
+        end
+
+        return out
+    end
+
     function FileChooser:getListItem(dirpath, f, fullpath, attributes, collate)
         if self._dummy or self.name ~= "filemanager" then
             return orig_FileChooser_getListItem(self, dirpath, f, fullpath, attributes, collate)
         end
-        local _t0_gli = os.clock()
-        _perf.getlistitem_calls = _perf.getlistitem_calls + 1
         if attributes.mode == "directory" and collate
                 and collate.can_collate_mixed and collate.mandatory_func and not collate.item_func then
             local item = orig_FileChooser_getListItem(self, dirpath, f, fullpath, attributes, collate)
-            local _t0_lfs = os.clock()
-            _perf.lfsdir_scans = _perf.lfsdir_scans + 1
             local ok, iter, dir_obj = pcall(lfs.dir, fullpath)
             if ok then
                 local max_access = attributes.access or 0
@@ -184,33 +229,30 @@ local function apply_browser_folder_cover()
                 new_attr.modification = max_modification
                 item.attr = new_attr
             end
-            _perf.lfsdir_time = _perf.lfsdir_time + (os.clock() - _t0_lfs)
-            _perf.getlistitem_time = _perf.getlistitem_time + (os.clock() - _t0_gli)
             return item
         end
         local key = toKey(dirpath, f, fullpath, attributes, collate, self.show_filter.status)
         if not cached_list[key] then
             cached_list[key] = orig_FileChooser_getListItem(self, dirpath, f, fullpath, attributes, collate)
         end
-        local elapsed = os.clock() - _t0_gli
-        if elapsed > 0.05 then
-            require("logger").dbg("[zen-perf] SLOW getListItem:", f, string.format("%.1fms", elapsed * 1000))
-        end
-        _perf.getlistitem_time = _perf.getlistitem_time + elapsed
         return cached_list[key]
     end
 
-    local function _item_table_key(path)
-        local mtime = lfs.attributes(path, "modification") or 0
+    local function _item_table_stable_key(path)
         local filter = FileChooser.show_filter and FileChooser.show_filter.status
-        return string.format("%s|%d|%s|%s|%s|%s|%s|%s",
-            path, mtime,
+        return string.format("%s|%s|%s|%s|%s|%s|%s",
+            path,
             G_reader_settings:readSetting("collate", "strcoll"),
             tostring(G_reader_settings:isTrue("collate_mixed")),
             tostring(G_reader_settings:isTrue("reverse_collate")),
             tostring(FileChooser.show_hidden),
             tostring(filter),
             tostring(_automatic_series_grouping_enabled()))
+    end
+
+    local function _item_table_key(path)
+        local mtime = lfs.attributes(path, "modification") or 0
+        return string.format("%s|%d", _item_table_stable_key(path), mtime)
     end
 
     function FileChooser:_zen_clear_item_table_cache()
@@ -223,27 +265,53 @@ local function apply_browser_folder_cover()
     function FileChooser:genItemTableFromPath(path)
         if not self._dummy and self.name == "filemanager" then
             local collate_mode = G_reader_settings:readSetting("collate", "strcoll")
-            local use_cache = collate_mode ~= "access"
+            local collate = self:getCollate()
 
+            -- key embeds the directory mtime, so any on-disk change (book added,
+            -- removed, sidecar written) advances the key and invalidates the cache.
             local key = _item_table_key(path)
-            if use_cache and _item_table_cache and _item_table_cache.key == key then
-                return _item_table_cache.table
+            local stable_key = _item_table_stable_key(path)
+            if _item_table_cache and _item_table_cache.key == key then
+                local cached_table = _item_table_cache.table
+                if collate_mode == "access" then
+                    cached_table = _apply_history_order(self, cached_table, collate)
+                    _item_table_cache.table = cached_table
+                end
+                return cached_table
             end
-            if _perf.page_t0 then _perf_dump("prev-page") end
-            _perf_reset()
+            -- Returning from reading a book writes its sidecar, which bumps the
+            -- directory mtime even though the file list is unchanged. That alone
+            -- would invalidate our key and force a full 920-file regen. So when we
+            -- know we just came back from the reader (flag set in
+            -- library_navigation.showFromReader) AND the file set is unchanged
+            -- (stable_key matches), reuse the cached table and only re-apply
+            -- history order. One-shot: clear the flag so later refreshes fall
+            -- through to a fresh regen.
+            if collate_mode == "access"
+                    and rawget(_G, "__ZEN_UI_LAST_READ_FILE")
+                    and _item_table_cache
+                    and _item_table_cache.stable_key == stable_key then
+                _G.__ZEN_UI_LAST_READ_FILE = nil
+                local cached_table = _apply_history_order(self, _item_table_cache.table, collate)
+                _item_table_cache = {
+                    key = key,
+                    stable_key = stable_key,
+                    table = cached_table,
+                    path = path,
+                }
+                return cached_table
+            end
             cached_list = {}
-            local _t0_gen = os.clock()
             local result = orig_FileChooser_genItemTableFromPath(self, path)
-            local elapsed = os.clock() - _t0_gen
-            if elapsed > 0.1 then
-                require("logger").dbg("[zen-perf] SLOW genItemTableFromPath:", path, string.format("%.1fms", elapsed * 1000))
+            if collate_mode == "access" then
+                result = _apply_history_order(self, result, collate)
             end
-            _perf.gen_item_time = _perf.gen_item_time + elapsed
-            if use_cache then
-                _item_table_cache = { key = key, table = result }
-            else
-                _item_table_cache = nil
-            end
+            _item_table_cache = {
+                key = key,
+                stable_key = stable_key,
+                table = result,
+                path = path,
+            }
             return result
         end
         return orig_FileChooser_genItemTableFromPath(self, path)
@@ -284,7 +352,6 @@ local function apply_browser_folder_cover()
         -- Force-disable the "show hint for books with description" indicator.
         BookInfoManager:saveSetting("no_hint_description", true)
         local original_update = MosaicMenuItem.update
-        local logger = require("logger")
         local UIManager = require("ui/uimanager")
 
         local pending_folders_by_menu = setmetatable({}, { __mode = "k" })
@@ -406,7 +473,6 @@ local function apply_browser_folder_cover()
                 end
             end
             if not tw then
-                _perf.paint_tw_calls = _perf.paint_tw_calls + 1
                 tw = _TW:new{
                     text    = count_str,
                     face    = _FontBadge:getFace("cfont", font_size),
@@ -437,7 +503,6 @@ local function apply_browser_folder_cover()
 
         local zen_migrated_paths = {}
 
-        local ffiUtil = require("ffi/util")
         local MAX_ANCESTOR_LEVELS = 3
 
         local function getBookInfoWithFallback(path)
@@ -451,10 +516,8 @@ local function apply_browser_folder_cover()
                 return nil, nil
             end
 
-            _perf.ancestor_calls = _perf.ancestor_calls + 1
-            local t0_anc = os.clock()
             local dir = ffiUtil.dirname(path)
-            for _ = 1, MAX_ANCESTOR_LEVELS do
+            for _i = 1, MAX_ANCESTOR_LEVELS do
                 local parent = ffiUtil.dirname(dir)
                 if parent == dir then break end
                 local candidate = parent .. "/" .. basename
@@ -465,8 +528,6 @@ local function apply_browser_folder_cover()
                             and candidate_bi.has_cover
                             and candidate_bi.cover_fetched
                             and not candidate_bi.ignore_cover then
-                        _perf.ancestor_hits = _perf.ancestor_hits + 1
-                        _perf.ancestor_time = _perf.ancestor_time + (os.clock() - t0_anc)
                         logger.dbg("[zen-ui] fallback: found cover at ancestor path",
                             candidate, "for", path)
                         return candidate_bi, candidate
@@ -475,7 +536,6 @@ local function apply_browser_folder_cover()
                 if parent == home_dir then break end
                 dir = parent
             end
-            _perf.ancestor_time = _perf.ancestor_time + (os.clock() - t0_anc)
             return nil, nil
         end
 
@@ -625,8 +685,70 @@ local function apply_browser_folder_cover()
             return math.max(1, h - strip_h)
         end
 
+        local function setZenBookPlaceholder(item, path)
+            local border = Folder.face.border_size
+            local max_w = item.width - 2 * border
+            local eff_h = getEffectiveMosaicHeight(item)
+            local bh = eff_h - 2 * border
+            local portrait_w, portrait_h = Cover.calcDims(max_w, bh)
+            local dimen = { w = portrait_w + 2 * border, h = portrait_h + 2 * border }
+            local centered_top = math.floor((eff_h - dimen.h) / 2)
+
+            local final_bb = Cover.genCover(path, portrait_w, portrait_h, true)
+
+            local gray_frame = FrameContainer:new {
+                padding       = 0,
+                bordersize    = border,
+                width         = dimen.w,
+                height        = dimen.h,
+                background    = placeholderBg(),
+                overlap_align = "center",
+                CenterContainer:new {
+                    dimen = { w = portrait_w, h = portrait_h },
+                    ImageWidget:new {
+                        image = final_bb,
+                        width = portrait_w,
+                        height = portrait_h,
+                    },
+                },
+            }
+
+            if item.dim or (item.entry and item.entry.dim) then
+                gray_frame.dim = true
+            end
+
+            item._cover_frame = gray_frame
+            local widget = OverlapGroup:new {
+                dimen = { w = item.width, h = eff_h },
+                VerticalGroup:new {
+                    VerticalSpan:new { width = centered_top },
+                    CenterContainer:new {
+                        dimen = { w = item.width, h = dimen.h },
+                        OverlapGroup:new {
+                            dimen = dimen,
+                            gray_frame,
+                        },
+                    },
+                },
+            }
+            if item._underline_container[1] then
+                item._underline_container[1]:free()
+            end
+            item._underline_container[1] = widget
+            if item[1] and item[1] ~= item._underline_container then
+                item[1] = item._underline_container
+            end
+            item._zen_placeholder_path = path
+        end
+
         -- Main update implementation
         local function _zen_update_impl(self, ...)
+            if self.entry and (self.entry.is_file or self.entry.file) then
+                local entry_path = self.entry.path or self.entry.file
+                if entry_path and self.filepath ~= entry_path then
+                    self.filepath = entry_path
+                end
+            end
 
             if self._zen_ancestor_cover then
                 if self.entry and (self.entry.is_file or self.entry.file) then
@@ -667,29 +789,27 @@ local function apply_browser_folder_cover()
             end
 
             local was_found = self.bookinfo_found
-            local _t0_orig = os.clock()
             original_update(self, ...)
-            _perf.orig_update_time = _perf.orig_update_time + (os.clock() - _t0_orig)
             -- Invalidate cached folder covers when night mode changes (pre-baked blitbufs need re-render).
             if self._foldercover_processed and not (self.entry.is_file or self.entry.file)
                     and self._zen_render_night ~= Device.screen.night_mode then
                 self._foldercover_processed = nil
             end
-            if self._foldercover_processed or self.menu.no_refresh_covers then return end
             if (self.entry.is_file or self.entry.file) then
-                if not self.do_cover_image or not self.mandatory then return end
+                if self._foldercover_processed then return end
+                if not self.do_cover_image then return end
                 if not was_found and self.bookinfo_found and self.menu then
                     scheduleFolderRefresh(self.menu)
                 end
+            elseif self._foldercover_processed or covers_suppressed(self.menu) then
+                return
             end
 
             -- Handle single book files (Scenario 1 & 2)
             local _resolved_path = self.entry.path or self.entry.file
             if (self.entry.is_file or self.entry.file) and _resolved_path then
                 local path = _resolved_path
-                local _t0_xbi = os.clock()
                 local bookinfo = BookInfoManager:getBookInfo(path, true)
-                _perf.extra_getbi_time = _perf.extra_getbi_time + (os.clock() - _t0_xbi)
                 if not bookinfo then
                     local ancestor_bi, ancestor_path = getBookInfoWithFallback(path)
                     if ancestor_bi and ancestor_path ~= path and ancestor_bi.cover_bb then
@@ -733,58 +853,10 @@ local function apply_browser_folder_cover()
                     end
                     -- no ancestor cover: fall through to unified placeholder below
                 end
-                -- Unified: not yet in DB, or confirmed no cover art
-                if (not bookinfo) or (bookinfo.cover_fetched
+                -- Unified: not yet in DB, still fetching, or confirmed no cover art.
+                if (not bookinfo) or (not bookinfo.cover_fetched) or (bookinfo.cover_fetched
                         and (bookinfo.ignore_cover or not bookinfo.has_cover)) then
-                    local border = Folder.face.border_size
-                    local max_w = self.width - 2 * border
-                    local eff_h = getEffectiveMosaicHeight(self)
-                    local bh = eff_h - 2 * border
-                    local portrait_w, portrait_h = Cover.calcDims(max_w, bh)
-                    local dimen = { w = portrait_w + 2 * border, h = portrait_h + 2 * border }
-                    local centered_top = math.floor((eff_h - dimen.h) / 2)
-
-                    local final_bb = Cover.genCover(path, portrait_w, portrait_h, true)
-
-                    local gray_frame = FrameContainer:new {
-                        padding       = 0,
-                        bordersize    = border,
-                        width         = dimen.w,
-                        height        = dimen.h,
-                        background    = placeholderBg(),
-                        overlap_align = "center",
-                        CenterContainer:new {
-                            dimen = { w = portrait_w, h = portrait_h },
-                            ImageWidget:new {
-                                image = final_bb,
-                                width = portrait_w,
-                                height = portrait_h,
-                            },
-                        },
-                    }
-
-                    if self.dim or (self.entry and self.entry.dim) then
-                        gray_frame.dim = true
-                    end
-
-                    self._cover_frame = gray_frame
-                    local widget = OverlapGroup:new {
-                        dimen = { w = self.width, h = eff_h },
-                        VerticalGroup:new {
-                            VerticalSpan:new { width = centered_top },
-                            CenterContainer:new {
-                                dimen = { w = self.width, h = dimen.h },
-                                OverlapGroup:new {
-                                    dimen = dimen,
-                                    gray_frame,
-                                },
-                            },
-                        },
-                    }
-                    if self._underline_container[1] then
-                        self._underline_container[1]:free()
-                    end
-                    self._underline_container[1] = widget
+                    setZenBookPlaceholder(self, path)
                 end
                 -- Clear stale placeholder frame when real cover is now available.
                 if bookinfo and bookinfo.cover_fetched and bookinfo.has_cover then
@@ -915,17 +987,7 @@ local function apply_browser_folder_cover()
         end
 
         function MosaicMenuItem:update(...)
-            local _t0 = os.clock()
-            local _t0_orig_before = _perf.orig_update_time
             _zen_update_impl(self, ...)
-            local elapsed = os.clock() - _t0
-            local orig_elapsed = _perf.orig_update_time - _t0_orig_before
-            _perf.update_calls = _perf.update_calls + 1
-            _perf.update_time  = _perf.update_time + elapsed
-            if elapsed > 0.05 then
-                local title = self.text or (self.entry and self.entry.text) or "unknown"
-                require("logger").dbg("[zen-perf] SLOW update:", title, string.format("%.1fms", elapsed * 1000), "orig:", string.format("%.1fms", orig_elapsed * 1000))
-            end
         end
 
         function MosaicMenuItem:_setFolderCover(img)
@@ -1172,7 +1234,7 @@ local function apply_browser_folder_cover()
                     if self._foldercover_processed and self._zen_render_night ~= Device.screen.night_mode then
                         self._foldercover_processed = nil
                     end
-                    if self._foldercover_processed or self.menu.no_refresh_covers then return end
+                    if self._foldercover_processed or covers_suppressed(self.menu) then return end
                     if self.entry.is_file or self.entry.file then return end
                     local dir_path = self.entry and self.entry.path
                     if not dir_path then return end
@@ -1412,7 +1474,13 @@ local function apply_browser_folder_cover()
             function plugin:onBookInfoUpdated(filepath, bookinfo)
                 zen_migrated_paths[filepath] = nil
                 orig_biu(self, filepath, bookinfo)
-                _item_table_cache = nil
+                -- In access (recently-read) mode the item-table cache holds the
+                -- history-ordered list; a bookinfo update (cover extracted) does not
+                -- change ordering, so keep it. Other collations may depend on the
+                -- updated info, so drop the cache to force a clean regen.
+                if G_reader_settings:readSetting("collate", "strcoll") ~= "access" then
+                    _item_table_cache = nil
+                end
                 local fm = require("apps/filemanager/filemanager").instance
                 local fc = fm and fm.file_chooser
                 if fc and pending_folders_by_menu[fc] then

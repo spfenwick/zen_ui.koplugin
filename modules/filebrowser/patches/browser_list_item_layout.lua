@@ -31,6 +31,11 @@ local function apply_browser_list_item_layout()
     local Screen = Device.screen
     local scale_by_size = Screen:scaleBySize(1000000) * (1 / 1000000)
 
+    local function covers_suppressed(menu)
+        return (menu and menu.no_refresh_covers == true)
+            or rawget(_G, "__ZEN_UI_SUPPRESS_FILEMANAGER_COVERS") == true
+    end
+
     local function patchListMenu()
         local ListMenu = require("listmenu")
         local ListMenuItem = Cover.getUpvalue(ListMenu._updateItemsBuildUI, "ListMenuItem")
@@ -312,7 +317,7 @@ local function apply_browser_list_item_layout()
 
             -- Re-fetch with cover only when in cover-image mode and cover exists.
             if self.do_cover_image and bookinfo.has_cover and not bookinfo.ignore_cover
-               and not self.menu.no_refresh_covers then
+               and not covers_suppressed(self.menu) then
                 bookinfo = BookInfoManager:getBookInfo(filepath, true) or bookinfo
             end
 
@@ -320,7 +325,7 @@ local function apply_browser_list_item_layout()
             -- (e.g. first extracted in mosaic mode at a smaller size), fall through
             -- so KOReader queues a re-extraction at the correct cover_specs.
             if self.do_cover_image and bookinfo.has_cover and not bookinfo.ignore_cover
-               and not self.menu.no_refresh_covers
+               and not covers_suppressed(self.menu)
                and bookinfo.cover_bb
                and BookInfoManager.isCachedCoverInvalid(bookinfo, cover_specs) then
                 bookinfo.cover_bb:free()
@@ -336,7 +341,7 @@ local function apply_browser_list_item_layout()
 
             if self.do_cover_image then
                 if bookinfo.has_cover and not bookinfo.ignore_cover
-                   and bookinfo.cover_bb and not self.menu.no_refresh_covers
+                   and bookinfo.cover_bb and not covers_suppressed(self.menu)
                 then
                     cover_bb_used = true
                     -- Uniform fill: scale from the actual cached-bb dimensions so

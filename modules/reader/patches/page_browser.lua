@@ -545,7 +545,9 @@ local function apply_page_browser()
                             end,
                         }
                         cfg.config_dialog = dialog
-                        if ui_ref.highlight then
+                        if ui_ref.keyselection and type(ui_ref.keyselection.onStopHighlightIndicator) == "function" then
+                            ui_ref.keyselection:onStopHighlightIndicator(true)
+                        elseif ui_ref.highlight and type(ui_ref.highlight.onStopHighlightIndicator) == "function" then
                             ui_ref.highlight:onStopHighlightIndicator(true)
                         end
                         ui_ref:handleEvent(Event:new("DisableHinting"))

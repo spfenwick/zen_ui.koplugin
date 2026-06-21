@@ -2,6 +2,14 @@ local paths = require("common/paths")
 
 local M = {}
 
+local function syncBookListCache(ui, file)
+    if not (ui and ui.doc_settings and file) then return end
+    local ok_bl, BookList = pcall(require, "ui/widget/booklist")
+    if ok_bl and BookList and type(BookList.setBookInfoCache) == "function" then
+        pcall(BookList.setBookInfoCache, file, ui.doc_settings)
+    end
+end
+
 function M.restoreEnabled(plugin)
     local features = plugin and plugin.config and plugin.config.features
     return type(features) == "table" and features.restore_library_view == true
@@ -27,6 +35,8 @@ function M.showFromReader(ui, plugin)
     local file = ui.document.file
     local restore = M.restoreEnabled(plugin)
     local outside_home = file and not paths.isInHomeDir(file)
+    _G.__ZEN_UI_LAST_READ_FILE = file
+    syncBookListCache(ui, file)
 
     ui:handleEvent(require("ui/event"):new("CloseConfigMenu"))
     if M.returnToRakuyomiReader(restore) then

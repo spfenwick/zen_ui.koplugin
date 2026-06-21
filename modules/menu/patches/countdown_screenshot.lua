@@ -98,7 +98,7 @@ local function repaint_before_screenshot()
     UIManager:setDirty(nil, "full")
     local ok, err = pcall(function() UIManager:forceRePaint() end)
     if not ok then
-        logger.warn("zen-ui screenshot: forceRePaint before shot failed:", err)
+        logger.dbg("zen-ui screenshot: forceRePaint before shot failed:", err)
     end
 end
 
@@ -197,7 +197,7 @@ function M.run()
             local pattern = prefix and (screenshot_dir .. "/" .. prefix .. "_Screenshot_%Y-%m-%d_%H%M%S.png")
                 or (screenshot_dir .. "/Screenshot_%Y-%m-%d_%H%M%S.png")
             local name = os.date(pattern)
-            logger.warn("zen-ui screenshot: taking shot",
+            logger.dbg("zen-ui screenshot: taking shot",
                 "file=", name,
                 "context=", tostring(context_name),
                 "active_tab_label=", tostring(rawget(_G, "__ZEN_UI_ACTIVE_TAB_LABEL")),
@@ -205,7 +205,7 @@ function M.run()
                 "device=", get_device_name(),
                 "screen=", tostring(Screen:getWidth()) .. "x" .. tostring(Screen:getHeight()))
             Screen:shot(name)
-            logger.warn("zen-ui screenshot: saved", name)
+            logger.dbg("zen-ui screenshot: saved", name)
             show_save_dialog(name)
         end)
     end

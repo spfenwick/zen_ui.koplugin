@@ -5,7 +5,6 @@ local PATCH_MODULES = {
     night_mode_schedule    = "modules/global/patches/night_mode_schedule",
     warmth_schedule        = "modules/global/patches/warmth_schedule",
     brightness_schedule    = "modules/global/patches/brightness_schedule",
-    disable_night_on_exit  = "modules/global/patches/disable_night_on_exit",
     menu_top_swipe         = "modules/global/patches/menu_top_swipe",
     opds                   = "modules/global/patches/opds",
     kindle_network_profile_guard = "modules/global/patches/kindle_network_profile_guard",
@@ -53,11 +52,6 @@ function M.init(logger, plugin)
     local brightness_schedule_fn = load_patch("brightness_schedule")
     if brightness_schedule_fn then
         run_patch(logger, plugin, "brightness_schedule", brightness_schedule_fn)
-    end
-
-    local disable_night_on_exit_fn = load_patch("disable_night_on_exit")
-    if disable_night_on_exit_fn then
-        run_patch(logger, plugin, "disable_night_on_exit", disable_night_on_exit_fn)
     end
 
     local menu_top_swipe_fn = load_patch("menu_top_swipe")

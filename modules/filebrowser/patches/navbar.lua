@@ -281,16 +281,96 @@ local function apply_navbar()
         end
     end
 
+    local function withCoversSuppressed(fn)
+        local old = rawget(_G, "__ZEN_UI_SUPPRESS_FILEMANAGER_COVERS")
+        _G.__ZEN_UI_SUPPRESS_FILEMANAGER_COVERS = true
+        local ok, result = pcall(fn)
+        if old == nil then
+            _G.__ZEN_UI_SUPPRESS_FILEMANAGER_COVERS = nil
+        else
+            _G.__ZEN_UI_SUPPRESS_FILEMANAGER_COVERS = old
+        end
+        if not ok then error(result) end
+        return result
+    end
+
+    local function refreshSuppressedCoversNow(fm)
+        local fc = fm and fm.file_chooser
+        if not (fc and type(fc.updateItems) == "function") then return false end
+        if not fc._zen_needs_cover_refresh then return false end
+        fc._zen_needs_cover_refresh = nil
+        fc:updateItems()
+        return true
+    end
+
     -- === Tab callbacks ===
+
+    -- Build a {dir_path = mtime} snapshot of a directory tree, root + subdirs up
+    -- to `max_depth` levels deep. Adding/removing a book bumps its parent dir's
+    -- mtime, so comparing snapshots detects external changes (e.g. a network copy)
+    -- without re-walking every file. Depth-capped to stay cheap on large trees.
+    -- The item-table cache key only stats the root dir mtime, so a book added in
+    -- a subfolder would not invalidate it -- this snapshot covers that gap.
+    local LIB_SNAPSHOT_DEPTH = 2
+
+    local function _build_dir_mtime_snapshot(root, max_depth)
+        local snap = {}
+        local function walk(dir, depth)
+            local m = lfs.attributes(dir, "modification")
+            if m then snap[dir] = m end
+            if depth >= max_depth then return end
+            local ok, iter, dir_obj = pcall(lfs.dir, dir)
+            if not ok then return end
+            for f in iter, dir_obj do
+                if f ~= "." and f ~= ".." and f:sub(1, 1) ~= "." then
+                    local sub = dir .. "/" .. f
+                    if lfs.attributes(sub, "mode") == "directory" then
+                        walk(sub, depth + 1)
+                    end
+                end
+            end
+        end
+        walk(root, 0)
+        return snap
+    end
+
+    local function _snapshot_differs(old, new)
+        if type(old) ~= "table" then return true end
+        for path, m in pairs(new) do
+            if old[path] ~= m then return true end
+        end
+        for path in pairs(old) do
+            if new[path] == nil then return true end
+        end
+        return false
+    end
 
     local function onTabBooks()
         local fm = FileManager.instance
-        if not fm then return end
-        utils.closeWidgetsAbove(fm)
         local home_dir = paths.getHomeDir()
                          or require("apps/filemanager/filemanagerutil").getDefaultDir()
-        fm.file_chooser.path_items[home_dir] = nil
-        fm.file_chooser:changeToPath(home_dir)
+        if not (fm and fm.file_chooser) then return false end
+        local fc = fm.file_chooser
+        utils.closeWidgetsAbove(fm)
+        if fc.path == home_dir then
+            -- Already in the library root. Always jump to page 1, and clear the
+            -- item-table cache if the tree changed since last check so new books
+            -- show up. refreshPath re-reads the (now possibly invalidated) cache.
+            local snap = _build_dir_mtime_snapshot(home_dir, LIB_SNAPSHOT_DEPTH)
+            if _snapshot_differs(fc._zen_lib_mtime_snapshot, snap) then
+                if fc._zen_clear_item_table_cache then fc:_zen_clear_item_table_cache() end
+            end
+            fc._zen_lib_mtime_snapshot = snap
+            -- refreshPath uses path_items[path] as the focus index; pin it to 1 so
+            -- we always land on page 1 instead of the previously-remembered spot.
+            fc.path_items[home_dir] = 1
+            refreshSuppressedCoversNow(fm)
+            fc:refreshPath()
+        else
+            fc.path_items[home_dir] = nil
+            fc._zen_lib_mtime_snapshot = _build_dir_mtime_snapshot(home_dir, LIB_SNAPSHOT_DEPTH)
+            fc:changeToPath(home_dir)
+        end
     end
 
     local function onTabManga()
@@ -2031,22 +2111,47 @@ local function apply_navbar()
         local keep_book_location = rawget(_G, "__ZEN_UI_KEEP_BOOK_LOCATION") == true
         _G.__ZEN_UI_KEEP_BOOK_LOCATION = nil
         local restore_enabled = is_restore_enabled()
+        local forced_default_tab = rawget(_G, "__ZEN_UI_FORCE_DEFAULT_LIBRARY_TAB") == true
+            and resolve_default_tab() or nil
+        local state_before_show = rawget(_G, "__ZEN_UI_LIBRARY_STATE")
+        local default_tab = forced_default_tab or resolve_default_tab()
         -- When restore is disabled, open at library root immediately (no double render).
         local effective_focused = (restore_enabled or keep_book_location) and focused_file or nil
         if not restore_enabled and not keep_book_location then
             local home_dir = require("common/paths").getHomeDir()
             if home_dir then
                 path = home_dir
-                -- reset saved scroll position so page 1 is shown
-                if self.file_chooser and self.file_chooser.path_items then
+                if default_tab ~= "books" and self.file_chooser and self.file_chooser.path_items then
                     self.file_chooser.path_items[home_dir] = nil
                 end
             end
         end
-        orig_showFiles(self, path, effective_focused, selected_files)
+        local hidden_bootstrap = (forced_default_tab and forced_default_tab ~= "books")
+            or (not restore_enabled
+                and not keep_book_location
+                and default_tab ~= "books")
+            or (restore_enabled
+                and state_before_show
+                and state_before_show.tab
+                and state_before_show.tab ~= "books")
+        local suppress_initial_covers = hidden_bootstrap
+        if suppress_initial_covers then
+            withCoversSuppressed(function()
+                orig_showFiles(self, path, effective_focused, selected_files)
+            end)
+        else
+            orig_showFiles(self, path, effective_focused, selected_files)
+        end
+        if suppress_initial_covers and self.file_chooser then
+            self.file_chooser._zen_needs_cover_refresh = true
+        end
         if rawget(_G, "__ZEN_UI_FORCE_DEFAULT_LIBRARY_TAB") then
             _G.__ZEN_UI_FORCE_DEFAULT_LIBRARY_TAB = nil
             _G.__ZEN_UI_LIBRARY_STATE = nil
+            if forced_default_tab == "books" then
+                setActiveTab("books")
+                return
+            end
             open_default_tab()
             return
         end
@@ -2275,6 +2380,7 @@ local function apply_navbar()
     -- Expose a reinject function for external callers (e.g. quickstart on_close).
     -- Allows main.lua to rebuild the navbar after quickstart changes tab config.
     _G.__ZEN_UI_NAVBAR_OPEN_DEFAULT_TAB = open_default_tab
+    _G.__ZEN_UI_NAVBAR_RESOLVE_DEFAULT_TAB = resolve_default_tab
 
     _G.__ZEN_UI_REINJECT_FM_NAVBAR = function()
         local fm = FileManager.instance
