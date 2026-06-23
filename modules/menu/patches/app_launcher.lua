@@ -218,7 +218,15 @@ local function apply_app_launcher()
         end
     end
 
-    local function open_app_launcher_settings(touch_menu)
+    local function find_launcher_buttons_item(items)
+        for _i, item in ipairs(items or {}) do
+            if item._zen_launcher_buttons then
+                return item
+            end
+        end
+    end
+
+    local function open_app_launcher_settings(touch_menu, open_buttons)
         if not (touch_menu and type(touch_menu.updateItems) == "function") then
             return
         end
@@ -255,6 +263,14 @@ local function apply_app_launcher()
         touch_menu.parent_id = nil
         touch_menu.item_table = settings_item.sub_item_table
         touch_menu:updateItems(1)
+        if open_buttons then
+            local buttons_item = find_launcher_buttons_item(settings_item.sub_item_table)
+            if buttons_item and type(buttons_item.callback) == "function" then
+                UIManager:nextTick(function()
+                    buttons_item.callback(touch_menu)
+                end)
+            end
+        end
     end
 
     local function activate_entry(touch_menu, entry)
@@ -377,7 +393,7 @@ local function apply_app_launcher()
                 font_size = Font.sizemap and Font.sizemap["smallinfofont"] or 22,
                 radius = Screen:scaleBySize(10),
                 callback = function()
-                    open_app_launcher_settings(touch_menu)
+                    open_app_launcher_settings(touch_menu, true)
                 end,
             }
             layout_rows[#layout_rows + 1] = { add_button }

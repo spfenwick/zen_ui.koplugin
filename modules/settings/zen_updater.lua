@@ -636,7 +636,12 @@ local function do_network_check()
     local body = https_get(GITHUB_RELEASES_URL .. "?per_page=100")
     if not body then
         logger.warn("ZenUpdater: no response from releases API")
-        M._last_error = _("Could not reach update server. Check your internet connection.")
+        local ok_nm, NetworkMgr = pcall(require, "ui/network/manager")
+        if ok_nm and NetworkMgr and not NetworkMgr:isWifiOn() then
+            M._last_error = _("No network connection.")
+        else
+            M._last_error = _("Could not reach update server.")
+        end
         return false
     end
 
@@ -720,53 +725,17 @@ local function build_changelog_text(entries, count)
     return text, shown < #entries
 end
 
-local function _strip_inline_markdown(text)
-    if type(text) ~= "string" then return "" end
-    local out = text
-    out = out:gsub("%[([^%]]+)%]%(([^%)]+)%)", "%1")
-    out = out:gsub("`([^`]+)`", "%1")
-    out = out:gsub("%*%*(.-)%*%*", "%1")
-    out = out:gsub("__(.-)__", "%1")
-    out = out:gsub("^%s+", ""):gsub("%s+$", "")
-    return out
-end
-
-local function build_single_release_bullets(notes)
-    local normalized = normalize_release_notes(notes)
-    if normalized == _("No changelog provided.") then
-        return { _("No changelog provided.") }
+local function build_single_release_scroll_text(notes, version)
+    local text = render_release_text({
+        version = type(version) == "string" and version or "",
+        notes = normalize_release_notes(notes),
+    })
+    if text == "" then
+        text = _("No changelog provided.")
+    else
+        text = PTF_HEADER .. text
     end
-
-    local bullets = {}
-    local saw_explicit_bullets = false
-    for raw in (normalized .. "\n"):gmatch("(.-)\n") do
-        local line = raw:gsub("\r", "")
-        local trimmed = line:gsub("^%s+", ""):gsub("%s+$", "")
-        if trimmed ~= "" then
-            -- Skip section headings like "## What's changed" in this compact view.
-            if not trimmed:match("^##%s*") then
-                local item = trimmed:match("^[-*+]%s+(.+)$")
-                    or trimmed:match("^%d+%.%s+(.+)$")
-                if item then
-                    saw_explicit_bullets = true
-                    item = _strip_inline_markdown(item)
-                    if item ~= "" then
-                        bullets[#bullets + 1] = item
-                    end
-                elseif not saw_explicit_bullets and not trimmed:match("^#") then
-                    local plain = _strip_inline_markdown(trimmed)
-                    if plain ~= "" then
-                        bullets[#bullets + 1] = plain
-                    end
-                end
-            end
-        end
-    end
-
-    if #bullets == 0 then
-        bullets[1] = _("No changelog provided.")
-    end
-    return bullets
+    return text
 end
 
 --- Run do_network_check() in a non-blocking subprocess via Trapper.
@@ -1550,14 +1519,14 @@ local function _show_update_screen_and_install(plugin)
     end
 
     local ver_label   = M._latest_ver and ("v" .. M._latest_ver) or _("latest")
-    local changelog_items = build_single_release_bullets(M._latest_notes)
+    local changelog_text = build_single_release_scroll_text(M._latest_notes, M._latest_ver)
 
     local screen
     screen = ZenScreen:new{
         title        = _("Zen UI"),
         title_icon   = true,
         subtitle     = _("Update available: ") .. ver_label,
-        changelog    = changelog_items,
+        scroll_text  = changelog_text,
         hide_logo    = true,
         button       = _("Update now"),
         later_button = _("Later"),

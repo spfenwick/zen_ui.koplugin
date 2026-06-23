@@ -18,6 +18,10 @@ function M.build(ctx)
 
     local function save_and_apply_quick_settings() save_and_apply("quick_settings") end
 
+    local function is_draft_button(cb)
+        return type(cb) == "table" and type(cb._zen_draft_commit) == "function"
+    end
+
     -- Resolve UI instance once for plugin-availability checks (fail-open if nil).
     local _ui
     do
@@ -179,6 +183,7 @@ function M.build(ctx)
 
     local build_cb_sub_items
     local get_cb_label
+    local sync_cb_action_label
 
     local function ensureButtonOrder(id)
         for _i, ordered_id in ipairs(config.quick_settings.button_order) do
@@ -187,7 +192,50 @@ function M.build(ctx)
         table.insert(config.quick_settings.button_order, id)
     end
 
+    local function wrap_dispatch_callbacks(items, caller, on_update)
+        if type(items) ~= "table" then return end
+        for _i, item in ipairs(items) do
+            if type(item.callback) == "function" and not item._zen_qs_dispatch_wrapped then
+                local orig_callback = item.callback
+                item.callback = function(touch_menu, ...)
+                    caller.updated = false
+                    local result = orig_callback(touch_menu, ...)
+                    if caller.updated then
+                        caller.updated = false
+                        on_update(touch_menu)
+                    end
+                    return result
+                end
+                item._zen_qs_dispatch_wrapped = true
+            end
+            if type(item.hold_callback) == "function" and not item._zen_qs_dispatch_hold_wrapped then
+                local orig_hold_callback = item.hold_callback
+                item.hold_callback = function(touch_menu, ...)
+                    caller.updated = false
+                    local result = orig_hold_callback(touch_menu, ...)
+                    if caller.updated then
+                        caller.updated = false
+                        on_update(touch_menu)
+                    end
+                    return result
+                end
+                item._zen_qs_dispatch_hold_wrapped = true
+            end
+            if type(item.sub_item_table_func) == "function" and not item._zen_qs_dispatch_func_wrapped then
+                local orig_sub_item_table_func = item.sub_item_table_func
+                item.sub_item_table_func = function(...)
+                    local sub_items = orig_sub_item_table_func(...)
+                    wrap_dispatch_callbacks(sub_items, caller, on_update)
+                    return sub_items
+                end
+                item._zen_qs_dispatch_func_wrapped = true
+            end
+            wrap_dispatch_callbacks(item.sub_item_table, caller, on_update)
+        end
+    end
+
     local function addActionButton(touch_menu)
+        if not ok_disp then return end
         local cbs = config.quick_settings.custom_buttons
         if type(cbs) ~= "table" then
             config.quick_settings.custom_buttons = {}
@@ -204,30 +252,35 @@ function M.build(ctx)
             while taken[_("Custom") .. " " .. n] do n = n + 1 end
             default_label = _("Custom") .. " " .. n
         end
-        config.quick_settings.next_custom_id =
-            (config.quick_settings.next_custom_id or 0) + 1
         local new_cb = {
-            id     = "cb_" .. config.quick_settings.next_custom_id,
             type   = "action",
             label  = default_label,
+            label_auto = true,
             icon   = "zen_ui",
             action = {},
         }
-        table.insert(cbs, new_cb)
-        quick_button_custom_by_id[new_cb.id] = new_cb
-        quick_button_label_by_id[new_cb.id] = new_cb.label or _("Custom")
-        quick_button_key_set[new_cb.id] = true
-        config.quick_settings.show_buttons[new_cb.id] = countEnabledButtons() < quick_buttons_max
-        ensureButtonOrder(new_cb.id)
-        save_and_apply_quick_settings()
-        if touch_menu and build_cb_sub_items then
-            local sub_items = build_cb_sub_items(new_cb)
-            if #sub_items > 0 then
-                table.insert(touch_menu.item_table_stack, touch_menu.item_table)
-                touch_menu.parent_id = nil
-                touch_menu.item_table = sub_items
-                touch_menu:updateItems(1)
-            end
+        local committed = false
+        local function commit()
+            if committed or not (new_cb.action and next(new_cb.action)) then return end
+            config.quick_settings.next_custom_id =
+                (config.quick_settings.next_custom_id or 0) + 1
+            new_cb.id = "cb_" .. config.quick_settings.next_custom_id
+            new_cb._zen_draft_commit = nil
+            table.insert(cbs, new_cb)
+            quick_button_custom_by_id[new_cb.id] = new_cb
+            quick_button_label_by_id[new_cb.id] = get_cb_label(new_cb)
+            quick_button_key_set[new_cb.id] = true
+            config.quick_settings.show_buttons[new_cb.id] = countEnabledButtons() < quick_buttons_max
+            ensureButtonOrder(new_cb.id)
+            save_and_apply_quick_settings()
+            committed = true
+        end
+        new_cb._zen_draft_commit = commit
+        if touch_menu then
+            table.insert(touch_menu.item_table_stack, touch_menu.item_table)
+            touch_menu.parent_id = nil
+            touch_menu.item_table = build_cb_sub_items(new_cb)
+            touch_menu:updateItems(1)
         end
     end
 
@@ -436,6 +489,24 @@ function M.build(ctx)
         return _("Custom")
     end
 
+    sync_cb_action_label = function(cb)
+        if cb.type ~= "action" then return end
+        local current = cb.label or ""
+        local custom_prefix = _("Custom") .. " "
+        local is_legacy_auto_label = current == _("Custom")
+            or current == _("Action")
+            or (current:sub(1, #custom_prefix) == custom_prefix
+                and tonumber(current:sub(#custom_prefix + 1)) ~= nil)
+        if cb.label_auto == true or current == "" or is_legacy_auto_label then
+            cb.label = get_cb_label({
+                type = cb.type,
+                action = cb.action,
+                label = nil,
+            })
+            cb.label_auto = true
+        end
+    end
+
     build_cb_sub_items = function(cb)
         local items = {}
 
@@ -452,19 +523,20 @@ function M.build(ctx)
         elseif ok_disp then
             -- Action picker via Dispatcher submenu
             local dispatch_items = {}
-            -- Proxy caller: triggers save whenever Dispatcher writes caller.updated = true
-            local caller = setmetatable({}, {
-                __newindex = function(t, k, v)
-                    if k == "updated" and v then
-                        quick_button_label_by_id[cb.id] = get_cb_label(cb)
-                        save_and_apply_quick_settings()
-                    else
-                        rawset(t, k, v)
-                    end
-                end,
-                __index = function() return nil end,
-            })
+            local caller = {}
             Dispatcher:addSubMenu(caller, dispatch_items, cb, "action")
+            wrap_dispatch_callbacks(dispatch_items, caller, function(touch_menu)
+                sync_cb_action_label(cb)
+                if is_draft_button(cb) then
+                    cb._zen_draft_commit()
+                else
+                    quick_button_label_by_id[cb.id] = get_cb_label(cb)
+                    save_and_apply_quick_settings()
+                end
+                if touch_menu and touch_menu.updateItems then
+                    touch_menu:updateItems(1)
+                end
+            end)
             table.insert(items, IconItem.decorate({
                 text_func = function()
                     if cb.action and next(cb.action) then
@@ -486,7 +558,9 @@ function M.build(ctx)
             callback = function(tm)
                 showIconPickerDialog(cb, function(name)
                     cb.icon = name
-                    save_and_apply_quick_settings()
+                    if not is_draft_button(cb) then
+                        save_and_apply_quick_settings()
+                    end
                     -- Refresh the submenu so text_func re-reads cb.icon.
                     if tm and tm.updateItems then tm:updateItems(1) end
                 end)
@@ -514,10 +588,19 @@ function M.build(ctx)
                             is_enter_default = true,
                             callback = function()
                                 local txt = dialog:getInputText()
-                                cb.label = (txt and txt ~= "") and txt or nil
+                                if txt and txt ~= "" then
+                                    cb.label = txt
+                                    cb.label_auto = false
+                                else
+                                    cb.label = nil
+                                    cb.label_auto = true
+                                    sync_cb_action_label(cb)
+                                end
                                 UIManager:close(dialog)
-                                quick_button_label_by_id[cb.id] = get_cb_label(cb)
-                                save_and_apply_quick_settings()
+                                if not is_draft_button(cb) then
+                                    quick_button_label_by_id[cb.id] = get_cb_label(cb)
+                                    save_and_apply_quick_settings()
+                                end
                                 if touch_menu and touch_menu.updateItems then
                                     touch_menu:updateItems(1)
                                 end
@@ -531,28 +614,40 @@ function M.build(ctx)
 
         -- Delete button
         table.insert(items, IconItem.decorate({
-            text = _("Remove this button"),
+            text = _("Delete"),
             separator = true,
             keep_menu_open = true,
             callback = function(touch_menu)
-                local cbs = config.quick_settings.custom_buttons
-                for i, item in ipairs(cbs) do
-                    if item.id == cb.id then
-                        table.remove(cbs, i)
-                        break
+                if is_draft_button(cb) then
+                    if touch_menu then touch_menu:backToUpperMenu() end
+                    return
+                end
+                local ConfirmBox = require("ui/widget/confirmbox")
+                local function remove()
+                    local cbs = config.quick_settings.custom_buttons
+                    for i, item in ipairs(cbs) do
+                        if item.id == cb.id then
+                            table.remove(cbs, i)
+                            break
+                        end
                     end
+                    quick_button_custom_by_id[cb.id] = nil
+                    quick_button_label_by_id[cb.id] = nil
+                    quick_button_key_set[cb.id] = nil
+                    config.quick_settings.show_buttons[cb.id] = nil
+                    local new_order = {}
+                    for _i, id in ipairs(config.quick_settings.button_order) do
+                        if id ~= cb.id then table.insert(new_order, id) end
+                    end
+                    config.quick_settings.button_order = new_order
+                    save_and_apply_quick_settings()
+                    if touch_menu then touch_menu:backToUpperMenu() end
                 end
-                quick_button_custom_by_id[cb.id] = nil
-                quick_button_label_by_id[cb.id] = nil
-                quick_button_key_set[cb.id] = nil
-                config.quick_settings.show_buttons[cb.id] = nil
-                local new_order = {}
-                for _i, id in ipairs(config.quick_settings.button_order) do
-                    if id ~= cb.id then table.insert(new_order, id) end
-                end
-                config.quick_settings.button_order = new_order
-                save_and_apply_quick_settings()
-                if touch_menu then touch_menu:backToUpperMenu() end
+                UIManager:show(ConfirmBox:new{
+                    text = _("Delete this button?"),
+                    ok_text = _("Delete"),
+                    ok_callback = remove,
+                })
             end,
         }, icons.delete))
 

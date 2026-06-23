@@ -366,9 +366,12 @@ local function apply_quick_settings()
         sleep = {
             icon = "quick_sleep",
             label = _("Sleep"),
-            callback = function()
+            callback = function(touch_menu)
+                if touch_menu and touch_menu.closeMenu then
+                    touch_menu:closeMenu()
+                end
                 if Device:canSuspend() then
-                    UIManager:broadcastEvent(Event:new("RequestSuspend"))
+                    UIManager:suspend()
                 elseif Device:canPowerOff() then
                     UIManager:broadcastEvent(Event:new("RequestPowerOff"))
                 end

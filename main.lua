@@ -62,6 +62,18 @@ local _zen_plugin_ref = nil
 -- so the on_update_found callback can rebuild their tab_item_table dynamically.
 local _zen_menu_instances = setmetatable({}, { __mode = "k" })
 
+local function build_update_changelog_scroll_text(items)
+    if type(items) ~= "table" or #items == 0 then return nil end
+    local lines = { _("What's New"), "" }
+    for _i, item in ipairs(items) do
+        if type(item) == "string" and item ~= "" then
+            lines[#lines + 1] = "- " .. item
+        end
+    end
+    if #lines == 2 then return nil end
+    return table.concat(lines, "\n")
+end
+
 -- Defensive nil-action guard: prevent UIManager:scheduleIn/nextTick(nil) crashes.
 -- Installed once per process; logs a traceback so the real culprit can be identified.
 -- Catches bugs in Zen UI *and* in KOReader sync plugins (which share the same UIManager).
@@ -415,10 +427,10 @@ function ZenUI:init()
                 logger.info("ZenUI update splash: showing ZenScreen")
                 local T = require("ffi/util").template
                 require("ui/uimanager"):show(ZenScreen:new{
-                    title     = _("Zen UI"),
-                    subtitle  = T(_("Updated to %1"), "v" .. current_ver),
-                    changelog = changelog_to_show,
-                    on_close  = function()
+                    title       = _("Zen UI"),
+                    subtitle    = T(_("Updated to %1"), "v" .. current_ver),
+                    scroll_text = build_update_changelog_scroll_text(changelog_to_show),
+                    on_close    = function()
                         logger.info("ZenUI update splash: closed, pages_to_show=", pages_to_show and #pages_to_show or 0)
                         if pages_to_show and #pages_to_show > 0 then
                             local ok_qs, QuickstartScreen = pcall(require, "common/quickstart/quickstart_screen")

@@ -31,6 +31,10 @@ function M.build(ctx)
         end
     end
 
+    local function is_draft_entry(entry)
+        return type(entry) == "table" and type(entry._zen_draft_commit) == "function"
+    end
+
     local function open_entry_settings(touch_menu, entry, parent)
         if not (touch_menu and type(touch_menu.updateItems) == "function" and entry) then
             return
@@ -42,6 +46,48 @@ function M.build(ctx)
     end
 
     local ok_disp, Dispatcher = pcall(require, "dispatcher")
+
+    local function wrap_dispatch_callbacks(items, caller, on_update)
+        if type(items) ~= "table" then return end
+        for _i, item in ipairs(items) do
+            if type(item.callback) == "function" and not item._zen_launcher_dispatch_wrapped then
+                local orig_callback = item.callback
+                item.callback = function(touch_menu, ...)
+                    caller.updated = false
+                    local result = orig_callback(touch_menu, ...)
+                    if caller.updated then
+                        caller.updated = false
+                        on_update(touch_menu)
+                    end
+                    return result
+                end
+                item._zen_launcher_dispatch_wrapped = true
+            end
+            if type(item.hold_callback) == "function" and not item._zen_launcher_dispatch_hold_wrapped then
+                local orig_hold_callback = item.hold_callback
+                item.hold_callback = function(touch_menu, ...)
+                    caller.updated = false
+                    local result = orig_hold_callback(touch_menu, ...)
+                    if caller.updated then
+                        caller.updated = false
+                        on_update(touch_menu)
+                    end
+                    return result
+                end
+                item._zen_launcher_dispatch_hold_wrapped = true
+            end
+            if type(item.sub_item_table_func) == "function" and not item._zen_launcher_dispatch_func_wrapped then
+                local orig_sub_item_table_func = item.sub_item_table_func
+                item.sub_item_table_func = function(...)
+                    local sub_items = orig_sub_item_table_func(...)
+                    wrap_dispatch_callbacks(sub_items, caller, on_update)
+                    return sub_items
+                end
+                item._zen_launcher_dispatch_func_wrapped = true
+            end
+            wrap_dispatch_callbacks(item.sub_item_table, caller, on_update)
+        end
+    end
 
     local ICONS
     local function get_icons()
@@ -58,7 +104,9 @@ function M.build(ctx)
     local function show_icon_picker(entry, touch_menu)
         require("common/ui/zen_icon_picker")(get_icons(), entry.icon, function(name)
             entry.icon = name
-            save_app_launcher()
+            if not is_draft_entry(entry) then
+                save_app_launcher()
+            end
             if touch_menu and touch_menu.updateItems then
                 touch_menu:updateItems(1)
             end
@@ -84,7 +132,7 @@ function M.build(ctx)
         end
     end
 
-    local function prompt_label(entry, title)
+    local function prompt_label(entry, title, touch_menu)
         local InputDialog = require("ui/widget/inputdialog")
         local dialog
         dialog = InputDialog:new{
@@ -106,13 +154,20 @@ function M.build(ctx)
                         if label ~= "" then
                             entry.label = label
                             entry.label_auto = false
-                            save_app_launcher()
+                            if not is_draft_entry(entry) then
+                                save_app_launcher()
+                            end
                         elseif entry.type == "action" then
                             entry.label_auto = true
                             sync_action_label(entry)
-                            save_app_launcher()
+                            if not is_draft_entry(entry) then
+                                save_app_launcher()
+                            end
                         end
                         UIManager:close(dialog)
+                        if touch_menu and touch_menu.updateItems then
+                            touch_menu:updateItems(1)
+                        end
                     end,
                 },
             }},
@@ -154,21 +209,15 @@ function M.build(ctx)
         return false
     end
 
-    local function new_action_entry(label)
+    local function new_action_entry(label, draft)
         return {
-            id = Model.next_id(cfg),
+            id = draft and nil or Model.next_id(cfg),
             type = "action",
             label = label or _("Action"),
             label_auto = true,
             icon = DEFAULT_ENTRY_ICON,
             action = {},
         }
-    end
-
-    local function add_action(folder)
-        local entry = new_action_entry()
-        insert_entry(entry, folder)
-        return entry
     end
 
     local function add_folder(touch_menu)
@@ -276,14 +325,29 @@ function M.build(ctx)
         }
     end
 
+    local function open_new_action_picker(folder, touch_menu)
+        if not ok_disp then return end
+        local entry = new_action_entry(nil, true)
+        local committed = false
+        local function commit()
+            if committed or not (entry.action and next(entry.action)) then return end
+            sync_action_label(entry)
+            entry.id = Model.next_id(cfg)
+            entry._zen_draft_commit = nil
+            insert_entry(entry, folder)
+            committed = true
+        end
+        entry._zen_draft_commit = commit
+        open_entry_settings(touch_menu, entry, folder)
+    end
+
     local function add_items(folder)
         return {
             IconItem.decorate({
                 text = _("Add action"),
                 keep_menu_open = true,
                 callback = function(touch_menu)
-                    local entry = add_action(folder)
-                    open_entry_settings(touch_menu, entry, folder)
+                    open_new_action_picker(folder, touch_menu)
                 end,
             }, icons.action),
             IconItem.decorate({
@@ -302,8 +366,7 @@ function M.build(ctx)
                 text = _("Action"),
                 keep_menu_open = true,
                 callback = function(touch_menu)
-                    local entry = add_action(folder)
-                    open_entry_settings(touch_menu, entry, folder)
+                    open_new_action_picker(folder, touch_menu)
                 end,
             }, icons.action),
             IconItem.decorate({
@@ -327,20 +390,19 @@ function M.build(ctx)
     local function build_action_picker(entry)
         if not ok_disp then return nil end
         local dispatch_items = {}
-        local caller = setmetatable({}, {
-            __newindex = function(t, key, value)
-                if key == "updated" and value then
-                    sync_action_label(entry)
-                    save_app_launcher()
-                else
-                    rawset(t, key, value)
-                end
-            end,
-            __index = function()
-                return nil
-            end,
-        })
+        local caller = {}
         Dispatcher:addSubMenu(caller, dispatch_items, entry, "action")
+        wrap_dispatch_callbacks(dispatch_items, caller, function(touch_menu)
+            sync_action_label(entry)
+            if is_draft_entry(entry) then
+                entry._zen_draft_commit()
+            else
+                save_app_launcher()
+            end
+            if touch_menu and touch_menu.updateItems then
+                touch_menu:updateItems(1)
+            end
+        end)
         return IconItem.decorate({
             text_func = function()
                 if entry.action and next(entry.action) then
@@ -427,8 +489,8 @@ function M.build(ctx)
                     return T(_("Label: %1"), entry.label)
                 end,
                 keep_menu_open = true,
-                callback = function()
-                    prompt_label(entry, _("Launcher label"))
+                callback = function(touch_menu)
+                    prompt_label(entry, _("Launcher label"), touch_menu)
                 end,
             }, icons.label)
         end
@@ -464,14 +526,20 @@ function M.build(ctx)
             add_label_item()
             add_icon_item()
         end
-        local move_items = build_move_items(entry, parent)
-        for _i, item in ipairs(move_items) do
-            items[#items + 1] = item
+        if not is_draft_entry(entry) then
+            local move_items = build_move_items(entry, parent)
+            for _i, item in ipairs(move_items) do
+                items[#items + 1] = item
+            end
         end
         items[#items + 1] = IconItem.decorate({
             text = _("Delete"),
             separator = true,
             callback = function(touch_menu)
+                if is_draft_entry(entry) then
+                    if touch_menu then touch_menu:backToUpperMenu() end
+                    return
+                end
                 local ConfirmBox = require("ui/widget/confirmbox")
                 local function remove()
                     Model.remove_by_id(cfg.entries, entry.id)
@@ -517,6 +585,7 @@ function M.build(ctx)
             item_table = sort_items,
             add_title = _("Add"),
             add_item_table = arrange_add_items(parent),
+            open_add_on_show = #sort_items == 0,
             callback = function()
                 list = current_list(parent)
                 local reordered = {}
@@ -561,6 +630,7 @@ function M.build(ctx)
             text = _("Buttons") .. " \u{25B8}",
             separator = true,
             keep_menu_open = true,
+            _zen_launcher_buttons = true,
             callback = function()
                 show_entries_arrange(nil)
             end,

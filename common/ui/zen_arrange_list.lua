@@ -409,10 +409,14 @@ local install_submenu_tap_handlers
 local install_root_tap_handlers
 
 local function open_submenu_for_item(sort_widget, item)
-    if not (sort_widget and item and item.hold_callback and has_submenu(item)) then
+    if not (sort_widget and item and has_submenu(item)) then
         return false
     end
-    item:hold_callback(function()
+    local sub_items = item.sub_item_table
+    if type(item.sub_item_table_func) == "function" then
+        sub_items = item.sub_item_table_func()
+    end
+    show_submenu(item_submenu_title(item), sub_items, function()
         if sort_widget._zen_arrange_refresh then
             sort_widget:_zen_arrange_refresh()
         else
@@ -467,6 +471,12 @@ show_submenu = function(title, items, refresh)
         item_table_stack = {},
         item_table = items,
         backToUpperMenu = function()
+            if #menu_proxy.item_table_stack > 0 then
+                items = table.remove(menu_proxy.item_table_stack)
+                menu_proxy.item_table = items
+                refresh_lists()
+                return
+            end
             if sort_widget then
                 UIManager:close(sort_widget)
                 sort_widget = nil
@@ -501,6 +511,12 @@ show_submenu = function(title, items, refresh)
     end
 
     configure_title_bar(sort_widget)
+    if sort_widget.title_bar and sort_widget.title_bar.left_button then
+        sort_widget.title_bar.left_button.callback = function()
+            menu_proxy:backToUpperMenu()
+            return true
+        end
+    end
     suppress_footer_cancel(sort_widget.footer_cancel)
     suppress_footer_jump_buttons(sort_widget)
     sync_footer_ok(sort_widget)
@@ -539,11 +555,7 @@ install_submenu_tap_handlers = function(sort_widget)
                     repopulate(row.show_parent)
                     return true
                 end
-                if item.hold_callback then
-                    item:hold_callback(function()
-                        repopulate(row.show_parent)
-                    end)
-                end
+                open_submenu_for_item(row.show_parent, item)
                 return true
             end
         end
@@ -566,15 +578,7 @@ install_root_tap_handlers = function(sort_widget)
                     return true
                 end
                 if row.show_parent.marked == row.index then
-                    if item.hold_callback then
-                        item:hold_callback(function()
-                            if row.show_parent._zen_arrange_refresh then
-                                row.show_parent:_zen_arrange_refresh()
-                            else
-                                row.show_parent:_populateItems()
-                            end
-                        end)
-                    end
+                    open_submenu_for_item(row.show_parent, item)
                 else
                     row.show_parent.marked = row.index
                     repopulate(row.show_parent)
@@ -670,6 +674,17 @@ function M.show(opts)
     install_titlebar_focus(sort_widget)
 
     UIManager:show(sort_widget)
+    if opts.open_add_on_show and type(opts.add_item_table) == "table" and #opts.add_item_table > 0 then
+        UIManager:nextTick(function()
+            show_submenu(opts.add_title or "", opts.add_item_table, function()
+                if sort_widget._zen_arrange_refresh then
+                    sort_widget:_zen_arrange_refresh()
+                else
+                    repopulate(sort_widget)
+                end
+            end)
+        end)
+    end
     return sort_widget
 end
 
