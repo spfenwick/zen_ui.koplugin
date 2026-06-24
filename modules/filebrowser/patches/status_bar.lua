@@ -1016,13 +1016,6 @@ local function apply_status_bar()
         return false
     end
 
-    local function is_status_suppressed_on_top()
-        local stack = UIManager._window_stack
-        local top = stack and stack[#stack]
-        local top_widget = top and top.widget
-        return suppresses_status_bar(top_widget)
-    end
-
     local function refreshVisibleStatusBar(fm, clock_tick)
         if FileManager.instance ~= fm then return end
         local stack = UIManager._window_stack
@@ -1041,6 +1034,45 @@ local function apply_status_bar()
             -- through its own heartbeat binding to avoid a double refresh.
             if clock_tick and top_widget._zen_status_clock_bound then return end
             top_widget:_zen_home_refresh_clock_widgets()
+        end
+    end
+
+    local page_load_refresh_pending = false
+    local function schedulePageLoadStatusRefresh(fm)
+        if not fm or page_load_refresh_pending then return end
+        page_load_refresh_pending = true
+        UIManager:nextTick(function()
+            page_load_refresh_pending = false
+            refreshVisibleStatusBar(fm, false)
+        end)
+    end
+
+    local function has_refreshable_status_bar(widget, fm)
+        return widget == fm
+            or widget == fm.show_parent
+            or widget._zen_status_refresh
+            or widget._zen_home_refresh_clock_widgets
+    end
+
+    local Menu = require("ui/widget/menu")
+    Menu._zen_status_bar_on_show_refresh = function(menu)
+        local fm = FileManager.instance
+        if fm and is_enabled() and has_refreshable_status_bar(menu, fm) then
+            schedulePageLoadStatusRefresh(fm)
+        end
+    end
+    if not Menu._zen_status_bar_on_show_patched then
+        Menu._zen_status_bar_on_show_patched = true
+        local orig_menu_onShow = Menu.onShow
+        Menu.onShow = function(menu, ...)
+            local result
+            if orig_menu_onShow then
+                result = orig_menu_onShow(menu, ...)
+            end
+            if Menu._zen_status_bar_on_show_refresh then
+                Menu._zen_status_bar_on_show_refresh(menu)
+            end
+            return result
         end
     end
 
@@ -1219,11 +1251,7 @@ local function apply_status_bar()
             local result = orig and orig(fc, ...) or true
             local fm = FileManager.instance
             if fm and is_enabled() then
-                UIManager:nextTick(function()
-                    if FileManager.instance == fm and not is_status_suppressed_on_top() then
-                        fm:_updateStatusBar()
-                    end
-                end)
+                schedulePageLoadStatusRefresh(fm)
             end
             return result
         end

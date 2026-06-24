@@ -202,6 +202,7 @@ local defaults = {
         custom_separator = "  ",
         custom_text      = "",
         show_bottom_border = false,
+        bottom_border_progress = false,
     },
     reader_footer = {
         verbose_chapter_time = false,

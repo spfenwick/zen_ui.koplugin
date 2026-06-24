@@ -145,12 +145,6 @@ function M.build(ctx)
     -- Tab definitions
     -- -------------------------------------------------------------------------
 
-    local function get_books_tab_label()
-        local label = config.navbar.books_label
-        if label == nil or label == "" or label == "Library" then return _("Library") end
-        return label
-    end
-
     local function get_home_tab_label()
         local label = config.navbar.home_label
         if label == nil or label == "" then return _("Home") end
@@ -158,7 +152,7 @@ function M.build(ctx)
     end
 
     local navbar_tab_items = {
-        { id = "books",       text_func = get_books_tab_label },
+        { id = "books",       text = _("Library")      },
         { id = "manga",       text = _("Manga")         },
         { id = "news",        text = _("News")          },
         { id = "continue",    text = _("Continue")      },
@@ -719,11 +713,12 @@ function M.build(ctx)
         }
     end
 
-    local function build_books_tab_items()
+    local function build_books_label_items()
         local presets = { [""] = true, Books = true, Home = true, Library = true }
         return {
             {
                 text = _("Books"),
+                radio = true,
                 checked_func = function() return config.navbar.books_label == "Books" end,
                 callback = function()
                     config.navbar.books_label = "Books"
@@ -732,6 +727,7 @@ function M.build(ctx)
             },
             {
                 text = _("Home"),
+                radio = true,
                 checked_func = function() return config.navbar.books_label == "Home" end,
                 callback = function()
                     config.navbar.books_label = "Home"
@@ -740,6 +736,7 @@ function M.build(ctx)
             },
             {
                 text = _("Library"),
+                radio = true,
                 checked_func = function()
                     local label = config.navbar.books_label
                     return label == nil or label == "" or label == "Library"
@@ -755,6 +752,7 @@ function M.build(ctx)
                     if presets[label] then return _("Custom") end
                     return _("Custom: ") .. label
                 end,
+                radio = true,
                 checked_func = function()
                     return not presets[config.navbar.books_label or ""]
                 end,
@@ -783,6 +781,15 @@ function M.build(ctx)
                     UIManager:show(dialog)
                     dialog:onShowKeyboard()
                 end,
+            },
+        }
+    end
+
+    local function build_books_tab_items()
+        return {
+            {
+                text = _("Label"),
+                sub_item_table = build_books_label_items(),
             },
         }
     end
@@ -937,7 +944,7 @@ function M.build(ctx)
                 item.sub_title = _("Home")
                 item.sub_item_table_func = build_home_tab_items
             elseif id == "books" then
-                item.sub_title = _("Books")
+                item.sub_title = _("Library")
                 item.sub_item_table_func = build_books_tab_items
             elseif id == "manga" then
                 item.sub_title = _("Manga")

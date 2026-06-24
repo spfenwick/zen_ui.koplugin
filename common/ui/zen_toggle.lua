@@ -121,11 +121,11 @@ function ZenToggle:paintTo(bb, x, y)
         paintPill(bb, x, y, w, h, Blitbuffer.COLOR_BLACK)
         paintCircle(bb, x + w - pad - kr, cy, kr, Blitbuffer.COLOR_WHITE)
     else
-        -- OFF: black-bordered pill (white interior), dark knob on the left
+        -- OFF: black-bordered pill (white interior), black knob on the left
         -- Offset by bw so the visual gap from the inner wall matches ON-state gap
         paintPill(bb, x, y, w, h, Blitbuffer.COLOR_BLACK)
         paintPill(bb, x + bw, y + bw, w - 2 * bw, h - 2 * bw, Blitbuffer.COLOR_WHITE)
-        paintCircle(bb, x + bw + pad + kr, cy, kr, Blitbuffer.COLOR_DARK_GRAY)
+        paintCircle(bb, x + bw + pad + kr, cy - .05, kr, Blitbuffer.COLOR_BLACK)
     end
 end
 

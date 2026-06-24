@@ -39,6 +39,26 @@ local function get_filemanager_instance()
     end
 end
 
+local function is_horizontal_swipe(ges)
+    if not ges then return false end
+    local direction = ges.direction
+    return direction == "east" or direction == "west"
+        or direction == "northeast" or direction == "northwest"
+        or direction == "southeast" or direction == "southwest"
+end
+
+local function is_diagonal_swipe(ges)
+    if not ges then return false end
+    local direction = ges.direction
+    return direction == "northeast" or direction == "northwest"
+        or direction == "southeast" or direction == "southwest"
+end
+
+local function should_block_standalone_swipe(menu, ges)
+    return is_diagonal_swipe(ges)
+        or (menu and menu._zen_block_fm_horizontal_swipe and is_horizontal_swipe(ges))
+end
+
 -- broadcastEvent dispatches to *every* window-stack widget directly, including
 -- FileManager.instance (which sits beneath the standalone page). Forwarding
 -- broadcast events to FM as well would dispatch them twice -- harmless for most
@@ -113,6 +133,9 @@ function M.enable_filemanager_dispatch(menu)
 
     local orig_onGesture = menu.onGesture
     function menu:onGesture(ges)
+        if should_block_standalone_swipe(self, ges) then
+            return true
+        end
         local consumed = orig_onGesture and orig_onGesture(self, ges)
         if consumed then return consumed end
 
@@ -121,6 +144,16 @@ function M.enable_filemanager_dispatch(menu)
             return fm:onGesture(ges)
         end
         return consumed
+    end
+
+    local orig_onSwipe = menu.onSwipe
+    function menu:onSwipe(arg, ges)
+        if should_block_standalone_swipe(self, ges) then
+            return true
+        end
+        if orig_onSwipe then
+            return orig_onSwipe(self, arg, ges)
+        end
     end
 end
 
@@ -178,6 +211,7 @@ function M.create_menu(opts)
     if opts.filemanager_dispatch ~= false then
         M.enable_filemanager_dispatch(menu_or_err)
     end
+    menu_or_err._zen_block_fm_horizontal_swipe = opts.block_filemanager_horizontal_swipe == true
     M.prevent_swipe_close(menu_or_err)
     M.apply_background(menu_or_err)
 

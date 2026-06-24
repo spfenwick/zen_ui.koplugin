@@ -1819,6 +1819,7 @@ function M.showHomeView(injectNavbar)
         name = "home",
         title = " ",
         no_title = not show_status_bar,
+        block_filemanager_horizontal_swipe = true,
     }
     StandalonePage.prepare_shell(menu)
 

@@ -358,6 +358,15 @@ local function apply_navbar()
         return true
     end
 
+    local function refreshLibraryStatusBar(fm)
+        if not (fm and type(fm._updateStatusBar) == "function") then return end
+        UIManager:nextTick(function()
+            if FileManager.instance == fm then
+                fm:_updateStatusBar()
+            end
+        end)
+    end
+
     -- === Tab callbacks ===
 
     -- Build a {dir_path = mtime} snapshot of a directory tree, root + subdirs up
@@ -416,6 +425,7 @@ local function apply_navbar()
             fc.path_items[home_dir] = 1
             fc._zen_lib_mtime_snapshot = _build_dir_mtime_snapshot(home_dir, LIB_SNAPSHOT_DEPTH)
             fc:changeToPath(home_dir)
+            refreshLibraryStatusBar(fm)
             return
         end
         if fc.path == home_dir then
@@ -437,6 +447,7 @@ local function apply_navbar()
             fc._zen_lib_mtime_snapshot = _build_dir_mtime_snapshot(home_dir, LIB_SNAPSHOT_DEPTH)
             fc:changeToPath(home_dir)
         end
+        refreshLibraryStatusBar(fm)
     end
 
     local function onTabManga()

@@ -622,6 +622,15 @@ function M.build(ctx)
         }
     end
 
+    local function toggle_featured_status_bar(mcfg)
+        local enabled = mcfg.show_status_bar ~= true
+        mcfg.show_status_bar = enabled
+        if enabled and dcfg.show_status_bar ~= false then
+            dcfg.show_status_bar = false
+        end
+        save_home("reinit")
+    end
+
     local function featured_status_bar_item(mcfg)
         return {
             text = _("Show top status bar"),
@@ -629,8 +638,7 @@ function M.build(ctx)
                 return mcfg.show_status_bar == true
             end,
             callback = function()
-                mcfg.show_status_bar = mcfg.show_status_bar ~= true
-                save_home("reinit")
+                toggle_featured_status_bar(mcfg)
             end,
         }
     end

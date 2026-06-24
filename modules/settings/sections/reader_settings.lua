@@ -38,12 +38,14 @@ function M.build(ctx)
         { key = "book_title",  text = _("Book title")    },
         { key = "author",      text = _("Author")        },
         { key = "chapter",     text = _("Chapter")       },
+        { key = "progress_percent", text = _("Progress %") },
+        { key = "page_progress",    text = _("Current / total pages") },
     }
 
     local HEADER_CANONICAL = {
         left   = { "time", "custom_text" },
         center = { "time" },
-        right  = { "custom_text", "frontlight", "wifi", "battery" },
+        right  = { "progress_percent", "page_progress", "custom_text", "frontlight", "wifi", "battery" },
     }
 
     local function save_clock() save_and_apply("reader_top_status_bar") end
@@ -352,6 +354,22 @@ function M.build(ctx)
                 callback = function()
                     if type(config.reader_top_status_bar) ~= "table" then config.reader_top_status_bar = {} end
                     config.reader_top_status_bar.show_bottom_border = not config.reader_top_status_bar.show_bottom_border
+                    save_clock()
+                end,
+            },
+            {
+                text = _("Use border as progress bar"),
+                checked_func = function()
+                    return type(config.reader_top_status_bar) == "table"
+                        and config.reader_top_status_bar.bottom_border_progress == true
+                end,
+                callback = function()
+                    if type(config.reader_top_status_bar) ~= "table" then config.reader_top_status_bar = {} end
+                    local enabled = config.reader_top_status_bar.bottom_border_progress ~= true
+                    config.reader_top_status_bar.bottom_border_progress = enabled
+                    if enabled then
+                        config.reader_top_status_bar.show_bottom_border = true
+                    end
                     save_clock()
                 end,
             },

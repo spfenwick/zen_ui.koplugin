@@ -3,7 +3,7 @@ local function apply_reader_top_status_bar()
         Paints a configurable three-zone header at the top of the reader screen (reflowable docs).
         Left / center / right slots each hold an ordered list of item keys.
         Items: time, battery, wifi, frontlight, ram, disk, custom_text,
-               book_title, author, chapter
+               book_title, author, chapter, progress_percent, page_progress
         Wraps ReaderView.paintTo. Config via config.reader_top_status_bar.
     --]]
 
@@ -186,6 +186,80 @@ local function apply_reader_top_status_bar()
         return zen_utils.truncateUtf8(chapter, 35, "..."), nil
     end
 
+    local function getFooter(doc_ctx)
+        if doc_ctx and doc_ctx.footer and doc_ctx.footer.ui then
+            return doc_ctx.footer
+        end
+        return doc_ctx and doc_ctx.ui and doc_ctx.ui.view and doc_ctx.ui.view.footer or nil
+    end
+
+    local function getPageInfo(doc_ctx)
+        local footer = getFooter(doc_ctx)
+        local ui = (footer and footer.ui) or (doc_ctx and doc_ctx.ui)
+        local document = ui and ui.document or (doc_ctx and doc_ctx.document)
+        if not document then return nil end
+
+        local pageno = footer and tonumber(footer.pageno)
+        local pages = footer and tonumber(footer.pages)
+        if not pageno and type(document.getCurrentPage) == "function" then
+            pageno = tonumber(document:getCurrentPage())
+        end
+        if not pages and type(document.getPageCount) == "function" then
+            pages = tonumber(document:getPageCount())
+        end
+        if not (pageno and pages and pages > 0) then return nil end
+
+        if ui and ui.pagemap and type(ui.pagemap.wantsPageLabels) == "function"
+                and ui.pagemap:wantsPageLabels() then
+            return ui.pagemap:getCurrentPageLabel(true),
+                ui.pagemap:getLastPageLabel(true), pageno, pages
+        end
+
+        if type(document.hasHiddenFlows) == "function" and document:hasHiddenFlows() then
+            local flow = document:getPageFlow(pageno)
+            local page = document:getPageNumberInFlow(pageno)
+            local flow_pages = document:getTotalPagesInFlow(flow)
+            if page and flow_pages then
+                if flow == 0 then
+                    return page, flow_pages, page, flow_pages
+                end
+                return ("[%d"):format(page), ("%d]%d"):format(flow_pages, flow), page, flow_pages
+            end
+        end
+
+        return pageno, pages, pageno, pages
+    end
+
+    local function getPageProgressItem(doc_ctx)
+        local current, total = getPageInfo(doc_ctx)
+        if current == nil or total == nil then return nil end
+        return ("%s / %s"):format(current, total), nil
+    end
+
+    local function getProgressRatio(doc_ctx)
+        local footer = getFooter(doc_ctx)
+        local percent = footer and tonumber(footer.percent_finished)
+        if not percent and footer and type(footer.getBookProgress) == "function" then
+            local ok, value = pcall(footer.getBookProgress, footer)
+            percent = ok and tonumber(value) or nil
+        end
+        if not percent then
+            local pageno, pages = select(3, getPageInfo(doc_ctx))
+            if pageno and pages and pages > 0 then
+                percent = pageno / pages
+            end
+        end
+        if not percent then return nil end
+        if percent < 0 then percent = 0 elseif percent > 1 then percent = 1 end
+        return percent
+    end
+
+    local function getProgressPercentItem(doc_ctx)
+        local percent = getProgressRatio(doc_ctx)
+        if not percent then return nil end
+        return string.format("%d%%", math.floor(percent * 100 + 0.5)), nil
+    end
+
     local item_fetchers = {
         wifi        = getWifiItem,
         disk        = getDiskItem,
@@ -197,6 +271,8 @@ local function apply_reader_top_status_bar()
         book_title  = getBookTitleItem,
         author      = getAuthorItem,
         chapter     = getChapterItem,
+        progress_percent = getProgressPercentItem,
+        page_progress    = getPageProgressItem,
     }
 
     local function collectItemTexts(order, doc_ctx)
@@ -283,6 +359,27 @@ local function apply_reader_top_status_bar()
             return HorizontalGroup:new{ tw }, { tw }, natural_w
         end
         return group, widgets, natural_w
+    end
+
+    local function paintBottomBorder(bb, x, y, width, cfg, doc_ctx)
+        local h_margin = Screen:scaleBySize(10)
+        local line_w = math.max(0, width - 2 * h_margin)
+        if line_w <= 0 then return end
+        local line_h = Size.line.medium
+        if type(cfg) == "table" and cfg.bottom_border_progress == true then
+            bb:paintRect(x + h_margin, y, line_w, line_h, Blitbuffer.COLOR_LIGHT_GRAY)
+            local percent = getProgressRatio(doc_ctx)
+            if percent and percent > 0 then
+                local progress_w = math.floor(line_w * percent + 0.5)
+                if progress_w > line_w then progress_w = line_w end
+                bb:paintRect(x + h_margin, y, progress_w, line_h, Blitbuffer.COLOR_BLACK)
+            end
+        else
+            local border = LineWidget:new{
+                dimen = Geom:new{ w = line_w, h = line_h },
+            }
+            border:paintTo(bb, x + h_margin, y)
+        end
     end
 
     -- Builds the header widget from current config.
@@ -528,12 +625,8 @@ local function apply_reader_top_status_bar()
             bb:paintRect(dimen.x, dimen.y, dimen.w, dimen.h, Blitbuffer.COLOR_WHITE)
         end
         UIManager:widgetRepaint(header, dimen.x, dimen.y)
-        if show_border then
-            local h_margin = Screen:scaleBySize(10)
-            local border = LineWidget:new{
-                dimen = Geom:new{ w = screen_width - 2 * h_margin, h = Size.line.medium },
-            }
-            UIManager:widgetRepaint(border, dimen.x + h_margin, dimen.y + header_h)
+        if show_border and bb then
+            paintBottomBorder(bb, dimen.x, dimen.y + header_h, screen_width, cfg2, view)
         end
         UIManager:setDirty(nil, "ui", dimen)
         for _i, w in ipairs(all_widgets) do
@@ -562,11 +655,7 @@ local function apply_reader_top_status_bar()
 
         local cfg2 = zen_plugin and zen_plugin.config and zen_plugin.config.reader_top_status_bar
         if type(cfg2) == "table" and cfg2.show_bottom_border then
-            local h_margin = Screen:scaleBySize(10)
-            local border = LineWidget:new{
-                dimen = Geom:new{ w = screen_width - 2 * h_margin, h = Size.line.medium },
-            }
-            border:paintTo(bb, x + h_margin, y + header_h)
+            paintBottomBorder(bb, x, y + header_h, screen_width, cfg2, self)
             header_h = header_h + Size.line.medium
         end
 

@@ -5,6 +5,7 @@ local Font = require("ui/font")
 local FrameContainer = require("ui/widget/container/framecontainer")
 local Geom = require("ui/geometry")
 local HorizontalGroup = require("ui/widget/horizontalgroup")
+local HorizontalSpan = require("ui/widget/horizontalspan")
 local IconWidget = require("ui/widget/iconwidget")
 local LeftContainer = require("ui/widget/container/leftcontainer")
 local LineWidget = require("ui/widget/linewidget")
@@ -14,6 +15,7 @@ local TextWidget = require("ui/widget/textwidget")
 local UIManager = require("ui/uimanager")
 local VerticalGroup = require("ui/widget/verticalgroup")
 local IconItem = require("common/ui/icon_menu_item")
+local ZenToggle = require("common/ui/zen_toggle")
 local utils = require("common/utils")
 
 local M = {}
@@ -162,7 +164,7 @@ end
 
 local function rebuild_icon_row(row)
     local item = row and row.item
-    if not (item and item.icon_glyph and row.width and row.height) then return end
+    if not (item and row.width and row.height) then return end
 
     local item_checkable = false
     local item_checked = item.checked
@@ -170,16 +172,45 @@ local function rebuild_icon_row(row)
         item_checkable = true
         item_checked = item.checked_func()
     end
-    row.checkmark_widget = CheckMark:new{
-        checkable = item_checkable,
-        checked = item_checked,
-    }
-
-    local checked_widget = CheckMark:new{ checked = true }
-    local check_w = checked_widget:getSize().w
-    local icon_w = IconItem.getWidth(item)
-    local text_max_width = row.width - 2 * Size.padding.default - check_w - icon_w
+    local toggle_h = math.max(16, math.floor(row.height * 0.45))
+    local check_w = toggle_h * 2
+    if item_checkable then
+        row.checkmark_widget = ZenToggle:new{
+            value = item_checked,
+            width = check_w,
+            height = toggle_h,
+        }
+    else
+        row.checkmark_widget = CheckMark:new{ checkable = false }
+    end
+    local icon_w = item.icon_glyph and IconItem.getWidth(item) or 0
+    local toggle_gap = Size.padding.default
+    local text_max_width = math.max(1, row.width - 2 * Size.padding.default - check_w - toggle_gap - icon_w)
     local face = item.face or row.face or Font:getFace("smallinfofont")
+    local row_items = {
+        align = "center",
+        CenterContainer:new{
+            dimen = Geom:new{ w = check_w },
+            row.checkmark_widget,
+        },
+        HorizontalSpan:new{ width = toggle_gap },
+    }
+    if item.icon_glyph then
+        table.insert(row_items, IconItem.makeState(item.icon_glyph, icon_w, row.height, face))
+    end
+    table.insert(row_items, VerticalGroup:new{
+        align = "left",
+        TextWidget:new{
+            text = item.text,
+            max_width = text_max_width,
+            face = face,
+            fgcolor = item.dim and Blitbuffer.COLOR_DARK_GRAY or nil,
+        },
+        row.show_parent.underscore_checked_item and item_checked and LineWidget:new{
+            dimen = Geom:new{ w = text_max_width, h = Size.line.thick },
+            background = Blitbuffer.COLOR_DARK_GRAY,
+        },
+    })
 
     row[1] = FrameContainer:new{
         padding = 0,
@@ -191,27 +222,7 @@ local function rebuild_icon_row(row)
                 w = row.width,
                 h = row.height,
             },
-            HorizontalGroup:new{
-                align = "center",
-                CenterContainer:new{
-                    dimen = Geom:new{ w = check_w },
-                    row.checkmark_widget,
-                },
-                IconItem.makeState(item.icon_glyph, icon_w, row.height, face),
-                VerticalGroup:new{
-                    align = "left",
-                    TextWidget:new{
-                        text = item.text,
-                        max_width = text_max_width,
-                        face = face,
-                        fgcolor = item.dim and Blitbuffer.COLOR_DARK_GRAY or nil,
-                    },
-                    row.show_parent.underscore_checked_item and item_checked and LineWidget:new{
-                        dimen = Geom:new{ w = text_max_width, h = Size.line.thick },
-                        background = Blitbuffer.COLOR_DARK_GRAY,
-                    },
-                },
-            },
+            HorizontalGroup:new(row_items),
         },
     }
     row[1].invert = row.invert
