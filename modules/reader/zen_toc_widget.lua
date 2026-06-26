@@ -25,23 +25,7 @@ local IconWidget     = require("ui/widget/iconwidget")
 local TextWidget     = require("ui/widget/textwidget")
 local UIManager      = require("ui/uimanager")
 local Screen         = Device.screen
-
--- ---------------------------------------------------------------------------
--- paintPill: shared scanline helper (same as zen_scroll_bar / zen_slider)
--- ---------------------------------------------------------------------------
-local function paintPill(bb, px, py, pw, ph, color)
-    if pw <= 0 or ph <= 0 then return end
-    local r = math.min(pw, ph) / 2.0
-    for row = 0, ph - 1 do
-        local dy    = (row + 0.5) - ph * 0.5
-        local inset = 0
-        if math.abs(dy) < r then
-            inset = math.ceil(r - math.sqrt(r * r - dy * dy))
-        end
-        local rw = pw - 2 * inset
-        if rw > 0 then bb:paintRect(px + inset, py + row, rw, 1, color) end
-    end
-end
+local pager          = require("common/ui/zen_pager")
 
 -- ---------------------------------------------------------------------------
 -- Title normalization: strips zero-width spaces and collapses whitespace.
@@ -64,21 +48,18 @@ local function normalize_title(s)
     return s
 end
 
--- ---------------------------------------------------------------------------
--- Captured once by page_browser.lua while __ZEN_UI_PLUGIN is still set.
-local _plugin_ref = nil
-
--- Read scroll-bar style from config (live, no restart needed).
--- ---------------------------------------------------------------------------
-local function get_style()
-    local p = _plugin_ref or rawget(_G, "__ZEN_UI_PLUGIN")
-    if p
-        and type(p.config) == "table"
-        and type(p.config.zen_scroll_bar) == "table"
-    then
-        return p.config.zen_scroll_bar.style or "dots"
+local function get_toc_page_label(ui, entry, fallback_page)
+    local pagemap = ui and ui.pagemap
+    if pagemap and type(pagemap.wantsPageLabels) == "function"
+        and pagemap:wantsPageLabels()
+        and entry and entry.xpointer
+        and type(pagemap.getXPointerPageLabel) == "function" then
+        local label = pagemap:getXPointerPageLabel(entry.xpointer)
+        if label then
+            return tostring(label)
+        end
     end
-    return "dots"
+    return tostring(fallback_page)
 end
 
 -- ---------------------------------------------------------------------------
@@ -101,7 +82,7 @@ function ZenTocWidget:init()
     local raw = (self.ui and self.ui.toc and self.ui.toc.toc) or {}
     local entries = {}
     local page_to_idx = {}
-    for _, e in ipairs(raw) do
+    for _i, e in ipairs(raw) do
         local pg    = e.page or 1
         local depth = e.depth or 1
         if depth <= 3 then
@@ -120,9 +101,10 @@ function ZenTocWidget:init()
             else
                 page_to_idx[pg] = #entries + 1
                 table.insert(entries, {
-                    title = title,
-                    page  = pg,
-                    depth = depth,
+                    title      = title,
+                    page       = pg,
+                    page_label = get_toc_page_label(self.ui, e, pg),
+                    depth      = depth,
                 })
             end
         end
@@ -138,7 +120,6 @@ function ZenTocWidget:init()
     local TITLE_H     = Screen:scaleBySize(50)
     local SEP_H       = 1
     local ROW_H       = Screen:scaleBySize(48)
-    local BAR_H       = Screen:scaleBySize(5)
     local BAR_PAD_V   = Screen:scaleBySize(7)
     local DOT_DIAM    = Screen:scaleBySize(10)
     local DOT_GAP     = Screen:scaleBySize(12)
@@ -147,10 +128,13 @@ function ZenTocWidget:init()
     local max_list_h_full = sh - TITLE_H - SEP_H
     local per_page_full   = math.max(1, math.floor(max_list_h_full / ROW_H))
 
-    -- Only add a scrollbar when entries overflow one screenful.
-    -- Height must accommodate the larger of bar and dots so live style toggle works.
+    -- Footer style follows the library "Scroll bar" setting (bar/dots/page_number).
+    -- page_number needs the taller strip to fit its chevron icons.
+    local toc_style   = pager.getStyle()
     local needs_bar   = #entries > per_page_full
-    local SCROLLBAR_H = needs_bar and (math.max(BAR_H, DOT_DIAM) + BAR_PAD_V * 2) or 0
+    local SCROLLBAR_H = needs_bar
+        and (toc_style == "page_number" and pager.PN_FOOTER_H or pager.FOOTER_H)
+        or 0
 
     local max_list_h = max_list_h_full - SCROLLBAR_H
     local per_page   = math.max(1, math.floor(max_list_h / ROW_H))
@@ -167,6 +151,10 @@ function ZenTocWidget:init()
     -- Y where entry rows start (absolute screen coords).
     local LIST_Y = MODAL_Y + TITLE_H + SEP_H
 
+    -- Footer bar geometry (shared by paintTo and the page_number tap zones).
+    local BAR_W = math.floor(MODAL_W * 0.78)
+    local BAR_X = math.floor((MODAL_W - BAR_W) / 2)   -- offset from modal left
+
     self._L = {
         sw = sw, sh = sh,
         modal_w = MODAL_W, modal_h = MODAL_H,
@@ -175,9 +163,11 @@ function ZenTocWidget:init()
         title_h = TITLE_H, sep_h   = SEP_H,
         row_h   = ROW_H,   per_page = per_page,
         list_h  = list_h,  list_y   = LIST_Y,
-        bar_h   = BAR_H,   bar_pad_v = BAR_PAD_V,
+        bar_pad_v = BAR_PAD_V,
         dot_diam = DOT_DIAM, dot_gap = DOT_GAP,
         scrollbar_h = SCROLLBAR_H,
+        style   = toc_style,
+        bar_w   = BAR_W,   bar_x   = BAR_X,
         close_x = CLOSE_X, close_y = CLOSE_Y,
         close_w = CLOSE_W, close_h = TITLE_H,
     }
@@ -205,7 +195,42 @@ function ZenTocWidget:init()
             screen_zone = { ratio_x = 0, ratio_y = 0, ratio_w = 1, ratio_h = 1 },
             handler     = function(ges) return self:_onTap(ges) end,
         },
+        {
+            id          = "zen_toc_hold",
+            ges         = "hold",
+            screen_zone = { ratio_x = 0, ratio_y = 0, ratio_w = 1, ratio_h = 1 },
+            handler     = function(ges) return self:_onHold(ges) end,
+        },
     })
+end
+
+-- ---------------------------------------------------------------------------
+-- Footer hit-test for the page_number style: returns "left"|"center"|"right"
+-- when the point falls inside the chevron bar, else nil.
+-- ---------------------------------------------------------------------------
+function ZenTocWidget:_footerZone(p)
+    local L = self._L
+    if L.style ~= "page_number" or self._nb_pages <= 1 then return nil end
+    local bar_left  = L.modal_x + L.bar_x
+    local bar_right = bar_left + L.bar_w
+    local bar_top   = L.modal_y + L.modal_h - L.scrollbar_h
+    if p.y < bar_top or p.x < bar_left or p.x >= bar_right then return nil end
+    if p.x < bar_left + pager.CHEV_W then return "left" end
+    if p.x >= bar_right - pager.CHEV_W then return "right" end
+    return "center"
+end
+
+-- Navigate to a TOC page (clamped) and repaint.
+function ZenTocWidget:_gotoTocPage(target)
+    local L = self._L
+    target = math.max(1, math.min(self._nb_pages, target))
+    if target == self._toc_page then return end
+    self._toc_page = target
+    UIManager:setDirty(self, function()
+        return "ui", Geom:new{
+            x = L.modal_x, y = L.modal_y, w = L.modal_w, h = L.modal_h,
+        }
+    end)
 end
 
 -- ---------------------------------------------------------------------------
@@ -311,7 +336,7 @@ function ZenTocWidget:paintTo(bb, x, y)
             local text_x = mx + L.pad + indent
 
             -- Page number (right-aligned)
-            local page_str = tostring(e.page)
+            local page_str = e.page_label or tostring(e.page)
             local pface    = Font:getFace("cfont", 16)
             local pn_tw    = TextWidget:new{
                 text    = page_str,
@@ -350,40 +375,8 @@ function ZenTocWidget:paintTo(bb, x, y)
     -- -----------------------------------------------------------------------
     if self._nb_pages > 1 then
         local scrollbar_top = my + L.modal_h - L.scrollbar_h
-        local bar_w = math.floor(L.modal_w * 0.78)
-        local bar_x = mx + math.floor((L.modal_w - bar_w) / 2)
-
-        if get_style() == "dots" then
-            local diam = L.dot_diam
-            local gap  = L.dot_gap
-            local step = diam + gap
-            local nb   = self._nb_pages
-
-            if step * nb - gap > bar_w then
-                step = math.max(2, math.floor(bar_w / nb))
-                diam = math.max(1, step - 1)
-            end
-
-            local total_w = step * (nb - 1) + diam
-            local start_x = bar_x + math.floor((bar_w - total_w) / 2)
-            local dot_y   = scrollbar_top + math.floor((L.scrollbar_h - diam) / 2)
-
-            for i = 1, nb do
-                local dot_x = start_x + (i - 1) * step
-                local color = (i == self._toc_page) and Blitbuffer.COLOR_BLACK or Blitbuffer.COLOR_DARK_GRAY
-                paintPill(bb, dot_x, dot_y, diam, diam, color)
-            end
-        else
-            local by = scrollbar_top + math.floor((L.scrollbar_h - L.bar_h) / 2)
-            paintPill(bb, bar_x, by, bar_w, L.bar_h, Blitbuffer.COLOR_LIGHT_GRAY)
-
-            local thumb_w = math.max(L.bar_h * 2, math.floor(bar_w / self._nb_pages))
-            thumb_w       = math.min(thumb_w, bar_w)
-            local travel  = bar_w - thumb_w
-            local pct     = (self._toc_page - 1) / (self._nb_pages - 1)
-            local thumb_x = bar_x + math.floor(pct * travel)
-            paintPill(bb, thumb_x, by, thumb_w, L.bar_h, Blitbuffer.COLOR_BLACK)
-        end
+        pager.paint(bb, mx + L.bar_x, scrollbar_top, L.bar_w, L.scrollbar_h,
+            self._toc_page, self._nb_pages)
     end
 end
 
@@ -411,6 +404,19 @@ function ZenTocWidget:_onTap(ges)
         return true
     end
 
+    -- Tap on the page_number footer chevrons / center (prev / next / go-to-page)
+    local zone = self:_footerZone(p)
+    if zone == "left" then
+        self:_gotoTocPage((self._toc_page or 1) - 1)
+        return true
+    elseif zone == "right" then
+        self:_gotoTocPage((self._toc_page or 1) + 1)
+        return true
+    elseif zone == "center" then
+        self:_showGotoDialog()
+        return true
+    end
+
     -- Tap on an entry row
     if p.y >= L.list_y and p.y < L.list_y + L.list_h then
         local row_idx   = math.floor((p.y - L.list_y) / L.row_h)
@@ -427,6 +433,44 @@ function ZenTocWidget:_onTap(ges)
     end
 
     return true
+end
+
+-- Hold on a page_number footer chevron → skip back / forward (or to ends).
+function ZenTocWidget:_onHold(ges)
+    local zone = self:_footerZone(ges.pos)
+    if not zone or zone == "center" then return false end
+    local skip = pager.getHoldSkip()
+    local page = self._toc_page or 1
+    if zone == "left" then
+        local target = skip == "ends" and 1 or (page - (tonumber(skip) or 10))
+        self:_gotoTocPage(target)
+    else -- right
+        local target = skip == "ends" and self._nb_pages or (page + (tonumber(skip) or 10))
+        self:_gotoTocPage(target)
+    end
+    return true
+end
+
+-- Numeric "Go to page" dialog for the page_number footer center tap.
+function ZenTocWidget:_showGotoDialog()
+    local createZenDialog = require("common/ui/zen_dialog")
+    local nb     = self._nb_pages or 1
+    local dialog = createZenDialog{
+        title       = "Go to page",
+        input       = "",
+        input_type  = "number",
+        input_hint  = "1 - " .. tostring(nb),
+        button_text = "\u{F124} Go",
+        button_callback = function(dialog)
+            local pnum = tonumber(dialog:getInputText())
+            if pnum and pnum >= 1 and pnum <= nb then
+                UIManager:close(dialog)
+                self:_gotoTocPage(math.floor(pnum))
+            end
+        end,
+    }
+    UIManager:show(dialog)
+    dialog:onShowKeyboard()
 end
 
 function ZenTocWidget:_onSwipe(ges)
@@ -477,8 +521,8 @@ function ZenTocWidget:onShow()
     end)
 end
 
-function ZenTocWidget.set_plugin(plugin)
-    _plugin_ref = plugin
+function ZenTocWidget.set_plugin(p)
+    pager.setPlugin(p)
 end
 
 return ZenTocWidget

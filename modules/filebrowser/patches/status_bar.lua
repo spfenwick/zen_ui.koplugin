@@ -19,9 +19,12 @@ local function apply_status_bar()
     local LineWidget = require("ui/widget/linewidget")
     local Size = require("ui/size")
     local VerticalGroup = require("ui/widget/verticalgroup")
-    local library_font = require("common/library_font")
+    local clock_timer = require("common/clock_timer")
+    local library_font = require("modules/filebrowser/patches/library_font")
     local utils = require("common/utils")
     local paths = require("common/paths")
+    local SharedState = require("common/shared_state")
+    local Background = require("common/ui/background")
     local _ = require("gettext")
 
     local zen_plugin = rawget(_G, "__ZEN_UI_PLUGIN")
@@ -206,6 +209,39 @@ local function apply_status_bar()
     end
     local h_padding = Screen:scaleBySize(10)
 
+    -- Builds the far-left back chevron. KOReader's Button flattens its icon
+    -- against an opaque white tile at render time (IconWidget alpha=false), which
+    -- leaves a white box around the chevron when a library background is showing.
+    -- Force the icon to keep its alpha channel and drop the frame's white fill so
+    -- the background paints through.
+    local function makeBackButton(icon_size, callback)
+        local Button = require("ui/widget/button")
+        local back_widget = Button:new{
+            icon        = "chevron.left",
+            icon_width  = icon_size,
+            icon_height = icon_size,
+            bordersize  = 0,
+            padding     = 0,
+            callback    = callback or function() end,
+        }
+        local lw = back_widget.label_widget
+        if lw then
+            lw.alpha = true
+            lw:free()  -- drop the flattened (white-baked) bb so it re-renders with alpha
+        end
+        if back_widget.frame then
+            back_widget.frame.background = nil
+        end
+        -- KOReader's stock flash_ui feedback repaints the button through the
+        -- widget stack, filling the titlebar white (the library background is
+        -- only painted by our repaintTitleBar) and leaving a white/inverted box
+        -- around the transparent chevron. Drop the tap feedback entirely so the
+        -- background stays untouched.
+        back_widget._doFeedbackHighlight = function() end
+        back_widget._undoFeedbackHighlight = function() end
+        return back_widget
+    end
+
     -- Disk free space cache
     local cached_disk_text = nil
     local cached_disk_time = 0
@@ -246,7 +282,7 @@ local function apply_status_bar()
         end
         local pen_x = 0
         local baseline = self.forced_baseline or self._baseline_h
-        for _, xglyph in ipairs(self._xshaping) do
+        for _i, xglyph in ipairs(self._xshaping) do
             if pen_x >= text_width then break end
             local face = self.face.getFallbackFont(xglyph.font_num)
             local glyph = RenderText:getGlyphByIndex(face, xglyph.glyph, self.bold)
@@ -320,10 +356,10 @@ local function apply_status_bar()
         if home_dir and home_dir ~= "" then
             table.insert(search_paths, home_dir)
         end
-        for _, p in ipairs({ "/mnt/us", "/mnt/onboard", "/sdcard", "/" }) do
+        for _i, p in ipairs({ "/mnt/us", "/mnt/onboard", "/sdcard", "/" }) do
             table.insert(search_paths, p)
         end
-        for _, spath in ipairs(search_paths) do
+        for _i, spath in ipairs(search_paths) do
             local pipe = io.popen("df -h " .. spath .. " 2>/dev/null")
             if pipe then
                 for line in pipe:lines() do
@@ -403,14 +439,14 @@ local function apply_status_bar()
     -- Converts an ordered list of item keys into a HorizontalGroup widget.
     -- Module-level so it can be used by both createStatusRow and buildStatusRow.
     -- face: optional Font face override; falls back to getBarFont().
-    local function _buildGroup(order, face)
+    local function _buildGroup(order, face, bold_override)
         local group     = HorizontalGroup:new{}
         local sep       = getSeparator()
         local use_color = config.colored
-        local bold      = config.bold_text or false
+        local bold      = bold_override ~= nil and bold_override or config.bold_text or false
         local first     = true
         local function f() return face or getBarFont() end
-        for _, key in ipairs(order) do
+        for _i, key in ipairs(order) do
             local fn = item_fetchers[key]
             if fn then
                 local icon, label, color = fn()
@@ -452,6 +488,16 @@ local function apply_status_bar()
             end
         end
 
+        -- Virtual series folders keep file_chooser.path at the parent dir, so the
+        -- subfolder check above misses them. Treat being in a series view as a
+        -- subfolder so the back chevron always shows and can exit the group.
+        local item_table = file_manager and file_manager.file_chooser
+            and file_manager.file_chooser.item_table
+        local in_series_view = item_table and item_table.is_in_series_view == true
+        if in_series_view then
+            in_subfolder = true
+        end
+
         -- Respect KOReader's "Lock home folder" setting; zen mode always treats home as locked
         local is_zen_mode = zen_plugin.config
             and type(zen_plugin.config.features) == "table"
@@ -468,11 +514,21 @@ local function apply_status_bar()
         local back_callback = nil
         local icon_size = Screen:scaleBySize(isUIMagnified() and 35 or 28)  -- 28 * 1.25 = 35
         if show_back then
-            local Button = require("ui/widget/button")
             local ffiUtil = require("ffi/util")
             back_callback = function()
+                local file_chooser = file_manager and file_manager.file_chooser
+                local bw_item_table = file_chooser and file_chooser.item_table
+                if bw_item_table and bw_item_table.is_in_series_view and file_chooser.onFolderUp then
+                    UIManager:scheduleIn(0.1, function()
+                        if file_manager.file_chooser then
+                            file_manager.file_chooser:onFolderUp()
+                        end
+                    end)
+                    return
+                end
+
                 local parent = ffiUtil.dirname(path)
-                if file_manager and file_manager.file_chooser and parent then
+                if file_chooser and parent then
                     -- Defer the path change to avoid button dimen crash during feedback highlight
                     UIManager:scheduleIn(0.1, function()
                         if file_manager.file_chooser then
@@ -481,14 +537,7 @@ local function apply_status_bar()
                     end)
                 end
             end
-            back_widget = Button:new{
-                icon = "chevron.left",
-                icon_width = icon_size,
-                icon_height = icon_size,
-                bordersize = 0,
-                padding = 0,
-                callback = back_callback,
-            }
+            back_widget = makeBackButton(icon_size, back_callback)
         end
 
         local left_content  = _buildGroup(config.left_order   or {})
@@ -617,6 +666,9 @@ local function apply_status_bar()
     -- opts:  optional table with:
     --   padding   (number)  edge inset in pixels; defaults to h_padding
     --   font_name (string)  Font sizemap key, e.g. "x_smallinfofont"; defaults to "xx_smallinfofont"
+    --   font_size_delta (number) adjusts the resolved font size
+    --   bold_text (boolean) overrides the global status-bar bold setting
+    --   show_bottom_border (boolean) defaults to false for embedded rows
     local function buildStatusRow(width, opts)
         opts = opts or {}
         local edge_pad = opts.padding ~= nil and opts.padding or h_padding
@@ -624,16 +676,19 @@ local function apply_status_bar()
         if opts.font_name then
             local sized = Font.sizemap and Font.sizemap[opts.font_name]
             if sized then
+                if type(opts.font_size_delta) == "number" then
+                    sized = math.max(8, sized + opts.font_size_delta)
+                end
                 face = library_font.getFace(sized)
             end
         end
         if not face then face = getBarFont() end
 
-        local left_content   = _buildGroup(config.left_order   or {}, face)
-        local center_content = _buildGroup(config.center_order or {}, face)
-        local right_content  = _buildGroup(config.right_order  or {}, face)
+        local left_content   = _buildGroup(config.left_order   or {}, face, opts.bold_text)
+        local center_content = _buildGroup(config.center_order or {}, face, opts.bold_text)
+        local right_content  = _buildGroup(config.right_order  or {}, face, opts.bold_text)
 
-        local row_height = Screen:scaleBySize(18)
+        local row_height = Screen:scaleBySize(opts.row_height or 16)
         local function upd(w)
             if w then local s = w:getSize(); if s and s.h > row_height then row_height = s.h end end
         end
@@ -666,31 +721,45 @@ local function apply_status_bar()
                 },
             })
         end
-        return row
+        if opts.show_bottom_border ~= true then
+            return row
+        end
+        local border = LineWidget:new{
+            dimen = Geom:new{ w = math.max(1, width - edge_pad * 2), h = Size.line.medium },
+            background = Blitbuffer.COLOR_LIGHT_GRAY,
+        }
+        local CenterContainer = require("ui/widget/container/centercontainer")
+        local vg = VerticalGroup:new{ align = "center", row }
+        table.insert(vg, CenterContainer:new{
+            dimen = Geom:new{ w = width, h = Size.line.medium },
+            border,
+        })
+        return vg
     end
 
-    -- Schedules a 60-second periodic refresh of a TouchMenu panel that contains a
-    -- status row.  The timer function is stored on the menu so it can be unscheduled
-    -- and self-cancels when the menu is no longer in panel mode.
+    -- Refresh TouchMenu panels from the shared minute heartbeat.
     local function schedulePanelRefresh(menu)
         if menu._zen_status_timer then
-            UIManager:unschedule(menu._zen_status_timer)
+            clock_timer.unbind(menu)
         end
-        local function tick()
-            if menu.item_table and menu.item_table.panel then
-                menu:updateItems()
-                UIManager:scheduleIn(60, tick)
-            else
-                menu._zen_status_timer = nil
+        local function tick(target)
+            if not (target.item_table and target.item_table.panel) then
+                target._zen_status_timer = nil
+                clock_timer.unbind(target)
+                return
             end
+            local stack = UIManager._window_stack
+            local top = stack and stack[#stack]
+            if not top or top.widget ~= target then return end
+            target:updateItems()
         end
         menu._zen_status_timer = tick
-        UIManager:scheduleIn(60, tick)
+        clock_timer.bind(menu, tick)
     end
 
     local function cancelPanelRefresh(menu)
         if menu._zen_status_timer then
-            UIManager:unschedule(menu._zen_status_timer)
+            clock_timer.unbind(menu)
             menu._zen_status_timer = nil
         end
     end
@@ -701,16 +770,8 @@ local function apply_status_bar()
     -- the collections list rather than navigating the filesystem.
     local function createStatusRowCustomBack(back_callback, title)
         local CenterContainer = require("ui/widget/container/centercontainer")
-        local Button = require("ui/widget/button")
         local icon_size = Screen:scaleBySize(isUIMagnified() and 35 or 28)
-        local back_widget = Button:new{
-            icon        = "chevron.left",
-            icon_width  = icon_size,
-            icon_height = icon_size,
-            bordersize  = 0,
-            padding     = 0,
-            callback    = back_callback or function() end,
-        }
+        local back_widget = makeBackButton(icon_size, back_callback)
         local left_content   = _buildGroup(config.left_order   or {})
         local right_content  = _buildGroup(config.right_order  or {})
 
@@ -815,7 +876,12 @@ local function apply_status_bar()
         if not tb or not tb.dimen then return end
         local bb = Screen.bb
         if bb then
-            bb:paintRect(tb.dimen.x, tb.dimen.y, tb.dimen.w, tb.dimen.h, Blitbuffer.COLOR_WHITE)
+            local bg_path = Background.library_path()
+            if bg_path == "" or not Background.paintScreenRegion(bb,
+                    tb.dimen.x, tb.dimen.y, tb.dimen.x, tb.dimen.y,
+                    tb.dimen.w, tb.dimen.h, bg_path) then
+                bb:paintRect(tb.dimen.x, tb.dimen.y, tb.dimen.w, tb.dimen.h, Blitbuffer.COLOR_WHITE)
+            end
         end
         UIManager:widgetRepaint(tb, tb.dimen.x, tb.dimen.y)
         UIManager:setDirty(nil, "ui", tb.dimen)
@@ -824,13 +890,28 @@ local function apply_status_bar()
     -- Expose for cross-patch use. Stored on the plugin table so it is naturally
     -- scoped to when this feature is active and cleaned up on plugin reload.
     if type(zen_plugin) == "table" then
-        if not zen_plugin._zen_shared then zen_plugin._zen_shared = {} end
-        zen_plugin._zen_shared.createStatusRow         = createStatusRow
-        zen_plugin._zen_shared.createStatusRowCustomBack = createStatusRowCustomBack
-        zen_plugin._zen_shared.buildStatusRow          = buildStatusRow
-        zen_plugin._zen_shared.schedulePanelRefresh    = schedulePanelRefresh
-        zen_plugin._zen_shared.cancelPanelRefresh      = cancelPanelRefresh
-        zen_plugin._zen_shared.repaintTitleBar         = repaintTitleBar
+        local status_bar_api = {
+            createStatusRow = createStatusRow,
+            createStatusRowCustomBack = createStatusRowCustomBack,
+            buildStatusRow = buildStatusRow,
+            schedulePanelRefresh = schedulePanelRefresh,
+            cancelPanelRefresh = cancelPanelRefresh,
+            repaintTitleBar = repaintTitleBar,
+            clockTimer = clock_timer,
+        }
+        local function register_status_bar_api(plugin)
+            SharedState.register(plugin or zen_plugin, status_bar_api)
+        end
+        SharedState.registerLoader({
+            "createStatusRow",
+            "createStatusRowCustomBack",
+            "buildStatusRow",
+            "schedulePanelRefresh",
+            "cancelPanelRefresh",
+            "repaintTitleBar",
+            "clockTimer",
+        }, register_status_bar_api)
+        register_status_bar_api(zen_plugin)
     end
 
     -- === Replace title content and reposition buttons ===
@@ -928,9 +1009,89 @@ local function apply_status_bar()
 
     -- === Hooks ===
 
-    -- Holds the current autoRefresh function reference so onSuspend/onResume
-    -- can cancel and restart the timer without a full stack scan.
+    -- Holds the current autoRefresh callback so resume can rebind it after
+    -- pausing the shared heartbeat during suspend.
     local _fm_autoRefresh = nil
+    local rakuyomi_view_names = {
+        chapter_listing = true,
+        library_view = true,
+    }
+
+    local function suppresses_status_bar(widget)
+        if not widget then return false end
+        if rakuyomi_view_names[widget.name] == true then return true end
+        if widget._zen_home_show_status_bar == false then
+            -- Home page without a top status bar. Still allow event-driven
+            -- refresh of an embedded featured status bar (or other clock-refresh
+            -- widgets) so its Wi-Fi/battery indicators update on toggle.
+            if widget._zen_home_refresh_clock_widgets
+                    and widget._zen_home_has_clock_refreshers then
+                return false
+            end
+            return true
+        end
+        return false
+    end
+
+    local function refreshVisibleStatusBar(fm, clock_tick)
+        if FileManager.instance ~= fm then return end
+        local stack = UIManager._window_stack
+        local top = stack and stack[#stack]
+        local top_widget = top and top.widget
+
+        if suppresses_status_bar(top_widget) then return end
+        if top_widget == fm or top_widget == fm.show_parent then
+            fm:_updateStatusBar()
+        elseif top_widget and top_widget._zen_status_refresh then
+            if clock_tick and top_widget._zen_status_clock_bound then return end
+            top_widget._zen_status_refresh(top_widget)
+        elseif top_widget and top_widget._zen_home_refresh_clock_widgets then
+            -- Featured embedded status bar: no _zen_status_refresh, refreshes via
+            -- its clock-widget refreshers instead. Skip clock ticks it handles
+            -- through its own heartbeat binding to avoid a double refresh.
+            if clock_tick and top_widget._zen_status_clock_bound then return end
+            top_widget:_zen_home_refresh_clock_widgets()
+        end
+    end
+
+    local page_load_refresh_pending = false
+    local function schedulePageLoadStatusRefresh(fm)
+        if not fm or page_load_refresh_pending then return end
+        page_load_refresh_pending = true
+        UIManager:nextTick(function()
+            page_load_refresh_pending = false
+            refreshVisibleStatusBar(fm, false)
+        end)
+    end
+
+    local function has_refreshable_status_bar(widget, fm)
+        return widget == fm
+            or widget == fm.show_parent
+            or widget._zen_status_refresh
+            or widget._zen_home_refresh_clock_widgets
+    end
+
+    local Menu = require("ui/widget/menu")
+    Menu._zen_status_bar_on_show_refresh = function(menu)
+        local fm = FileManager.instance
+        if fm and is_enabled() and has_refreshable_status_bar(menu, fm) then
+            schedulePageLoadStatusRefresh(fm)
+        end
+    end
+    if not Menu._zen_status_bar_on_show_patched then
+        Menu._zen_status_bar_on_show_patched = true
+        local orig_menu_onShow = Menu.onShow
+        Menu.onShow = function(menu, ...)
+            local result
+            if orig_menu_onShow then
+                result = orig_menu_onShow(menu, ...)
+            end
+            if Menu._zen_status_bar_on_show_refresh then
+                Menu._zen_status_bar_on_show_refresh(menu)
+            end
+            return result
+        end
+    end
 
     local orig_setupLayout = FileManager.setupLayout
 
@@ -980,7 +1141,7 @@ local function apply_status_bar()
         -- Defer again after all plugins (coverbrowser etc.) finish init
         local fm = self
         UIManager:nextTick(function()
-            fm:_updateStatusBar()
+            refreshVisibleStatusBar(fm, false)
             -- Restore subtitle path only when subtitle widget exists
             if not config.hide_browser_bar and fm.file_chooser and fm.file_chooser.path then
                 fm:updateTitleBarPath(fm.file_chooser.path)
@@ -1002,34 +1163,13 @@ local function apply_status_bar()
             end
         end)
 
-        -- Periodic refresh for time/battery/disk.
-        -- Always fires at the top of the next minute so the clock stays aligned.
-        -- Also refreshes any open zen overlay (favorites, collections, history, stats)
-        -- so their clock/battery updates without needing a separate timer per menu.
+        -- Periodic refresh for time/battery/disk. The shared heartbeat is
+        -- minute-aligned and also drives home/group standalone pages.
         local function autoRefresh()
-            if FileManager.instance ~= fm then return end
-            local stack = UIManager._window_stack
-            local top = stack and stack[#stack]
-            local top_widget = top and top.widget
-
-            -- Only refresh when the topmost widget is ours.  If a screensaver,
-            -- dialog, or TouchMenu is on top, skip — avoids painting behind
-            -- overlays and into the sleep screen.
-            if top_widget == fm or top_widget == fm.show_parent then
-                fm:_updateStatusBar()
-            elseif top_widget and top_widget._zen_status_refresh then
-                top_widget._zen_status_refresh()
-            end
-
-            -- Schedule next tick at the top of the following minute.
-            local t = os.date("*t")
-            UIManager:scheduleIn(60 - t.sec, autoRefresh)
+            refreshVisibleStatusBar(fm, true)
         end
-        -- Store reference so onSuspend/onResume can cancel/restart this timer.
         _fm_autoRefresh = autoRefresh
-        -- First tick: align to the top of the next minute.
-        local t = os.date("*t")
-        UIManager:scheduleIn(60 - t.sec, autoRefresh)
+        clock_timer.subscribe("filemanager_status_bar", autoRefresh)
     end
 
     local orig_onPathChanged = FileManager.onPathChanged
@@ -1056,14 +1196,7 @@ local function apply_status_bar()
             -- Only refresh the topmost widget.  If a screensaver, dialog, or
             -- TouchMenu is on top, skip — avoids painting behind overlays
             -- and into the sleep screen.
-            local stack = UIManager._window_stack
-            local top = stack and stack[#stack]
-            local top_widget = top and top.widget
-            if top_widget == self or top_widget == self.show_parent then
-                self:_updateStatusBar()
-            elseif top_widget and top_widget._zen_status_refresh then
-                top_widget._zen_status_refresh()
-            end
+            refreshVisibleStatusBar(self, false)
         end
     end
 
@@ -1081,15 +1214,7 @@ local function apply_status_bar()
         end
         _charging_refresh_timer = function()
             _charging_refresh_timer = nil
-            if FileManager.instance ~= fm then return end
-            local stack = UIManager._window_stack
-            local top = stack and stack[#stack]
-            local top_widget = top and top.widget
-            if top_widget == fm or top_widget == fm.show_parent then
-                fm:_updateStatusBar()
-            elseif top_widget and top_widget._zen_status_refresh then
-                top_widget._zen_status_refresh()
-            end
+            refreshVisibleStatusBar(fm, false)
         end
         UIManager:scheduleIn(1.5, _charging_refresh_timer)
     end
@@ -1107,14 +1232,12 @@ local function apply_status_bar()
         hookCharging("onNotCharging")
     end
 
-    -- Suspend: cancel the periodic timer so it does not fire during sleep.
-    -- Resume: do a single refresh and restart the timer aligned to the current second.
+    -- Suspend: pause the shared heartbeat so it does not fire during sleep.
+    -- Resume: do a visible refresh and restart it on the next minute boundary.
     local orig_onSuspend = FileManager.onSuspend
     FileManager.onSuspend = function(self)
         if orig_onSuspend then orig_onSuspend(self) end
-        if _fm_autoRefresh then
-            UIManager:unschedule(_fm_autoRefresh)
-        end
+        clock_timer.pause()
         -- Cancel any pending charging debounce so it doesn't paint into the screensaver.
         if _charging_refresh_timer then
             UIManager:unschedule(_charging_refresh_timer)
@@ -1132,15 +1255,7 @@ local function apply_status_bar()
         local fm = FileManager.instance
         if fm and is_enabled() then
             UIManager:nextTick(function()
-                if FileManager.instance ~= fm then return end
-                local stack = UIManager._window_stack
-                local top = stack and stack[#stack]
-                local top_widget = top and top.widget
-                if top_widget == fm or top_widget == fm.show_parent then
-                    fm:_updateStatusBar()
-                elseif top_widget and top_widget._zen_status_refresh then
-                    top_widget._zen_status_refresh()
-                end
+                refreshVisibleStatusBar(fm, false)
             end)
         end
     end
@@ -1153,11 +1268,7 @@ local function apply_status_bar()
             local result = orig and orig(fc, ...) or true
             local fm = FileManager.instance
             if fm and is_enabled() then
-                UIManager:nextTick(function()
-                    if FileManager.instance == fm then
-                        fm:_updateStatusBar()
-                    end
-                end)
+                schedulePageLoadStatusRefresh(fm)
             end
             return result
         end
@@ -1182,25 +1293,16 @@ local function apply_status_bar()
             -- the screensaver may still be the topmost widget immediately after
             -- resume and block the guard on the first try.
             local function doResumeRefresh()
-                if FileManager.instance ~= fm then return end
-                local stack = UIManager._window_stack
-                local top = stack and stack[#stack]
-                if not top then return end
-                if top.widget == fm or top.widget == fm.show_parent then
-                    fm:_updateStatusBar()
-                elseif top.widget and top.widget._zen_status_refresh then
-                    top.widget._zen_status_refresh()
-                end
+                refreshVisibleStatusBar(fm, false)
             end
             UIManager:scheduleIn(0.5, doResumeRefresh)
             UIManager:scheduleIn(1.5, doResumeRefresh)
-            -- Restart the periodic timer (was cancelled on suspend).
-            -- Delay slightly so the fresh alignment happens after the display settles.
+            -- Restart the shared minute heartbeat after the display settles.
             UIManager:scheduleIn(2, function()
                 if FileManager.instance ~= fm or not _fm_autoRefresh then return end
-                UIManager:unschedule(_fm_autoRefresh)
-                local t = os.date("*t")
-                UIManager:scheduleIn(60 - t.sec, _fm_autoRefresh)
+                clock_timer.resume()
+                clock_timer.subscribe("filemanager_status_bar", _fm_autoRefresh)
+                clock_timer.restart()
             end)
         end
     end

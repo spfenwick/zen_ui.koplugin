@@ -16,6 +16,7 @@ return {
     copy         = "\u{F018F}",  -- mdi-content-copy
     cut          = "\u{F0190}",  -- mdi-content-cut
     paste        = "\u{F0192}",  -- mdi-content-paste
+    save         = "\u{F0193}",  -- mdi-content-save
     select       = "\u{F0489}",  -- mdi-cursor-default-click
     new_folder   = "\u{F0B9D}",  -- mdi-folder-plus
     folder_open  = "\u{F07C}",   -- mdi-folder-open
@@ -53,6 +54,10 @@ return {
     -- details / info (context_menu.lua / opds.lua)
     details      = "\u{F02FD}",  -- mdi-information
     edit         = "\u{F090C}",  -- mdi-pencil
+    label        = "\u{F04F9}",
+    icon         = "\u{F02F5}",
+    plugin       = "\u{F06A5}",
+    action       = "\u{F140B}",
 
     -- network / sync (opds.lua)
     search       = "\u{F0349}",  -- mdi-magnify
@@ -71,6 +76,21 @@ return {
     -- screenshot dialog
     wallpaper    = "\u{F05DA}",  -- mdi-wallpaper
     send         = "\u{F048A}",  -- mdi-send
+
+    -- Zen UI settings root
+    settings_launcher = "\u{F15FC}",
+    settings_quick    = "\u{F0A1A}",
+    settings_library  = "\u{F125F}",
+    settings_home     = "\u{F02DC}",
+    settings_navbar   = "\u{F0837}",
+    settings_reader   = "\u{F14F7}",
+    settings_global   = "\u{F484}",
+    settings_advanced = "\u{F1323}",
+    settings_about    = "\u{F02FD}",  -- mdi-information
+
+    -- book status actions (book_status.lua)
+    restart      = "\u{F0709}",  -- mdi-restart
+    next_book    = "\u{f0054}",   -- nf-md-arrow-right
 
     -- misc
     update       = "\u{F01B}",   -- nf-fa-cloud-download

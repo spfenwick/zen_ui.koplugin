@@ -8,12 +8,39 @@ local function apply_reader_footer()
 
     local ReaderFooter = require("apps/reader/modules/readerfooter")
     local BD = require("ui/bidi")
+    local Blitbuffer = require("ffi/blitbuffer")
     local Geom = require("ui/geometry")
     local LeftContainer = require("ui/widget/container/leftcontainer")
     local TextWidget = require("ui/widget/textwidget")
     local UIManager = require("ui/uimanager")
-    local Screen = require("device").screen
+    local Device = require("device")
+    local Screen = Device.screen
     local _ = require("gettext")
+
+    -- In compact_items mode, KOReader's battery generator returns the icon
+    -- only. Append the numeric percentage so it matches "icons" mode
+    -- (BD.wrap(prefix) .. batt_lvl .. "%").
+    if not ReaderFooter._zen_battery_patched then
+        local orig_battery = ReaderFooter.textGeneratorMap.battery
+        ReaderFooter.textGeneratorMap.battery = function(footer)
+            local result = orig_battery(footer)
+            if footer.settings.item_prefix == "compact_items" and result ~= "" then
+                local powerd = Device:getPowerDevice()
+                local batt_lvl = 0
+                if Device:hasBattery() then
+                    local main_batt_lvl = powerd:getCapacity()
+                    if Device:hasAuxBattery() and powerd:isAuxBatteryConnected() then
+                        batt_lvl = main_batt_lvl + powerd:getAuxCapacity()
+                    else
+                        batt_lvl = main_batt_lvl
+                    end
+                end
+                result = result .. batt_lvl .. "%"
+            end
+            return result
+        end
+        ReaderFooter._zen_battery_patched = true
+    end
 
     -- Register as a generator (alias of dynamic_filler; only layout differs).
     if not ReaderFooter.textGeneratorMap.dynamic_filler_2 then
@@ -252,6 +279,9 @@ local function apply_reader_footer()
     local orig_updateFooterContainer = ReaderFooter.updateFooterContainer
     ReaderFooter.updateFooterContainer = function(self)
         orig_updateFooterContainer(self)
+        if self.progress_bar then
+            self.progress_bar.fillcolor = Blitbuffer.COLOR_BLACK
+        end
         if not is_lcr_alongside(self) then
             -- Remove any stale left container from a previous mode.
             self._zen_left_text = nil

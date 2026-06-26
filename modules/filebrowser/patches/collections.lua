@@ -1,11 +1,13 @@
 local logger = require("logger")
 local icons  = require("common/inline_icon_map")
 local Cover  = require("common/cover_utils")
-local library_font = require("common/library_font")
+local library_font = require("modules/filebrowser/patches/library_font")
 local OverlapGroup = require("ui/widget/overlapgroup")
 local CenterContainer = require("ui/widget/container/centercontainer")
 local VerticalGroup = require("ui/widget/verticalgroup")
 local VerticalSpan = require("ui/widget/verticalspan")
+local Background = require("common/ui/background")
+local SharedState = require("common/shared_state")
 
 logger.dbg("zen-coll: module loaded")
 
@@ -23,6 +25,10 @@ local function apply_collections()
     local function is_enabled()
         local features = zen_plugin.config and zen_plugin.config.features
         return type(features) == "table" and features.collections == true
+    end
+
+    local function get_shared(key)
+        return SharedState.get(zen_plugin, key)
     end
 
     local function should_match_statusbar_height()
@@ -456,6 +462,7 @@ local function apply_collections()
 
         local SORT_OPTIONS = {
             { key = "title",    text = "\u{F04BB}  " .. _g("Title")         },
+            { key = "title_natural", text = "\u{F04BB}  " .. _g("Title natural") },
             { key = "authors",  text = "\u{F0013}  " .. _g("Authors")       },
             { key = "series",   text = "\u{F0436}  " .. _g("Series")        },
             { key = "access",   text = "\u{F02DA}  " .. _g("Recently read") },
@@ -845,6 +852,7 @@ local function apply_collections()
     ---------------------------------------------------------------------------
     local function clean_nav(menu, collection_name, raw_coll_name, fm_coll)
         if not menu then return end
+        Background.applyToMenu(menu)
 
         local UIManager_mod = require("ui/uimanager")
 
@@ -923,8 +931,7 @@ local function apply_collections()
         local tb = menu.title_bar
         if not tb then return end
 
-        local createStatusRowCustomBack = zen_plugin._zen_shared
-            and zen_plugin._zen_shared.createStatusRowCustomBack
+        local createStatusRowCustomBack = get_shared("createStatusRowCustomBack")
 
         if createStatusRowCustomBack and tb.title_group and #tb.title_group >= 2 then
             local back_callback = menu.onReturn and function() menu.onReturn() end
@@ -939,8 +946,7 @@ local function apply_collections()
             tb.has_left_icon  = false
             tb.has_right_icon = false
 
-            local repaintTitleBar = zen_plugin._zen_shared
-                and zen_plugin._zen_shared.repaintTitleBar
+            local repaintTitleBar = get_shared("repaintTitleBar")
             menu._zen_status_refresh = function()
                 if tb.title_group and #tb.title_group >= 2 then
                     tb.title_group[2] = createStatusRowCustomBack(back_callback, collection_name)
@@ -962,6 +968,7 @@ local function apply_collections()
     ---------------------------------------------------------------------------
     local function clean_nav_list(menu, fm_coll)
         if not menu then return end
+        Background.applyToMenu(menu)
 
         local UIManager_mod = require("ui/uimanager")
         local Device        = require("device")
@@ -1008,8 +1015,7 @@ local function apply_collections()
         local tb = menu.title_bar
         if not tb then return end
 
-        local createStatusRow = zen_plugin._zen_shared
-            and zen_plugin._zen_shared.createStatusRow
+        local createStatusRow = get_shared("createStatusRow")
 
         if createStatusRow and tb.title_group and #tb.title_group >= 2 then
             local FileManager = require("apps/filemanager/filemanager")
@@ -1022,8 +1028,7 @@ local function apply_collections()
             tb.has_left_icon  = false
             tb.has_right_icon = false
 
-            local repaintTitleBar = zen_plugin._zen_shared
-                and zen_plugin._zen_shared.repaintTitleBar
+            local repaintTitleBar = get_shared("repaintTitleBar")
             menu._zen_status_refresh = function()
                 if tb.title_group and #tb.title_group >= 2 then
                     tb.title_group[2] = createStatusRow(nil, FileManager.instance)
@@ -1064,6 +1069,7 @@ local function apply_collections()
         if is_favorites and collection_name == nil then
             local menu = self.booklist_menu
             if menu and is_enabled() then
+                Background.applyToMenu(menu)
                 local _ = require("gettext")
                 local fav_display = _("Favorites")
                 local raw_fav = resolved_name

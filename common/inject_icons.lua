@@ -8,12 +8,15 @@ local _plugin_root = require("common/plugin_root")
 if _plugin_root then
     utils.registerPluginIcons(_plugin_root .. "/icons/", {
         -- App / settings UI
-        ["zen_settings"]        = "settings.svg",
+        ["zen_settings"]        = "zen_ui.svg",
         ["quicksettings"]       = "quicksettings.svg",
         ["zen_ui"]              = "zen_ui.svg",
         ["zen_ui_light"]        = "zen_ui_light.svg",
         ["zen_ui_update"]       = "zen_ui_update.svg",
         ["library"]             = "library.svg",
+        ["app_launcher"]        = "app_launcher.svg",
+        ["lightning"]           = "lightning.svg",
+        ["folder_open"]         = "folder_open.svg",
         -- Highlight / lookup popup (shared by highlight_menu + dict_quick_lookup)
         ["lookup.highlight"]    = "lookup_highlight.svg",
         ["lookup.vocab"]        = "lookup_vocab.svg",

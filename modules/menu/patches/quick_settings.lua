@@ -17,20 +17,27 @@ local function apply_quick_settings()
     local ConfirmBox = require("ui/widget/confirmbox")
     local TextWidget = require("ui/widget/textwidget")
     local UIManager = require("ui/uimanager")
-    local ZenSlider = require("common/zen_slider")
-    local library_font = require("common/library_font")
+    local library_font = require("modules/filebrowser/patches/library_font")
     local VerticalGroup = require("ui/widget/verticalgroup")
     local VerticalSpan = require("ui/widget/verticalspan")
     local utils = require("common/utils")
+    local shutdown = require("common/shutdown")
+    local SharedState = require("common/shared_state")
     local build_brightness_slider = require("modules/menu/patches/brightness_slider")
     local build_warmth_slider     = require("modules/menu/patches/warmth_slider")
     local _ = require("gettext")
     local Screen = Device.screen
     local Dispatcher = require("dispatcher")
+    local PluginScan = require("modules/menu/app_launcher/plugin_scan")
 
     local zen_plugin = rawget(_G, "__ZEN_UI_PLUGIN")
     if not zen_plugin or type(zen_plugin.config) ~= "table" then
         return
+    end
+    require("modules/menu/patches/touch_menu_panel").install(zen_plugin)
+
+    local function get_shared(key)
+        return SharedState.get(zen_plugin, key)
     end
 
     -- Resolve plugin icons/ dir from this file's path at apply-time.
@@ -45,15 +52,28 @@ local function apply_quick_settings()
         return type(features) == "table" and features.quick_settings == true
     end
 
+    local function getQuickSettingsTabIndex(touch_menu)
+        local tab_table = touch_menu and touch_menu.tab_item_table
+        if type(tab_table) ~= "table" then return 1 end
+        for i, tab in ipairs(tab_table) do
+            if tab.id == "quicksettings" then
+                return i
+            end
+        end
+        return 1
+    end
+
     -- ============================================================
     -- Configuration
     -- ============================================================
 
     local config_default = {
-        button_order = { "wifi", "night", "rotate", "zen", "lockdown", "usb", "search", "quickrss", "cloud", "zlibrary", "calibre", "calibre_search", "notion", "streak", "opds", "localsend", "filebrowser", "puzzle", "crossword", "connections", "chess", "casualchess", "stats_progress", "stats_calendar", "battery_stats", "kosync", "restart", "exit", "sleep", "screenshot" },
+        button_order = { "wifi", "night", "frontlight", "gyro", "rotate", "zen", "lockdown", "usb", "search", "quickrss", "cloud", "zlibrary", "calibre", "calibre_search", "notion", "streak", "opds", "localsend", "filebrowser", "puzzle", "crossword", "connections", "chess", "casualchess", "stats_progress", "stats_calendar", "battery_stats", "kosync", "restart", "exit", "sleep", "screenshot" },
         show_buttons = {
             wifi = true,
             night = true,
+            frontlight = false,
+            gyro = false,
             rotate = true,
             zen = true,
             lockdown = false,
@@ -86,6 +106,8 @@ local function apply_quick_settings()
         },
         show_frontlight = true,
         show_warmth = true,
+        rotate_action = "cycle",
+        screenshot_timer_seconds = 3,
         custom_buttons = {},  -- array of { id, label, icon, action }
         next_custom_id = 0,
     }
@@ -136,14 +158,14 @@ local function apply_quick_settings()
             -- Deduplicate existing entries, then append any new buttons from the default order
             local seen = {}
             local deduped = {}
-            for _, id in ipairs(config.button_order) do
+            for _i, id in ipairs(config.button_order) do
                 if not seen[id] then
                     seen[id] = true
                     table.insert(deduped, id)
                 end
             end
             config.button_order = deduped
-            for _, id in ipairs(config_default.button_order) do
+            for _i, id in ipairs(config_default.button_order) do
                 if not seen[id] then
                     seen[id] = true
                     table.insert(config.button_order, id)
@@ -154,7 +176,7 @@ local function apply_quick_settings()
         if type(config.custom_buttons) ~= "table" then config.custom_buttons = {} end
         if type(config.next_custom_id) ~= "number" then config.next_custom_id = 0 end
         local cb_ids = {}
-        for _, cb in ipairs(config.custom_buttons) do
+        for _i, cb in ipairs(config.custom_buttons) do
             if type(cb.id) == "string" then
                 cb_ids[cb.id] = true
                 if config.show_buttons[cb.id] == nil then
@@ -164,7 +186,7 @@ local function apply_quick_settings()
         end
         -- Remove stale cb_ entries (deleted custom buttons) from button_order
         local clean_order = {}
-        for _, id in ipairs(config.button_order) do
+        for _i, id in ipairs(config.button_order) do
             if id:sub(1, 3) ~= "cb_" or cb_ids[id] then
                 table.insert(clean_order, id)
             end
@@ -172,8 +194,8 @@ local function apply_quick_settings()
         config.button_order = clean_order
         -- Append new custom button IDs not yet in button_order
         local in_order = {}
-        for _, id in ipairs(config.button_order) do in_order[id] = true end
-        for _, cb in ipairs(config.custom_buttons) do
+        for _i, id in ipairs(config.button_order) do in_order[id] = true end
+        for _i, cb in ipairs(config.custom_buttons) do
             if type(cb.id) == "string" and not in_order[cb.id] then
                 table.insert(config.button_order, cb.id)
             end
@@ -189,12 +211,64 @@ local function apply_quick_settings()
 
     loadConfig()
 
+    local function setRotationMode(touch_menu, mode)
+        if touch_menu and touch_menu.closeMenu then
+            touch_menu:closeMenu()
+        end
+        UIManager:broadcastEvent(Event:new("SetRotationMode", mode))
+    end
+
+    local function toggleRotationTarget(target_mode)
+        if Screen:getRotationMode() == target_mode then
+            return Screen.DEVICE_ROTATED_UPRIGHT
+        end
+        return target_mode
+    end
+
+    local function nextCycleRotationMode()
+        local current = Screen:getRotationMode()
+        if current == Screen.DEVICE_ROTATED_CLOCKWISE then
+            return Screen.DEVICE_ROTATED_UPSIDE_DOWN
+        elseif current == Screen.DEVICE_ROTATED_UPSIDE_DOWN then
+            return Screen.DEVICE_ROTATED_COUNTER_CLOCKWISE
+        elseif current == Screen.DEVICE_ROTATED_COUNTER_CLOCKWISE then
+            return Screen.DEVICE_ROTATED_UPRIGHT
+        end
+        return Screen.DEVICE_ROTATED_CLOCKWISE
+    end
+
     -- Returns true if a plugin slot is loaded in the active UI; fails open if no UI yet.
     local function hasPlugin(slot)
         local ok_f, FM = pcall(require, "apps/filemanager/filemanager")
         local ok_r, RU = pcall(require, "apps/reader/readerui")
         local ui = (ok_f and FM.instance) or (ok_r and RU.instance)
         return ui == nil or ui[slot] ~= nil
+    end
+
+    local function showUnavailable()
+        local InfoMessage = require("ui/widget/infomessage")
+        UIManager:show(InfoMessage:new{ text = _("Quick settings button is unavailable") })
+    end
+
+    local function getScreenshotTimerSeconds()
+        local seconds = tonumber(config.screenshot_timer_seconds) or 3
+        return math.max(0, math.min(10, math.floor(seconds)))
+    end
+
+    local function showScreenshotTimerDialog(touch_menu)
+        local SpinWidget = require("ui/widget/spinwidget")
+        UIManager:show(SpinWidget:new{
+            title_text = _("Screenshot timer"),
+            value = getScreenshotTimerSeconds(),
+            value_min = 0,
+            value_max = 10,
+            default_value = 3,
+            callback = function(spin)
+                config.screenshot_timer_seconds = spin.value
+                zen_plugin:saveConfig()
+                if touch_menu and touch_menu.updateItems then touch_menu:updateItems(1) end
+            end,
+        })
     end
 
     -- ============================================================
@@ -263,11 +337,66 @@ local function apply_quick_settings()
                 UIManager:setDirty("all", "full")
             end,
         },
+        frontlight = {
+            icon = "lightbulb",
+            label = _("Light"),
+            visible_func = function() return Device:hasFrontlight() end,
+            active_func = function()
+                local powerd = Device:getPowerDevice()
+                if powerd and powerd.isFrontlightOn then
+                    return powerd:isFrontlightOn()
+                end
+                return powerd and powerd.frontlightIntensity
+                    and powerd:frontlightIntensity() > (powerd.fl_min or 0)
+            end,
+            callback = function(touch_menu)
+                local powerd = Device:getPowerDevice()
+                if not powerd then return end
+                if powerd.isFrontlightOn and powerd:isFrontlightOn() then
+                    if powerd.turnOffFrontlight then
+                        powerd:turnOffFrontlight()
+                    elseif powerd.setIntensity then
+                        powerd:setIntensity(powerd.fl_min or 0)
+                    end
+                else
+                    local target = powerd.fl_intensity
+                    if type(target) ~= "number" or target <= (powerd.fl_min or 0) then
+                        target = math.min(powerd.fl_max or 1, (powerd.fl_min or 0) + 1)
+                    end
+                    local turned_on = powerd.turnOnFrontlight and powerd:turnOnFrontlight()
+                    if (not powerd.turnOnFrontlight or turned_on == false) and powerd.setIntensity then
+                        powerd:setIntensity(target)
+                    end
+                end
+                touch_menu:updateItems(1)
+            end,
+        },
+        gyro = {
+            icon = "gyro",
+            label = _("Gyro"),
+            visible_func = function() return Device:hasGSensor() end,
+            active_func = function()
+                return G_reader_settings:nilOrFalse("input_ignore_gsensor")
+            end,
+            callback = function(touch_menu)
+                UIManager:broadcastEvent(Event:new("ToggleGSensor"))
+                touch_menu:updateItems(1)
+            end,
+        },
         rotate = {
             icon = "quick_rotate",
             label = _("Rotate"),
-            callback = function()
-                UIManager:broadcastEvent(Event:new("IterateRotation"))
+            callback = function(touch_menu)
+                local action = config.rotate_action
+                if action == "90" then
+                    setRotationMode(touch_menu, toggleRotationTarget(Screen.DEVICE_ROTATED_CLOCKWISE))
+                elseif action == "180" then
+                    setRotationMode(touch_menu, toggleRotationTarget(Screen.DEVICE_ROTATED_UPSIDE_DOWN))
+                elseif action == "270" then
+                    setRotationMode(touch_menu, toggleRotationTarget(Screen.DEVICE_ROTATED_COUNTER_CLOCKWISE))
+                else
+                    setRotationMode(touch_menu, nextCycleRotationMode())
+                end
             end,
         },
         usb = {
@@ -300,7 +429,7 @@ local function apply_quick_settings()
                     text = _("Are you sure you want to exit KOReader?"),
                     ok_text = _("Exit"),
                     ok_callback = function()
-                        UIManager:broadcastEvent(Event:new("Exit"))
+                        shutdown.broadcastExit(zen_plugin)
                     end,
                 })
             end,
@@ -308,9 +437,12 @@ local function apply_quick_settings()
         sleep = {
             icon = "quick_sleep",
             label = _("Sleep"),
-            callback = function()
+            callback = function(touch_menu)
+                if touch_menu and touch_menu.closeMenu then
+                    touch_menu:closeMenu()
+                end
                 if Device:canSuspend() then
-                    UIManager:broadcastEvent(Event:new("RequestSuspend"))
+                    UIManager:suspend()
                 elseif Device:canPowerOff() then
                     UIManager:broadcastEvent(Event:new("RequestPowerOff"))
                 end
@@ -427,7 +559,7 @@ local function apply_quick_settings()
             callback = function(touch_menu)
                 UIManager:broadcastEvent(Event:new("ToggleLocalSend"))
                 UIManager:scheduleIn(1.5, function()
-                    if touch_menu._qs_refs then
+                    if touch_menu._zen_panel_refs then
                         touch_menu:updateItems(1)
                     end
                 end)
@@ -446,21 +578,9 @@ local function apply_quick_settings()
                 return type(features) == "table" and features.lockdown_mode == true
             end,
             callback = function()
-                local features = zen_plugin.config and zen_plugin.config.features
-                if type(features) == "table" then
-                    features.zen_mode = not features.zen_mode
-                    if zen_plugin.saveConfig then
-                        zen_plugin:saveConfig()
-                    end
+                if zen_plugin.onToggleZenMode then
+                    zen_plugin:onToggleZenMode()
                 end
-                UIManager:show(ConfirmBox:new{
-                    text = _("This change requires a restart to take effect."),
-                    ok_text = _("Restart now"),
-                    cancel_text = _("Later"),
-                    ok_callback = function()
-                        UIManager:broadcastEvent(Event:new("Restart"))
-                    end,
-                })
             end,
         },
         lockdown = {
@@ -471,20 +591,12 @@ local function apply_quick_settings()
                 return type(features) == "table" and features.lockdown_mode == true
             end,
             callback = function(touch_menu)
-                local features = zen_plugin.config and zen_plugin.config.features
-                if type(features) ~= "table" then return end
-                local enabling = not features.lockdown_mode
-                features.lockdown_mode = enabling
-                if enabling then features.zen_mode = true end
-                local ok_lm, lockdown_mod = pcall(require, "modules/global/patches/lockdown_mode")
-                if ok_lm and type(lockdown_mod) == "table" then
-                    lockdown_mod.apply_magnify_layout(zen_plugin, enabling)
+                if zen_plugin.onToggleLockdownMode then
+                    zen_plugin:onToggleLockdownMode()
                 end
-                if zen_plugin.saveConfig then zen_plugin:saveConfig() end
                 if touch_menu and touch_menu.updateItems then
                     touch_menu:updateItems(1)
                 end
-                require("modules/settings/zen_settings_apply").prompt_restart()
             end,
         },
         connections = {
@@ -562,10 +674,12 @@ local function apply_quick_settings()
             visible_func = function() return hasPlugin("kosync") end,
             callback = function(touch_menu)
                 touch_menu:closeMenu()
-                UIManager:broadcastEvent(Event:new("KOSyncPullProgress"))
-                -- Push after a short delay to let the pull complete first.
-                UIManager:scheduleIn(1, function()
-                    UIManager:broadcastEvent(Event:new("KOSyncPushProgress"))
+                NetworkMgr:runWhenOnline(function()
+                    UIManager:broadcastEvent(Event:new("KOSyncPullProgress"))
+                    -- Push after a short delay to let the pull complete first.
+                    UIManager:scheduleIn(1, function()
+                        UIManager:broadcastEvent(Event:new("KOSyncPushProgress"))
+                    end)
                 end)
             end,
         },
@@ -605,9 +719,10 @@ local function apply_quick_settings()
             callback = function(touch_menu)
                 touch_menu:closeMenu()
                 UIManager:scheduleIn(0.3, function()
-                    require("common/countdown_screenshot").run()
+                    require("modules/menu/patches/countdown_screenshot").run(getScreenshotTimerSeconds())
                 end)
             end,
+            hold_callback = showScreenshotTimerDialog,
         },
         chess = {
             icon = "quick_chess",
@@ -634,14 +749,25 @@ local function apply_quick_settings()
     -- Panel builder — returns panel widget + refs for tap handling
     -- ============================================================
 
+    local function is_qs_hold_required()
+        local features = zen_plugin.config and zen_plugin.config.features
+        if not (type(features) == "table" and features.lockdown_mode == true) then return false end
+        local lc = zen_plugin.config.lockdown
+        return type(lc) == "table" and lc.require_hold_in_qs == true
+    end
+
     local function createQuickSettingsPanel(touch_menu)
         local panel_width = touch_menu.item_width
         local padding = Screen:scaleBySize(10)
         local inner_width = panel_width - padding * 2
         local powerd = Device:getPowerDevice()
 
-        -- Refs table: stored on touch_menu for gesture handling
-        local refs = { buttons = {}, sliders = {}, toggles = {} }
+        local refs = {
+            buttons = {},
+            sliders = {},
+            toggles = {},
+            require_hold = is_qs_hold_required,
+        }
 
         -- ----- Top row: action buttons -----
 
@@ -649,24 +775,48 @@ local function apply_quick_settings()
         -- without a restart (config is always current at this point).
         if type(config.custom_buttons) == "table" then
             for _i, cb in ipairs(config.custom_buttons) do
-                local cb_action = cb.action
-                button_defs[cb.id] = {
-                    icon = cb.icon or "zen_ui",
-                    label = (cb.label and cb.label ~= "") and cb.label
-                        or (cb_action and next(cb_action) and Dispatcher:menuTextFunc(cb_action))
-                        or _("Custom"),
-                    callback = function(tm)
-                        tm:closeMenu()
-                        if type(cb_action) == "table" and next(cb_action) then
-                            Dispatcher:execute(cb_action)
-                        end
-                    end,
-                }
+                if cb.type == "plugin" and type(cb.plugin) == "table" then
+                    local plugin = cb.plugin
+                    button_defs[cb.id] = {
+                        icon = cb.icon or "lightning",
+                        label = (cb.label and cb.label ~= "") and cb.label
+                            or cb.plugin_title
+                            or _("Plugin"),
+                        visible_func = function()
+                            return PluginScan.exists(plugin.key, plugin.method)
+                        end,
+                        callback = function(tm)
+                            local launch = PluginScan.resolve(plugin.key, plugin.method)
+                            if not launch then
+                                showUnavailable()
+                                return
+                            end
+                            tm:closeMenu()
+                            UIManager:nextTick(function()
+                                pcall(launch)
+                            end)
+                        end,
+                    }
+                else
+                    local cb_action = cb.action
+                    button_defs[cb.id] = {
+                        icon = cb.icon or "zen_ui",
+                        label = (cb.label and cb.label ~= "") and cb.label
+                            or (cb_action and next(cb_action) and Dispatcher:menuTextFunc(cb_action))
+                            or _("Custom"),
+                        callback = function(tm)
+                            tm:closeMenu()
+                            if type(cb_action) == "table" and next(cb_action) then
+                                Dispatcher:execute(cb_action)
+                            end
+                        end,
+                    }
+                end
             end
         end
 
         local visible_buttons = {}
-        for _, id in ipairs(config.button_order) do
+        for _i, id in ipairs(config.button_order) do
             if config.show_buttons[id] and button_defs[id] then
                 local def = button_defs[id]
                 if not def.visible_func or def.visible_func() then
@@ -821,10 +971,9 @@ local function apply_quick_settings()
 
         -- ----- Status bar row (reuses status_bar component when that feature is active) -----
 
-        local _zen_shared = zen_plugin._zen_shared
-        local status_row  = _zen_shared
-            and type(_zen_shared.buildStatusRow) == "function"
-            and _zen_shared.buildStatusRow(panel_width, {
+        local buildStatusRow = get_shared("buildStatusRow")
+        local status_row  = type(buildStatusRow) == "function"
+            and buildStatusRow(panel_width, {
                 padding   = Screen:scaleBySize(6),
                 font_name = "x_smallinfofont",
             })
@@ -857,276 +1006,29 @@ local function apply_quick_settings()
         end
         table.insert(panel, VerticalSpan:new{ width = Screen:scaleBySize(8) })
 
-        touch_menu._qs_refs = refs
+        touch_menu._zen_panel_refs = refs
 
         return panel
     end
 
-    -- ============================================================
-    -- Gesture handler for panel taps/pans
-    -- ============================================================
-
-    local function is_qs_hold_required()
-        local features = zen_plugin.config and zen_plugin.config.features
-        if not (type(features) == "table" and features.lockdown_mode == true) then return false end
-        local lc = zen_plugin.config.lockdown
-        return type(lc) == "table" and lc.require_hold_in_qs == true
-    end
-
-    local function handlePanelGesture(touch_menu, ges, is_hold)
-        local refs = touch_menu._qs_refs
-        if not refs then return false end
-
-        -- Check sliders for taps (not holds)
-        if not is_hold then
-            for _, sr in ipairs(refs.sliders or {}) do
-                if sr.slider:handleTap(ges) then return true end
-            end
-        end
-
-        -- Check toggles (tap only)
-        if not is_hold then
-            for _, tr in ipairs(refs.toggles or {}) do
-                if tr.toggle.dimen and ges.pos:intersectWith(tr.toggle.dimen) then
-                    tr.callback()
-                    return true
-                end
-            end
-        end
-
-        -- Check buttons
-        for _, btn_ref in ipairs(refs.buttons) do
-            if btn_ref.widget.dimen and ges.pos:intersectWith(btn_ref.widget.dimen) then
-                if is_qs_hold_required() then
-                    -- Hold fires the callback; tap is swallowed.
-                    if is_hold and btn_ref.callback then
-                        btn_ref.callback(touch_menu)
-                        return true
-                    else
-                        return true -- swallow tap (or disabled button)
-                    end
-                end
-                if is_hold and btn_ref.hold_callback then
-                    btn_ref.hold_callback()
-                    return true
-                elseif not is_hold and btn_ref.callback then
-                    btn_ref.callback(touch_menu)
-                    return true
-                elseif not is_hold then
-                    return true -- disabled button: swallow tap, do nothing
-                end
-                -- hold with no hold_callback: don't consume, let it fall through
-                return false
-            end
-        end
-
-        return false
-    end
-
-    -- ============================================================
-    -- Hook TouchMenu to support panel tabs
-    -- ============================================================
+    rawset(_G, "__ZEN_UI_BUILD_QUICK_SETTINGS_PREVIEW", function(item_width)
+        local touch_menu = {
+            item_width = item_width,
+            closeMenu = function() end,
+        }
+        return createQuickSettingsPanel(touch_menu)
+    end)
 
     local TouchMenu = require("ui/widget/touchmenu")
-    local FocusManager = require("ui/widget/focusmanager")
 
-    -- Always open to tab 1 (quick settings) regardless of last-used tab.
-    local GestureRange = require("ui/gesturerange")
+    -- Always open to the quick settings tab regardless of last-used tab.
     local orig_init = TouchMenu.init
     function TouchMenu:init()
         if is_enabled() then
-            self.last_index = 1
+            self.last_index = getQuickSettingsTabIndex(self)
         end
         orig_init(self)
-        -- Pre-set image.dimen on bar icon buttons so widgetInvert doesn't crash
-        -- if a tap arrives before the first paint (nil dimen on IconWidget).
-        if self.bar and type(self.bar.icon_widgets) == "table" then
-            for _, btn in ipairs(self.bar.icon_widgets) do
-                if btn and btn.image and not btn.image.dimen then
-                    local ok_sz, sz = pcall(function() return btn.image:getSize() end)
-                    if ok_sz and sz then
-                        btn.image.dimen = Geom:new{ w = sz.w, h = sz.h }
-                    end
-                end
-            end
-        end
-        -- Register a screen-wide hold gesture for panel button hold_callbacks
-        if is_enabled() then
-            -- screen_size may be nil on some devices (e.g. KindleBasic5)
-            local sw = (self.screen_size and self.screen_size.w) or Screen:getWidth()
-            local sh = (self.screen_size and self.screen_size.h) or Screen:getHeight()
-            self.ges_events.HoldCloseAllMenus = {
-                GestureRange:new{
-                    ges = "hold",
-                    range = Geom:new{ x = 0, y = 0, w = sw, h = sh },
-                }
-            }
-            self.ges_events.PanCloseAllMenus = {
-                GestureRange:new{
-                    ges = "pan",
-                    range = Geom:new{ x = 0, y = 0, w = sw, h = sh },
-                }
-            }
-            self.ges_events.PanReleaseCloseAllMenus = {
-                GestureRange:new{
-                    ges = "pan_release",
-                    range = Geom:new{ x = 0, y = 0, w = sw, h = sh },
-                }
-            }
-            self.ges_events.MultiSwipe = {
-                GestureRange:new{
-                    ges = "multiswipe",
-                    range = Geom:new{ x = 0, y = 0, w = sw, h = sh },
-                }
-            }
-        end
     end
-
-    -- Hook updateItems for panel rendering
-    local orig_updateItems = TouchMenu.updateItems
-
-    function TouchMenu:updateItems(target_page, target_item_id)
-        if not is_enabled() then
-            self._qs_refs = nil
-            return orig_updateItems(self, target_page, target_item_id)
-        end
-
-        if not self.item_table or not self.item_table.panel then
-            local _shared = zen_plugin._zen_shared
-            if _shared and type(_shared.cancelPanelRefresh) == "function" then
-                _shared.cancelPanelRefresh(self)
-            end
-            self._qs_refs = nil -- clear refs when switching away from panel tab
-            return orig_updateItems(self, target_page, target_item_id)
-        end
-
-        -- Custom panel mode: render the panel widget instead of menu items
-        -- Lock sliders briefly whenever we (re-)enter panel mode so the
-        -- southward swipe that opens the menu cannot accidentally move the
-        -- slider before the user intentionally touches it.
-        if not self._qs_refs then
-            self._qs_slider_locked = true
-            UIManager:scheduleIn(0.35, function()
-                self._qs_slider_locked = false
-            end)
-        end
-        -- Preserve keyboard focus position before clearing layout so toggle
-        -- callbacks can rebuild without jumping focus back to the tab bar.
-        local old_selected
-        if self.selected then
-            old_selected = { x = self.selected.x, y = self.selected.y }
-        end
-        self.item_group:clear()
-        self.layout = {}
-        table.insert(self.item_group, self.bar)
-        table.insert(self.layout, self.bar.icon_widgets)
-
-        -- Build panel (also sets self._qs_refs)
-        local panel_fn = self.item_table.panel
-        local panel = type(panel_fn) == "function" and panel_fn(self) or panel_fn
-        table.insert(self.item_group, panel)
-
-        local qs_refs = self._qs_refs
-        if qs_refs and qs_refs.button_layout_row and #qs_refs.button_layout_row > 0 then
-            table.insert(self.layout, qs_refs.button_layout_row)
-        end
-
-        -- Footer (no pagination)
-        table.insert(self.item_group, self.footer_top_margin)
-        table.insert(self.item_group, self.footer)
-        self.page_info_text:setText("")
-        self.page_info_left_chev:showHide(false)
-        self.page_info_right_chev:showHide(false)
-        self.page_info_left_chev:enableDisable(false)
-        self.page_info_right_chev:enableDisable(false)
-
-        -- Schedule 60-second status row refresh (status_bar component owns the clock)
-        local _shared = zen_plugin._zen_shared
-        if _shared and type(_shared.schedulePanelRefresh) == "function" then
-            _shared.schedulePanelRefresh(self)
-        end
-
-        -- Recalculate dimen
-        local old_dimen = self.dimen:copy()
-        self.dimen.w = self.width
-        self.dimen.h = self.item_group:getSize().h + self.bordersize * 2 + self.padding
-        -- Restore keyboard focus to the same position after rebuild; fall
-        -- back to the tab bar only if the old slot no longer exists.
-        if old_selected then
-            local row = self.layout[old_selected.y]
-            if row and row[old_selected.x] then
-                self:moveFocusTo(old_selected.x, old_selected.y, 0)
-            else
-                self:moveFocusTo(self.cur_tab, 1, FocusManager.NOT_FOCUS)
-            end
-        else
-            self:moveFocusTo(self.cur_tab, 1, FocusManager.NOT_FOCUS)
-        end
-
-        local keep_bg = old_dimen and self.dimen.h >= old_dimen.h
-        UIManager:setDirty((self.is_fresh or keep_bg) and self.show_parent or "all", function()
-            local refresh_dimen = old_dimen and old_dimen:combine(self.dimen) or self.dimen
-            local refresh_type = "ui"
-            if self.is_fresh then
-                refresh_type = "flashui"
-                self.is_fresh = false
-            end
-            return refresh_type, refresh_dimen
-        end)
-    end
-
-    -- Hook onTapCloseAllMenus to intercept taps on panel widgets
-    local orig_onTapCloseAllMenus = TouchMenu.onTapCloseAllMenus
-
-    function TouchMenu:onTapCloseAllMenus(arg, ges_ev)
-        if not is_enabled() then
-            return orig_onTapCloseAllMenus(self, arg, ges_ev)
-        end
-
-        if self._qs_refs and self.item_table and self.item_table.panel then
-            -- Block all panel input until the opening gesture has fully settled.
-            if self._qs_slider_locked then return true end
-            if handlePanelGesture(self, ges_ev, false) then
-                return true
-            end
-        end
-        return orig_onTapCloseAllMenus(self, arg, ges_ev)
-    end
-
-    -- Hook onHoldCloseAllMenus to intercept holds on panel buttons
-    function TouchMenu:onHoldCloseAllMenus(arg, ges_ev)
-        if not is_enabled() then return end
-
-        if self._qs_refs and self.item_table and self.item_table.panel then
-            if not self._qs_slider_locked then
-                handlePanelGesture(self, ges_ev, true)
-            end
-        end
-        -- Holds outside the menu do nothing (don't close it)
-        return true
-    end
-
-    -- Delegate all slider gesture types to ZenSlider, which owns the logic.
-    ZenSlider.installTouchMenuHooks(TouchMenu, {
-        in_panel_mode = function(tm)
-            return is_enabled()
-                and tm._qs_refs ~= nil
-                and tm.item_table ~= nil
-                and tm.item_table.panel ~= nil
-        end,
-        get_sliders = function(tm)
-            local refs = tm._qs_refs
-            if not refs then return {} end
-            local sliders = {}
-            for _, sr in ipairs(refs.sliders or {}) do
-                table.insert(sliders, sr.slider)
-            end
-            return sliders
-        end,
-        is_locked           = function(tm) return tm._qs_slider_locked end,
-        swipe_fallback      = function(tm, ges) handlePanelGesture(tm, ges, false) end,
-        multiswipe_fallback = function(tm, ges) handlePanelGesture(tm, ges, false) end,
-    })
 
     -- Hook switchMenuTab to force quick settings tab on menu open
     local orig_switchMenuTab = TouchMenu.switchMenuTab
@@ -1137,42 +1039,7 @@ local function apply_quick_settings()
             return
         end
         -- Always reset last_index so next open returns to quick settings tab.
-        self.last_index = 1
-    end
-
-    -- Cancel status bar refresh timer when the menu is closed
-    local orig_onCloseWidget = TouchMenu.onCloseWidget
-    function TouchMenu:onCloseWidget()
-        local _shared = zen_plugin._zen_shared
-        if _shared and type(_shared.cancelPanelRefresh) == "function" then
-            _shared.cancelPanelRefresh(self)
-        end
-        -- Clear refs and gesture-tracking state so they reset on next open.
-        self._qs_refs = nil
-        self._qs_opening_pan = false
-        if orig_onCloseWidget then orig_onCloseWidget(self) end
-    end
-
-    -- Safety guards: onPrevPage / onNextPage crash when self.page is nil in
-    -- panel mode (no pagination).  Consume silently.
-    local orig_onPrevPage = TouchMenu.onPrevPage
-    if orig_onPrevPage then
-        function TouchMenu:onPrevPage()
-            if is_enabled() and self.item_table and self.item_table.panel then
-                return true
-            end
-            return orig_onPrevPage(self)
-        end
-    end
-
-    local orig_onNextPage = TouchMenu.onNextPage
-    if orig_onNextPage then
-        function TouchMenu:onNextPage()
-            if is_enabled() and self.item_table and self.item_table.panel then
-                return true
-            end
-            return orig_onNextPage(self)
-        end
+        self.last_index = getQuickSettingsTabIndex(self)
     end
 
     -- ============================================================
@@ -1182,7 +1049,7 @@ local function apply_quick_settings()
     local quick_settings_tab = {
         id = "quicksettings",
         icon = "quicksettings",
-        remember = false,
+        remember = true,
         panel = createQuickSettingsPanel,
     }
 

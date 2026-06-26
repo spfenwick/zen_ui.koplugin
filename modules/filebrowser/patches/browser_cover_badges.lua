@@ -14,6 +14,7 @@ local function apply_browser_cover_badges()
     local ReadCollection = require("readcollection")
     local Screen         = require("device").screen
     local TextWidget     = require("ui/widget/textwidget")
+    local Background     = require("common/ui/background")
     local book_status    = require("common/book_status")
     local utils          = require("common/utils")
     local _              = require("gettext")
@@ -282,7 +283,7 @@ local function apply_browser_cover_badges()
                 pre_target.dim = is_selected and true or nil
                 pre_target.color = is_selected and Blitbuffer.COLOR_DARK_GRAY or nil
             end
-            -- Clear the full cell to white before painting so that portrait
+            -- Clear the full cell before painting so that portrait
             -- covers (which are narrower than the cell) don't leave ghost pixels
             -- from a previously painted full-width placeholder in the margins.
             -- Only needed in the file manager; PathChooser uses default KOReader rendering.
@@ -295,7 +296,11 @@ local function apply_browser_cover_badges()
                         "strip_patched=", tostring(MosaicMenuItem._zen_title_strip_patched),
                         "is_directory=", tostring(self.is_directory))
                 end
-                bb:paintRect(x, y, self.width, self.height, Blitbuffer.COLOR_WHITE)
+                local bg_path = Background.library_path()
+                if bg_path == "" or not Background.paintScreenRegion(bb, x, y,
+                        x, y, self.width, self.height, bg_path) then
+                    bb:paintRect(x, y, self.width, self.height, Blitbuffer.COLOR_WHITE)
+                end
             end
 
             -- 1. Base widget painting (cover image / FakeCover / folder tree)
@@ -450,6 +455,8 @@ local function apply_browser_cover_badges()
                     -- Border drawn 2px outside fill; adapts to badge color
                     paintPentagon(bb, bdg_x - 2, bdg_y - 2, bw + 4, bh + 4, badge_fg)
                     paintPentagon(bb, bdg_x, bdg_y, bw, bh, utils.getBadgeColor(_plugin and _plugin.config))
+                    local cover_border_color = target.color or target.bordercolor or Blitbuffer.COLOR_BLACK
+                    bb:paintRect(bdg_x - 2, bdg_y - 2, bw + 4, math.max(1, border), cover_border_color)
 
                     local rect_h = math.floor(bh * 30 / 42)
                     -- Inner icon/text area with a little padding
@@ -519,7 +526,7 @@ local function apply_browser_cover_badges()
                     end
                     -- Repaint cover border so pentagon never obscures it
                     if border > 0 then
-                        local bclr = target.bordercolor or Blitbuffer.COLOR_BLACK
+                        local bclr = cover_border_color
                         bb:paintRect(cover_left, target.dimen.y, target.dimen.w, border, bclr)
                         bb:paintRect(cover_left + target.dimen.w - border, target.dimen.y, border, bh + 4, bclr)
                     end

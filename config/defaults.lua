@@ -8,14 +8,13 @@ local defaults = {
         quickstart_shown_for_version = false,
         sort_defaults_applied = false,
         bim_fbc_migrated = false,
+        reader_footer_hide_cbz_default_migrated = false,
+        context_menu_allow_delete_default_migrated = false,
     },
     updater = {
         just_updated_version = "",
         last_update_check = 0,
         update_available = false,
-        latest_version = "",
-        update_dl_url = "",
-        update_sha256 = "",
         update_channel = "stable",
         update_auto_check = true,
     },
@@ -38,6 +37,7 @@ local defaults = {
     features = {
         navbar = true,
         quick_settings = true,
+        app_launcher = true,
         zen_mode = true,
         status_bar = true,
         disable_top_menu_swipe_zones = true,
@@ -50,6 +50,7 @@ local defaults = {
         search = true,
         browser_cover_rounded_corners = true,
         browser_cover_mosaic_uniform = true,
+        automatic_series_grouping = true,
         partial_page_repaint = false,
         reader_top_status_bar = true,
         reader_bottom_menu = false,
@@ -75,32 +76,38 @@ local defaults = {
             collections = false,
             authors = true,
             series = true,
+            home = true,
             stats = false,
             exit = false,
             page_left = false,
             page_right = false,
             menu = false,
         },
-        tab_order = { "page_left", "books", "manga", "news", "authors", "series", "continue", "favorites", "history", "collections", "stats", "exit", "page_right", "menu" },
+        tab_order = { "page_left", "books", "manga", "news", "authors", "series", "home", "continue", "favorites", "history", "collections", "stats", "exit", "page_right", "menu" },
+        show_icons = true,
         show_labels = true,
+        icon_size = 34,
+        label_size = 20,
         books_label = "Library",
+        home_label = "Home",
+        default_tab = "home",
         manga_action = "rakuyomi",
         manga_folder = "",
         news_action = "quickrss",
         news_folder = "",
         colored = false,
         active_tab_color = { 0x33, 0x99, 0xFF },
-        active_tab_styling = true,
-        active_tab_bold = false,
         active_tab_underline = true,
         underline_above = false,
-        show_top_border = true,
+        show_top_border = false,
     },
     quick_settings = {
-        button_order = { "wifi", "night", "rotate", "zen", "lockdown", "usb", "search", "quickrss", "cloud", "zlibrary", "calibre", "notion", "streak", "opds", "filebrowser", "restart", "exit", "sleep" },
+        button_order = { "wifi", "night", "frontlight", "gyro", "rotate", "zen", "lockdown", "usb", "search", "quickrss", "cloud", "zlibrary", "calibre", "notion", "streak", "opds", "filebrowser", "restart", "exit", "sleep" },
         show_buttons = {
             wifi = true,
             night = true,
+            frontlight = false,
+            gyro = false,
             rotate = true,
             zen = true,
             lockdown = false,
@@ -120,6 +127,9 @@ local defaults = {
         },
         show_frontlight = true,
         show_warmth = true,
+        flip_lh_rh_icon = false,
+        rotate_action = "90",
+        screenshot_timer_seconds = 3,
     },
     status_bar = {
         custom_text = " ",
@@ -136,6 +146,10 @@ local defaults = {
     },
     browser_hide_up_folder = {
         hide_up_folder = true,
+    },
+    library_background = {
+        enabled = false,
+        path = "",  -- "" = none; absolute image path otherwise
     },
     additional_home_dirs = {},
     browser_list_item_layout = {
@@ -172,12 +186,12 @@ local defaults = {
         font_size = 18,
     },
     zen_scroll_bar = {
-        style              = "dots",     -- "bar" | "dots" | "page_number"
+        style              = "page_number",  -- "bar" | "dots" | "page_number"
         page_number_format = "total",  -- "current" | "total"
         hold_skip          = "ends",       -- "10" | "20" | "ends"
     },
     context_menu = {
-        allow_delete = false,
+        allow_delete = true,
     },
     reader_top_status_bar = {
         font_face = "default",
@@ -188,11 +202,12 @@ local defaults = {
         separator_key    = "small-space",
         custom_separator = "  ",
         custom_text      = "",
+        show_bottom_border = false,
+        bottom_border_progress = false,
     },
     reader_footer = {
         verbose_chapter_time = false,
-        hide_in_cbz = false,
-        backup_preset = nil,
+        hide_in_cbz = true,
     },
     highlight_lookup = {
         allow_unknown_items = false,
@@ -221,10 +236,6 @@ local defaults = {
         night_h     = 20,
         night_m     = 0,
         night_value = 5,
-    },
-    sleep_screen = {
-        presets = {},           -- { { name=…, screensaver_type=…, … }, … }
-        active_preset = nil,   -- name of currently active preset, or nil
     },
     stats_page = {
         rows = { "today", "this_month", "this_year", "all_time", "library" },

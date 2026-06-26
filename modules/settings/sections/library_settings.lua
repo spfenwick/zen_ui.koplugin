@@ -5,12 +5,93 @@
 local _ = require("gettext")
 local UIManager = require("ui/uimanager")
 local paths = require("common/paths")
+local SharedState = require("common/shared_state")
 
 local status_bar_section  = require("modules/settings/sections/library_settings/status_bar_settings")
 local settings_apply      = require("modules/settings/zen_settings_apply")
 local zen_settings_utils  = require("modules/settings/zen_settings_utils")
 
 local M = {}
+local home_rebuild_pending = false
+local home_rebuild_poll_active = false
+local bg_surface_refresh_pending = false
+local bg_surface_refresh_poll_active = false
+
+local function is_filemanager_menu_open()
+    local ok_fm, FileManager = pcall(require, "apps/filemanager/filemanager")
+    if not ok_fm or not FileManager or not FileManager.instance then return false end
+    local fm = FileManager.instance
+    return fm.menu ~= nil and fm.menu.menu_container ~= nil
+end
+
+local function schedule_home_rebuild_on_menu_close(plugin)
+    if not plugin then return end
+    home_rebuild_pending = true
+    if home_rebuild_poll_active then return end
+    home_rebuild_poll_active = true
+
+    local function tick()
+        if is_filemanager_menu_open() then
+            UIManager:scheduleIn(0.25, tick)
+            return
+        end
+        home_rebuild_poll_active = false
+        if not home_rebuild_pending then return end
+        home_rebuild_pending = false
+        local home = SharedState.get(plugin, "home")
+        if home and home.rebuildActive then
+            home.rebuildActive()
+        end
+    end
+
+    UIManager:scheduleIn(0.25, tick)
+end
+
+local function refresh_background_surfaces(plugin)
+    local home = SharedState.get(plugin, "home")
+    if home and home.rebuildActive then
+        home.rebuildActive()
+    end
+
+    local stack = UIManager._window_stack
+    if type(stack) == "table" then
+        for _i, entry in ipairs(stack) do
+            local widget = entry and entry.widget
+            if widget and widget._zen_bg_applied and type(widget.updateItems) == "function" then
+                pcall(widget.updateItems, widget)
+                UIManager:setDirty(widget, "full")
+            end
+        end
+    end
+
+    local reinject_navbars = rawget(_G, "__ZEN_UI_REINJECT_NAVBARS")
+    if type(reinject_navbars) == "function" then
+        reinject_navbars()
+    else
+        UIManager:setDirty(nil, "full")
+        UIManager:forceRePaint()
+    end
+end
+
+local function schedule_background_surface_refresh(plugin)
+    if not plugin then return end
+    bg_surface_refresh_pending = true
+    if bg_surface_refresh_poll_active then return end
+    bg_surface_refresh_poll_active = true
+
+    local function tick()
+        if is_filemanager_menu_open() then
+            UIManager:scheduleIn(0.25, tick)
+            return
+        end
+        bg_surface_refresh_poll_active = false
+        if not bg_surface_refresh_pending then return end
+        bg_surface_refresh_pending = false
+        refresh_background_surfaces(plugin)
+    end
+
+    UIManager:scheduleIn(0.25, tick)
+end
 
 local function ensure_library_font_cfg(config)
     if type(config.library_font) ~= "table" then
@@ -28,12 +109,13 @@ local function ensure_library_font_cfg(config)
     return config.library_font
 end
 
-local function save_library_font(config, plugin, touchmenu_instance)
+local function save_library_font(config, plugin, touchmenu_instance, prompt_restart)
     _G.__ZEN_UI_LIBRARY_FONT_CFG = config.library_font
     plugin:saveConfig()
     settings_apply.reinit_filemanager()
+    schedule_home_rebuild_on_menu_close(plugin)
     local strip_cfg = type(config.mosaic_title_strip) == "table" and config.mosaic_title_strip or nil
-    if strip_cfg and (strip_cfg.show_title == true or strip_cfg.show_author == true) then
+    if prompt_restart or (strip_cfg and (strip_cfg.show_title == true or strip_cfg.show_author == true)) then
         settings_apply.prompt_restart()
     end
     if touchmenu_instance then
@@ -65,7 +147,6 @@ function M.build(ctx)
     local items = {}
 
     table.insert(items, status_bar_section.build(ctx))
-
     table.insert(items, {
         text_func = function()
             local cfg = ensure_library_font_cfg(config)
@@ -120,7 +201,7 @@ function M.build(ctx)
                         callback = function(file)
                             if cfg.font_face ~= file then
                                 cfg.font_face = file
-                                save_library_font(config, plugin, touchmenu_instance)
+                                save_library_font(config, plugin, touchmenu_instance, true)
                             end
                         end,
                     })
@@ -129,16 +210,28 @@ function M.build(ctx)
                     local cfg = ensure_library_font_cfg(config)
                     if cfg.font_face ~= "default" then
                         cfg.font_face = "default"
-                        save_library_font(config, plugin, touchmenu_instance)
+                        save_library_font(config, plugin, touchmenu_instance, true)
                     end
                 end,
             },
             {
-                text = _("Use default font"),
+                text = _("Reset font"),
+                keep_menu_open = true,
                 callback = function(touchmenu_instance)
-                    local cfg = ensure_library_font_cfg(config)
-                    cfg.font_face = "default"
-                    save_library_font(config, plugin, touchmenu_instance)
+                    local ConfirmBox = require("ui/widget/confirmbox")
+                    UIManager:show(ConfirmBox:new{
+                        text = _("Reset font family and size to default?"),
+                        ok_text = _("Reset"),
+                        ok_callback = function()
+                            local cfg = ensure_library_font_cfg(config)
+                            local changed = cfg.font_face ~= "default" or cfg.font_size ~= 18
+                            if changed then
+                                cfg.font_face = "default"
+                                cfg.font_size = 18
+                                save_library_font(config, plugin, touchmenu_instance, true)
+                            end
+                        end,
+                    })
                 end,
             },
         },
@@ -158,6 +251,28 @@ function M.build(ctx)
                     config.browser_hide_up_folder.hide_up_folder =
                         config.browser_hide_up_folder.hide_up_folder ~= true
                     save_and_apply("browser_hide_up_folder")
+                end,
+            },
+            {
+                text = _("Group book series into folders"),
+                checked_func = function()
+                    return config.features.automatic_series_grouping ~= false
+                end,
+                callback = function()
+                    config.features.automatic_series_grouping =
+                        config.features.automatic_series_grouping == false
+                    plugin:saveConfig()
+                    local ok_fm, FileManager = pcall(require, "apps/filemanager/filemanager")
+                    local fc = ok_fm and FileManager and FileManager.instance
+                        and FileManager.instance.file_chooser
+                    if fc and fc._zen_clear_item_table_cache then
+                        fc:_zen_clear_item_table_cache()
+                    end
+                    if fc and fc.path and fc.changeToPath then
+                        fc:changeToPath(fc.path)
+                    else
+                        save_and_apply("automatic_series_grouping")
+                    end
                 end,
             },
             -- Cover mode subsection
@@ -581,7 +696,7 @@ function M.build(ctx)
     end
 
     local display_mode_sub_items = {}
-    for _, entry in ipairs(display_modes) do
+    for _i, entry in ipairs(display_modes) do
         table.insert(display_mode_sub_items, {
             text = entry.text,
             checked_func = function() return get_display_mode() == entry.mode end,
@@ -590,15 +705,16 @@ function M.build(ctx)
         })
     end
 
-    table.insert(items, {
+    local display_mode_item = {
         text = _("Display mode"),
         sub_item_table = display_mode_sub_items,
-    })
+    }
 
     -- -------------------------------------------------------------------------
     -- Items per page
     -- -------------------------------------------------------------------------
 
+    local items_per_page_item
     do
         local function get_bim()
             local ok, bim = pcall(require, "bookinfomanager")
@@ -614,7 +730,7 @@ function M.build(ctx)
             return fm and fm.file_chooser or nil
         end
 
-        table.insert(items, {
+        items_per_page_item = {
             text = _("Items per page"),
             sub_item_table = {
                 {
@@ -772,48 +888,7 @@ function M.build(ctx)
                     end,
                 },
             },
-        })
-    end
-
-    -- -------------------------------------------------------------------------
-    -- Sort by
-    -- -------------------------------------------------------------------------
-
-    local collate_options = {
-        { key = "strcoll",                text = _("name")                                          },
-        { key = "natural",                text = _("name (natural sorting)")                        },
-        { key = "access",                 text = _("last read date")                                },
-        { key = "date",                   text = _("date modified")                                 },
-        { key = "size",                   text = _("size")                                          },
-        { key = "type",                   text = _("type")                                          },
-        { key = "percent_unopened_first", text = _("percent - unopened first")                      },
-        { key = "percent_unopened_last",  text = _("percent - unopened last")                       },
-        { key = "percent_natural",        text = _("percent - unopened - finished last")            },
-        { key = "title",                  text = _("Title")                                         },
-        { key = "authors",                text = _("Authors")                                       },
-        { key = "series",                 text = _("Series")                                        },
-        { key = "keywords",               text = _("Keywords"),        separator = true             },
-    }
-
-    local function get_current_collate()
-        return G_reader_settings:readSetting("collate") or "strcoll"
-    end
-
-    local function apply_sort_by(collate_id)
-        local ok, FileManager = pcall(require, "apps/filemanager/filemanager")
-        local fm = ok and FileManager and FileManager.instance
-        if fm then
-            if type(fm.onSetSortBy) == "function" then
-                pcall(fm.onSetSortBy, fm, collate_id)
-            elseif fm.file_chooser and type(fm.file_chooser.refreshPath) == "function" then
-                G_reader_settings:saveSetting("collate", collate_id)
-                pcall(fm.file_chooser.refreshPath, fm.file_chooser)
-            else
-                G_reader_settings:saveSetting("collate", collate_id)
-            end
-        else
-            G_reader_settings:saveSetting("collate", collate_id)
-        end
+        }
     end
 
     local function refresh_filechooser()
@@ -823,46 +898,6 @@ function M.build(ctx)
             pcall(fm.file_chooser.refreshPath, fm.file_chooser)
         end
     end
-
-    local collate_sub_items = {}
-    for _, option in ipairs(collate_options) do
-        table.insert(collate_sub_items, {
-            text = option.text,
-            checked_func = function() return get_current_collate() == option.key end,
-            radio = true,
-            callback = function() apply_sort_by(option.key) end,
-        })
-    end
-    table.insert(collate_sub_items, {
-        text = _("Reverse sorting"),
-        checked_func = function() return G_reader_settings:isTrue("reverse_collate") end,
-        callback = function()
-            G_reader_settings:flipNilOrFalse("reverse_collate")
-            refresh_filechooser()
-        end,
-    })
-    table.insert(collate_sub_items, {
-        text = _("Folders and files mixed"),
-        checked_func = function() return G_reader_settings:isTrue("collate_mixed") end,
-        callback = function()
-            G_reader_settings:flipNilOrFalse("collate_mixed")
-            refresh_filechooser()
-        end,
-    })
-
-    table.insert(items, {
-        text = _("Sort by"),
-        text_func = function()
-            local collate = get_current_collate()
-            for _i, option in ipairs(collate_options) do
-                if option.key == collate then
-                    return _("Sort by: ") .. option.text
-                end
-            end
-            return _("Sort by")
-        end,
-        sub_item_table = collate_sub_items,
-    })
 
     -- -------------------------------------------------------------------------
     -- Scroll bar style
@@ -875,11 +910,11 @@ function M.build(ctx)
     }
 
     local function get_scroll_bar_style()
-        return (type(config.zen_scroll_bar) == "table" and config.zen_scroll_bar.style) or "bar"
+        return (type(config.zen_scroll_bar) == "table" and config.zen_scroll_bar.style) or "page_number"
     end
 
     local scroll_bar_sub_items = {}
-    for _, entry in ipairs(scroll_bar_styles) do
+    for _i, entry in ipairs(scroll_bar_styles) do
         table.insert(scroll_bar_sub_items, {
             text = entry.text,
             checked_func = function() return get_scroll_bar_style() == entry.style end,
@@ -906,7 +941,7 @@ function M.build(ctx)
             and config.zen_scroll_bar.page_number_format) or "current"
     end
     local pn_format_sub_items = {}
-    for _, entry in ipairs(pn_formats) do
+    for _i, entry in ipairs(pn_formats) do
         table.insert(pn_format_sub_items, {
             text = entry.text,
             checked_func = function() return get_pn_format() == entry.fmt end,
@@ -937,7 +972,7 @@ function M.build(ctx)
             and config.zen_scroll_bar.hold_skip) or "10"
     end
     local hold_skip_sub_items = {}
-    for _, entry in ipairs(hold_skip_opts) do
+    for _i, entry in ipairs(hold_skip_opts) do
         table.insert(hold_skip_sub_items, {
             text = entry.text,
             checked_func = function() return get_hold_skip() == entry.skip end,
@@ -957,48 +992,177 @@ function M.build(ctx)
     })
 
     table.insert(items, {
-        text = _("Scroll bar style"),
+        text = _("Scroll bar"),
         sub_item_table = scroll_bar_sub_items,
     })
 
     -- -------------------------------------------------------------------------
-    -- Misc toggles
+    -- Layout
     -- -------------------------------------------------------------------------
 
-    table.insert(items, {
-        text = _("Show item underline"),
-        checked_func = function()
-            return config.features.browser_hide_underline ~= true
-        end,
-        callback = function()
-            config.features.browser_hide_underline = config.features.browser_hide_underline ~= true
-            save_and_apply("browser_hide_underline")
-        end,
+    table.insert(items, 2, {
+        text = _("Layout"),
+        sub_item_table = {
+            display_mode_item,
+            items_per_page_item,
+            {
+                text = _("Show item underline"),
+                checked_func = function()
+                    return config.features.browser_hide_underline ~= true
+                end,
+                callback = function()
+                    config.features.browser_hide_underline = config.features.browser_hide_underline ~= true
+                    save_and_apply("browser_hide_underline")
+                end,
+            },
+            {
+                text = _("Hide list borders"),
+                checked_func = function()
+                    return type(config.browser_list_item_layout) == "table"
+                        and config.browser_list_item_layout.hide_list_borders == true
+                end,
+                callback = function()
+                    if type(config.browser_list_item_layout) ~= "table" then
+                        config.browser_list_item_layout = {}
+                    end
+                    config.browser_list_item_layout.hide_list_borders =
+                        config.browser_list_item_layout.hide_list_borders ~= true
+                    plugin:saveConfig()
+                    -- updateItems rebuilds item_group so stripListBorders takes effect immediately.
+                    local ok_fm, FM = pcall(require, "apps/filemanager/filemanager")
+                    local fm = ok_fm and FM and FM.instance
+                    if fm and fm.file_chooser and fm.file_chooser.updateItems then
+                        fm.file_chooser:updateItems()
+                        UIManager:setDirty(fm, "ui")
+                    else
+                        UIManager:setDirty(nil, "full")
+                    end
+                end,
+            },
+        },
     })
 
+    -- -------------------------------------------------------------------------
+    -- Background image
+    -- -------------------------------------------------------------------------
+
+    local function ensure_lib_bg()
+        if type(config.library_background) ~= "table" then config.library_background = {} end
+        if config.library_background.enabled == nil then
+            config.library_background.enabled = false
+        end
+        if type(config.library_background.path) ~= "string" then
+            config.library_background.path = ""
+        end
+        return config.library_background
+    end
+    local function lib_bg_path()
+        return ensure_lib_bg().path
+    end
+    local function save_lib_bg()
+        plugin:saveConfig()
+        require("common/ui/background").clearCache()
+        settings_apply.reinit_filemanager_on_menu_close()
+        schedule_background_surface_refresh(plugin)
+    end
+    local function set_lib_bg(path)
+        ensure_lib_bg().path = path or ""
+        save_lib_bg()
+    end
+    local function lib_bg_error_text(code)
+        if code == "not_jpeg" then
+            return _("Background image must be a JPG or JPEG file.")
+        elseif code == "missing" then
+            return _("Background image file not found.")
+        elseif code == "no_decoder" then
+            return _("Image support is unavailable on this device.")
+        elseif code == "decode_failed" then
+            return _("Background image could not be loaded. It may be corrupt or unsupported.")
+        end
+        return _("No background image selected.")
+    end
+    local function lib_bg_start_path()
+        local path = lib_bg_path()
+        if path ~= "" then
+            local util = require("util")
+            local dir = select(1, util.splitFilePathName(path))
+            if type(dir) == "string" and dir ~= "" then
+                return dir
+            end
+        end
+        return paths.getHomeDir() or G_reader_settings:readSetting("lastdir") or "/"
+    end
+
     table.insert(items, {
-        text = _("Hide list borders"),
-        checked_func = function()
-            return type(config.browser_list_item_layout) == "table"
-                and config.browser_list_item_layout.hide_list_borders == true
-        end,
-        callback = function()
-            if type(config.browser_list_item_layout) ~= "table" then
-                config.browser_list_item_layout = {}
-            end
-            config.browser_list_item_layout.hide_list_borders =
-                config.browser_list_item_layout.hide_list_borders ~= true
-            plugin:saveConfig()
-            -- updateItems rebuilds item_group so stripListBorders takes effect immediately.
-            local ok_fm, FM = pcall(require, "apps/filemanager/filemanager")
-            local fm = ok_fm and FM and FM.instance
-            if fm and fm.file_chooser and fm.file_chooser.updateItems then
-                fm.file_chooser:updateItems()
-                UIManager:setDirty(fm, "ui")
-            else
-                UIManager:setDirty(nil, "full")
-            end
-        end,
+        text = _("Background"),
+        sub_item_table = {
+            {
+                text = _("Enable"),
+                checked_func = function()
+                    return ensure_lib_bg().enabled == true
+                end,
+                callback = function(touchmenu_instance)
+                    local bg = ensure_lib_bg()
+                    if bg.enabled ~= true then
+                        -- Enabling: only allow if the image actually works.
+                        local bg_mod = require("common/ui/background")
+                        local ok_img, reason = bg_mod.validateImage(bg.path)
+                        if not ok_img then
+                            bg.enabled = false
+                            local InfoMessage = require("ui/widget/infomessage")
+                            UIManager:show(InfoMessage:new{
+                                text = lib_bg_error_text(reason),
+                            })
+                            if touchmenu_instance then touchmenu_instance:updateItems() end
+                            return
+                        end
+                        bg.enabled = true
+                    else
+                        bg.enabled = false
+                    end
+                    save_lib_bg()
+                    if touchmenu_instance then touchmenu_instance:updateItems() end
+                end,
+            },
+            {
+                text_func = function()
+                    local path = lib_bg_path()
+                    if path == "" then return _("Image: none") end
+                    local util = require("util")
+                    local name = select(2, util.splitFilePathName(path))
+                    return _("Image: ") .. (name ~= "" and name or path)
+                end,
+                keep_menu_open = true,
+                callback = function(touchmenu_instance)
+                    local PathChooser = require("ui/widget/pathchooser")
+                    UIManager:show(PathChooser:new{
+                        select_file = true,
+                        select_directory = false,
+                        show_files = true,
+                        path = lib_bg_start_path(),
+                        onConfirm = function(file_path)
+                            local bg_mod = require("common/ui/background")
+                            local ok_img, reason = bg_mod.validateImage(file_path)
+                            if not ok_img then
+                                local InfoMessage = require("ui/widget/infomessage")
+                                UIManager:show(InfoMessage:new{
+                                    text = lib_bg_error_text(reason),
+                                })
+                                return
+                            end
+                            set_lib_bg(file_path)
+                            if touchmenu_instance then touchmenu_instance:updateItems() end
+                        end,
+                    })
+                end,
+                hold_callback = function(touchmenu_instance)
+                    if lib_bg_path() ~= "" then
+                        set_lib_bg("")
+                        if touchmenu_instance then touchmenu_instance:updateItems() end
+                    end
+                end,
+            },
+        },
     })
 
     table.insert(items, {
@@ -1055,7 +1219,7 @@ function M.build(ctx)
                                     if type(config.additional_home_dirs) ~= "table" then
                                         config.additional_home_dirs = {}
                                     end
-                                    for _, existing in ipairs(config.additional_home_dirs) do
+                                    for _i, existing in ipairs(config.additional_home_dirs) do
                                         if existing == dir_path then return end
                                     end
                                     table.insert(config.additional_home_dirs, dir_path)
@@ -1096,7 +1260,7 @@ function M.build(ctx)
     })
 
     table.insert(items, {
-        text = _("Allow delete in context menu"),
+        text = _("Allow delete"),
         checked_func = function()
             return type(config.context_menu) == "table"
                 and config.context_menu.allow_delete == true

@@ -16,6 +16,7 @@ local function apply_context_menu()
     local book_status  = require("common/book_status")
     local paths        = require("common/paths")
     local icons        = require("common/inline_icon_map")
+    local submenu_arrow = icons.arrow_right
     local zen_plugin   = rawget(_G, "__ZEN_UI_PLUGIN")
     local Cover        = require("common/cover_utils")
     local VerticalGroup   = require("ui/widget/verticalgroup")
@@ -29,16 +30,21 @@ local function apply_context_menu()
     local Font            = require("ui/font")
     local Geom            = require("ui/geometry")
     local Blitbuffer      = require("ffi/blitbuffer")
-    local library_font    = require("common/library_font")
+    local library_font    = require("modules/filebrowser/patches/library_font")
 
     local function apply_button_group_font(button_rows, nominal_size)
         if type(button_rows) ~= "table" then return button_rows end
+        local size = library_font.scaleValue(nominal_size or 20)
         for _i, row in ipairs(button_rows) do
             if type(row) == "table" then
                 for _j, btn in ipairs(row) do
                     if type(btn) == "table" and type(btn.text) == "string" then
                         local face = btn.font_face or btn.text_font_face or library_font.getFontName()
+                        local fsize = btn.font_size or btn.text_font_size or size
                         btn.font_face = face
+                        btn.font_size = fsize
+                        btn.text_font_face = face
+                        btn.text_font_size = fsize
                     end
                 end
             end
@@ -419,6 +425,14 @@ local function apply_context_menu()
                 end
             end
 
+            if item._is_current_dir
+                    and self_fc.item_table
+                    and self_fc.item_table.is_in_series_view
+                    and self_fc.item_table._zen_series_group_item then
+                item = self_fc.item_table._zen_series_group_item
+            end
+            local is_virtual_folder = item.is_series_group == true
+
             -- Group context menu (authors/series views)
             if item._zen_group_files then
                 local group_files = item._zen_group_files
@@ -540,13 +554,13 @@ local function apply_context_menu()
 
                 local buttons = {}
                 if item._zen_prepend_buttons then
-                    for _, row in ipairs(item._zen_prepend_buttons) do
+                    for _i, row in ipairs(item._zen_prepend_buttons) do
                         table.insert(buttons, row)
                     end
                 end
                 if display_cb then
                     table.insert(buttons, {{
-                        text = "\u{F06D0}  " .. _("Display") .. "  \u{25B8}",
+                        text = "\u{F06D0}  " .. _("Display") .. "  " .. submenu_arrow,
                         align = "left",
                         callback = function()
                             UIManager:close(self_fc.file_dialog)
@@ -556,7 +570,7 @@ local function apply_context_menu()
                 end
                 if sort_cb then
                     table.insert(buttons, {{
-                        text = "\u{F04BF}  " .. _("Sort") .. "  \u{25B8}",
+                        text = "\u{F04BF}  " .. _("Sort") .. "  " .. submenu_arrow,
                         align = "left",
                         callback = function()
                             UIManager:close(self_fc.file_dialog)
@@ -636,7 +650,7 @@ local function apply_context_menu()
                     table.insert(buttons, {{
                         text = icons.filter .. "  " .. _("Filter")
                             .. (n_gf > 0 and " (" .. n_gf .. ")" or "")
-                            .. "  \u{25B8}",
+                            .. "  " .. submenu_arrow,
                         align = "left",
                         callback = function()
                             UIManager:close(self_fc.file_dialog)
@@ -646,7 +660,7 @@ local function apply_context_menu()
                 end
 
                 if item._zen_extra_buttons then
-                    for _, row in ipairs(item._zen_extra_buttons) do
+                    for _i, row in ipairs(item._zen_extra_buttons) do
                         table.insert(buttons, row)
                     end
                 end
@@ -661,7 +675,7 @@ local function apply_context_menu()
 
             local home_dir = paths.getHomeDir()
             local cur_path = self_fc.path or ""
-            if home_dir and not item._zen_collection_name then
+            if home_dir and not item._zen_collection_name and not item._zen_home_context then
                 if not paths.isInHomeDir(cur_path) then
                     return orig_showFileDialog(self_fc, item)
                 end
@@ -680,6 +694,16 @@ local function apply_context_menu()
                 UIManager:nextTick(function()
                     self_fc:refreshPath()
                 end)
+            end
+
+            local function refresh_after_sort_change()
+                if self_fc._zen_clear_item_table_cache then
+                    self_fc:_zen_clear_item_table_cache()
+                end
+                if self_fc.clearSortingCache then
+                    self_fc:clearSortingCache()
+                end
+                self_fc:refreshPath()
             end
 
             local dialog_title, dialog_cover_widget, book_description
@@ -949,14 +973,36 @@ local function apply_context_menu()
                     dialog_title = text_str or BD.filename(file:match("([^/]+)$"))
                 else
                     -- folder
-                    local name = (file:match("([^/]+)/?$") or file):gsub("/$", "")
+                    local is_series_group = is_virtual_folder
+                    local name = is_series_group
+                        and (item.text or item._zen_group_name or file)
+                        or (file:match("([^/]+)/?$") or file):gsub("/$", "")
                     local folder_name_str = BD.directory(name)
                     local lfs = require("libs/libkoreader-lfs")
                     local DocReg = require("document/documentregistry")
 
                     -- Use real FileChooser so cover order/scope matches the browser
                     local _fm = require("apps/filemanager/filemanager")
-                    local _cover_chooser = _fm.instance and _fm.instance.file_chooser
+                    local _cover_chooser
+                    if is_series_group then
+                        _cover_chooser = {
+                            genItemTableFromPath = function()
+                                local entries = {}
+                                for _i, series_item in ipairs(item.series_items or {}) do
+                                    local series_path = series_item and (series_item.path or series_item.file)
+                                    if series_path and not series_item.is_go_up then
+                                        table.insert(entries, {
+                                            path = series_path,
+                                            is_file = true,
+                                        })
+                                    end
+                                end
+                                return entries
+                            end
+                        }
+                    else
+                        _cover_chooser = _fm.instance and _fm.instance.file_chooser
+                    end
                     if not _cover_chooser then
                         -- Fallback: non-recursive immediate-dir listing
                         _cover_chooser = {
@@ -980,45 +1026,62 @@ local function apply_context_menu()
                         }
                     end
 
-                    -- Use unified makeCover for folder
-                    local cover_widget = Cover.makeCover(file, _cover_chooser, {
+                    -- Use unified makeCover for folder, including virtual series folders.
+                    local cover_path = is_series_group
+                        and ("zen-series://" .. folder_name_str)
+                        or file
+                    local cover_widget = Cover.makeCover(cover_path, _cover_chooser, {
                         is_folder = true,
                         max_w = cover_max_w,
                         max_h = cover_max_h,
                         folder_name = folder_name_str,
                     })
 
-                 -- Apply rounded corners
-                if cover_widget and _zen_apply_rounded_cover then
-                    _zen_apply_rounded_cover(cover_widget, border)
-                end
+                    -- Apply rounded corners
+                    if cover_widget and _zen_apply_rounded_cover then
+                        _zen_apply_rounded_cover(cover_widget, border)
+                    end
 
                     if cover_widget then
                         -- Count books recursively for the display label
                         local n_books = 0
-                        local function _cnt(dir, depth)
-                            if depth > 5 then return end
-                            local ok_d, it, obj = pcall(lfs.dir, dir)
-                            if not ok_d then return end
-                            for fname in it, obj do
-                                if fname ~= "." and fname ~= ".." and not fname:match("^%.") then
-                                    local fpath = dir .. "/" .. fname
-                                    local fmode = lfs.attributes(fpath, "mode")
-                                    if fmode == "file" and DocReg:hasProvider(fpath) then
-                                        n_books = n_books + 1
-                                    elseif fmode == "directory" then
-                                        _cnt(fpath, depth + 1)
+                        if is_series_group then
+                            for _i, series_item in ipairs(item.series_items or {}) do
+                                if series_item and not series_item.is_go_up
+                                        and (series_item.is_file or series_item.path or series_item.file) then
+                                    n_books = n_books + 1
+                                end
+                            end
+                        else
+                            local function _cnt(dir, depth)
+                                if depth > 5 then return end
+                                local ok_d, it, obj = pcall(lfs.dir, dir)
+                                if not ok_d then return end
+                                for fname in it, obj do
+                                    if fname ~= "." and fname ~= ".." and not fname:match("^%.") then
+                                        local fpath = dir .. "/" .. fname
+                                        local fmode = lfs.attributes(fpath, "mode")
+                                        if fmode == "file" and DocReg:hasProvider(fpath) then
+                                            n_books = n_books + 1
+                                        elseif fmode == "directory" then
+                                            _cnt(fpath, depth + 1)
+                                        end
                                     end
                                 end
                             end
+                            _cnt(file, 0)
                         end
-                        _cnt(file, 0)
                         local folder_count_str = n_books > 0
                             and (n_books == 1 and _("1 book") or (tostring(n_books) .. " " .. _("books")))
                             or nil
-                        dialog_title = folder_count_str
-                            and (folder_name_str .. "\n" .. folder_count_str)
-                            or folder_name_str
+                        local virtual_folder_str = is_series_group and _("Virtual folder") or nil
+                        dialog_title = folder_name_str
+                        if folder_count_str then
+                            dialog_title = dialog_title .. "\n" .. folder_count_str
+                        end
+                        if virtual_folder_str then
+                            dialog_title = dialog_title .. "\n" .. virtual_folder_str
+                        end
 
                         local framed_h = cover_max_h + 2 * border
                         local text_col_w = math.max(avail_w - cover_max_w - 2 * border - gap, Screen:scaleBySize(60))
@@ -1034,6 +1097,15 @@ local function apply_context_menu()
                             table.insert(vstack, TextWidget:new{
                                 text = folder_count_str,
                                 face = library_font.getFace(17),
+                                max_width = text_col_w,
+                            })
+                        end
+                        if virtual_folder_str then
+                            table.insert(vstack, VerticalSpan:new{ width = Screen:scaleBySize(2) })
+                            table.insert(vstack, TextWidget:new{
+                                text = virtual_folder_str,
+                                face = library_font.getFace(14),
+                                fgcolor = Blitbuffer.COLOR_GRAY_3,
                                 max_width = text_col_w,
                             })
                         end
@@ -1185,8 +1257,9 @@ local function apply_context_menu()
                 end
             end
 
-            -- Edit submenu (unchanged)
+            -- Edit submenu
             local function showEditSubmenu()
+                if is_virtual_folder then return end
                 close_dialog()
                 local edit_dialog
 
@@ -1341,7 +1414,7 @@ local function apply_context_menu()
                 })
             end
 
-            if not is_file and is_not_parent_folder and not is_home_dir then
+            if not is_file and is_not_parent_folder and not is_home_dir and not is_virtual_folder then
                 table.insert(buttons, {
                     {
                         text = "\u{F0CB6}  " .. _("Rename"),
@@ -1367,7 +1440,7 @@ local function apply_context_menu()
                 })
             end
 
-            if is_file and is_not_parent_folder then
+            if is_file and is_not_parent_folder and not item._zen_home_context then
                 table.insert(buttons, {
                     {
                         text = "\u{F01BE}  " .. _("Move"),
@@ -1385,8 +1458,7 @@ local function apply_context_menu()
                                 or file_chooser.path
                             if not move_home_dir then return end
                             local src_dir = ffiUtil.realpath(ffiUtil.dirname(src))
-                            local _g = rawget(_G, "G_reader_settings")
-                            local _zen_cfg = _g and _g:readSetting("zen_ui_config")
+                            local _zen_cfg = require("config/manager").get()
                             local _extra = type(_zen_cfg) == "table"
                                 and type(_zen_cfg.additional_home_dirs) == "table"
                                 and _zen_cfg.additional_home_dirs or nil
@@ -1460,6 +1532,7 @@ local function apply_context_menu()
                 })
             end
 
+
             if is_file then
                 local ReadCollection = require("readcollection")
 
@@ -1484,7 +1557,7 @@ local function apply_context_menu()
                 if not item._zen_collection_name then
                     table.insert(buttons, {
                         {
-                            text = "\u{F04CE}  " .. _("Add to collection") .. "  \u{25B6}",
+                            text = "\u{F04CE}  " .. _("Add to collection") .. "  " .. submenu_arrow,
                             align = "left",
                             callback = function()
                                 close_dialog()
@@ -1537,7 +1610,7 @@ local function apply_context_menu()
             if is_file and is_not_parent_folder then
                 table.insert(buttons, {
                     {
-                        text = "\u{F0B64}  " .. _("Read status") .. "  ▶",
+                        text = "\u{F0B64}  " .. _("Read status") .. "  " .. submenu_arrow,
                         align = "left",
                         callback = function()
                             close_dialog()
@@ -1650,7 +1723,7 @@ local function apply_context_menu()
 
                 table.insert(buttons, {
                     {
-                        text = "\u{F06D0}  " .. _("Display") .. "  ▶",
+                        text = "\u{F06D0}  " .. _("Display") .. "  " .. submenu_arrow,
                         align = "left",
                         callback = showViewSubmenu,
                     },
@@ -1660,6 +1733,7 @@ local function apply_context_menu()
             if not is_file and is_not_parent_folder then
                 local SORT_OPTIONS = {
                     { key = "title", text = "\u{F04BB}  " .. _("Title") },
+                    { key = "title_natural", text = "\u{F04BB}  " .. _("Title natural") },
                     { key = "authors", text = "\u{F0013}  " .. _("Authors") },
                     { key = "series", text = "\u{F0436}  " .. _("Series") },
                     { key = "access", text = "\u{F02DA}  " .. _("Recently read") },
@@ -1670,7 +1744,7 @@ local function apply_context_menu()
                     if g_sort then
                         table.insert(buttons, {
                             {
-                                text = "\u{F04BF}  " .. _("Sort library") .. "  ▶",
+                                text = "\u{F04BF}  " .. _("Sort library") .. "  " .. submenu_arrow,
                                 align = "left",
                                 callback = function()
                                     close_dialog()
@@ -1679,7 +1753,7 @@ local function apply_context_menu()
                                     local cur = g_sort:readSetting("collate", "strcoll")
                                     local cur_reverse = g_sort:isTrue("reverse_collate")
                                     if cur == "strcoll" then cur = "title" end
-                                    for _, opt in ipairs(SORT_OPTIONS) do
+                                    for _i, opt in ipairs(SORT_OPTIONS) do
                                         local is_active = cur == opt.key
                                         table.insert(sort_buttons, {{
                                             text = opt.text .. (is_active and "  \u{2713}" or ""),
@@ -1688,12 +1762,12 @@ local function apply_context_menu()
                                             callback = function()
                                                 g_sort:saveSetting("collate", opt.key)
                                                 UIManager:close(sort_dialog)
-                                                self_fc:refreshPath()
+                                                refresh_after_sort_change()
                                             end,
                                         }})
                                     end
                                     table.insert(sort_buttons, {{
-                                        text = "\u{F04BF}  " .. _("Order") .. "  ▶",
+                                        text = "\u{F04BF}  " .. _("Order") .. "  " .. submenu_arrow,
                                         align = "left",
                                         callback = function()
                                             UIManager:close(sort_dialog)
@@ -1705,7 +1779,7 @@ local function apply_context_menu()
                                                     else
                                                         g_sort:delSetting("reverse_collate")
                                                     end
-                                                    self_fc:refreshPath()
+                                                    refresh_after_sort_change()
                                                 end,
                                             })
                                         end,
@@ -1724,11 +1798,13 @@ local function apply_context_menu()
                     local fsd_api = rawget(_G, "__ZEN_FOLDER_SORT")
                     if fsd_api then
                         local ffiUtil_fsd = require("ffi/util")
-                        local real_folder = ffiUtil_fsd.realpath(file) or file
+                        local real_folder = item._zen_sort_key
+                            or ffiUtil_fsd.realpath(file)
+                            or file
 
                         table.insert(buttons, {
                             {
-                                text = "\u{F04BF}  " .. _("Sort folder") .. "  ▶",
+                                text = "\u{F04BF}  " .. _("Sort folder") .. "  " .. submenu_arrow,
                                 align = "left",
                                 callback = function()
                                     close_dialog()
@@ -1737,7 +1813,7 @@ local function apply_context_menu()
                                     local current_override = fsd_api.get(real_folder)
                                     local cur_collate = current_override and current_override.collate
                                     local cur_reverse = current_override and current_override.reverse or false
-                                    for _, opt in ipairs(SORT_OPTIONS) do
+                                    for _i, opt in ipairs(SORT_OPTIONS) do
                                         local is_active = cur_collate == opt.key
                                         table.insert(sort_buttons, {{
                                             text = opt.text .. (is_active and "  \u{2713}" or ""),
@@ -1746,12 +1822,12 @@ local function apply_context_menu()
                                             callback = function()
                                                 fsd_api.set(real_folder, opt.key, cur_reverse)
                                                 UIManager:close(sort_dialog)
-                                                self_fc:refreshPath()
+                                                refresh_after_sort_change()
                                             end,
                                         }})
                                     end
                                     table.insert(sort_buttons, {{
-                                        text = "\u{F04BF}  " .. _("Order") .. "  ▶",
+                                        text = "\u{F04BF}  " .. _("Order") .. "  " .. submenu_arrow,
                                         align = "left",
                                         callback = function()
                                             UIManager:close(sort_dialog)
@@ -1760,7 +1836,7 @@ local function apply_context_menu()
                                                 on_select = function(reverse)
                                                     if cur_collate then
                                                         fsd_api.set(real_folder, cur_collate, reverse)
-                                                        self_fc:refreshPath()
+                                                        refresh_after_sort_change()
                                                     end
                                                 end,
                                             })
@@ -1774,7 +1850,7 @@ local function apply_context_menu()
                                             callback = function()
                                                 fsd_api.clear(real_folder)
                                                 UIManager:close(sort_dialog)
-                                                self_fc:refreshPath()
+                                                refresh_after_sort_change()
                                             end,
                                         }})
                                     end
@@ -1824,7 +1900,7 @@ local function apply_context_menu()
                             setFilter(nil)
                         end,
                     }})
-                    for _, st in ipairs(STATUS_OPTS) do
+                    for _i, st in ipairs(STATUS_OPTS) do
                         local is_active = cur_st and cur_st[st.key] == true
                         table.insert(fbts, {{
                             text = st.icon .. "  " .. st.label .. (is_active and "  " .. icons.check or ""),
@@ -1841,7 +1917,7 @@ local function apply_context_menu()
                                     new_st[st.key] = true
                                 end
                                 local n = 0
-                                for _, v in pairs(new_st) do if v then n = n + 1 end end
+                                for _k, v in pairs(new_st) do if v then n = n + 1 end end
                                 if n == 0 or n == 4 then setFilter(nil)
                                 else setFilter(new_st) end
                                 UIManager:nextTick(showFilterDialog)
@@ -1859,7 +1935,7 @@ local function apply_context_menu()
 
                 local n_active = 0
                 if FileChooser.show_filter and FileChooser.show_filter.status then
-                    for _, v in pairs(FileChooser.show_filter.status) do
+                    for _k, v in pairs(FileChooser.show_filter.status) do
                         if v then n_active = n_active + 1 end
                     end
                 end
@@ -1867,7 +1943,7 @@ local function apply_context_menu()
                     {
                         text = icons.filter .. "  " .. _("Filter")
                             .. (n_active > 0 and " (" .. n_active .. ")" or "")
-                            .. "  ▶",
+                            .. "  " .. submenu_arrow,
                         align = "left",
                         callback = function()
                             close_dialog()
@@ -1877,18 +1953,49 @@ local function apply_context_menu()
                 })
             end
 
-            table.insert(buttons, {
-                {
-                    text = "\u{F090C}  " .. _("Edit") .. "  ▶",
-                    align = "left",
-                    callback = showEditSubmenu,
-                },
-            })
+            if not item._zen_home_context and not is_virtual_folder then
+                table.insert(buttons, {
+                    {
+                        text = "\u{F090C}  " .. _("Edit") .. "  " .. submenu_arrow,
+                        align = "left",
+                        callback = showEditSubmenu,
+                    },
+                })
+            end
 
             if item._zen_extra_buttons then
-                for _, row in ipairs(item._zen_extra_buttons) do
+                for _i, row in ipairs(item._zen_extra_buttons) do
                     table.insert(buttons, row)
                 end
+            end
+
+            if is_file and item._zen_is_history then
+                table.insert(buttons, {
+                    {
+                        text = icons.delete .. "  " .. _("Remove from history"),
+                        align = "left",
+                        callback = function()
+                            close_dialog()
+                            local ConfirmBox = require("ui/widget/confirmbox")
+                            UIManager:show(ConfirmBox:new{
+                                text = _("Remove this book from history?"),
+                                ok_text = _("Remove"),
+                                ok_callback = function()
+                                    local ReadHistory = require("readhistory")
+                                    ReadHistory:removeItemByPath(file)
+                                    local SharedState = require("common/shared_state")
+                                    local plug = zen_plugin or rawget(_G, "__ZEN_UI_PLUGIN")
+                                    local home = plug and SharedState.get(plug, "home")
+                                    if home and home.rebuildActive then
+                                        UIManager:nextTick(function()
+                                            home.rebuildActive()
+                                        end)
+                                    end
+                                end,
+                            })
+                        end,
+                    },
+                })
             end
 
             local dlg_title = dialog_cover_widget and "" or dialog_title

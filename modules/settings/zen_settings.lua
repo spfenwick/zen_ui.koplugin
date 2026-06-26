@@ -3,21 +3,31 @@ local UIManager = require("ui/uimanager")
 
 local settings_apply = require("modules/settings/zen_settings_apply")
 local updater        = require("modules/settings/zen_updater")
+local icons          = require("common/inline_icon_map")
+local IconItem       = require("common/ui/icon_menu_item")
 local utils          = require("modules/settings/zen_settings_utils")
 
 local lib_section      = require("modules/settings/sections/library_settings")
+local home_section = require("modules/settings/sections/library_settings/home_settings")
 local navbar_section   = require("modules/settings/sections/library_settings/navbar_settings")
 local menu_section     = require("modules/settings/sections/menu_settings")
+local app_launcher_section = require("modules/settings/sections/app_launcher_settings")
 local reader_section   = require("modules/settings/sections/reader_settings")
 local global_section   = require("modules/settings/sections/global_settings")
 local advanced_section = require("modules/settings/sections/advanced_settings")
 local about_section    = require("modules/settings/sections/about_settings")
+local shutdown         = require("common/shutdown")
 
 local M = {}
 
+IconItem.installMenuPatch()
+
 function M.build(plugin)
-    -- Load cached update state for the banner; background check runs after resume.
+    -- Initialize updater banner state; release metadata stays live-only.
     updater.init_banner()
+    if settings_apply.set_plugin then
+        settings_apply.set_plugin(plugin)
+    end
 
     local config = plugin.config
 
@@ -40,8 +50,10 @@ function M.build(plugin)
     }
 
     local filebrowser_items    = lib_section.build(ctx)
+    local home_item       = home_section.build(ctx)
     local navbar_item          = navbar_section.build(ctx)
     local quick_settings_item  = menu_section.build(ctx)
+    local app_launcher_item = app_launcher_section.build(ctx)
     local reader_items         = reader_section.build(ctx)
     local global_items      = global_section.build(ctx)
     local advanced_items    = advanced_section.build(ctx)
@@ -55,7 +67,7 @@ function M.build(plugin)
                 text = _("Are you sure you want to quit KOReader?"),
                 ok_text = _("Quit"),
                 ok_callback = function()
-                    UIManager:broadcastEvent(require("ui/event"):new("Exit"))
+                    shutdown.broadcastExit(plugin)
                 end,
             })
         end,
@@ -84,53 +96,62 @@ function M.build(plugin)
     })
 
     utils.reorder_nested_items_by_text({ navbar_item }, _("Navbar"), {
-        _("Tabs"),
+        _("Tabs") .. " \u{25B8}",
         _("Styling"),
-        _("Show labels"),
-    })
-
-    utils.reorder_nested_items_by_text({ navbar_item }, _("Tabs"), {
-        _("Visibility"),
-        _("Custom tabs"),
-        _("Arrange tabs"),
+        _("Default tab: "),
     })
 
     utils.reorder_nested_items_by_text({ navbar_item }, _("Styling"), {
+        _("Labels"),
+        _("Icons"),
+        _("Active tab"),
         _("Show top border"),
-        _("Active tab styling"),
-        _("Bold active tab"),
-        _("Active tab underline"),
+    })
+
+    utils.reorder_nested_items_by_text({ navbar_item }, _("Active tab"), {
+        _("Underline"),
         _("Underline above icon"),
-        _("Colored active tab"),
+        _("Colored"),
         _("Active tab color"),
-        _("Refresh navbar"),
+    })
+
+    utils.reorder_nested_items_by_text({ navbar_item }, _("Labels"), {
+        _("Show labels"),
+        _("Label size:"),
+    })
+
+    utils.reorder_nested_items_by_text({ navbar_item }, _("Icons"), {
+        _("Show icons"),
+        _("Icon size:"),
     })
 
     -- -------------------------------------------------------------------------
     -- Root menu assembly
     -- -------------------------------------------------------------------------
 
+    quick_settings_item.text = _("Controls")
+    IconItem.decorate(quick_settings_item, icons.settings_quick)
+    app_launcher_item.text = _("Launcher")
+    IconItem.decorate(app_launcher_item, icons.settings_launcher)
+    app_launcher_item._zen_settings_root = "launcher"
+    home_item.text = _("Home")
+    IconItem.decorate(home_item, icons.settings_home)
+    navbar_item.text = _("Navbar")
+    IconItem.decorate(navbar_item, icons.settings_navbar)
+
     local root_items = {
-        {
-            text = _("Zen Mode"),
-            checked_func = function()
-                return config.features["zen_mode"] == true
-            end,
-            callback = function()
-                config.features["zen_mode"] = config.features["zen_mode"] ~= true
-                save_and_apply("zen_mode")
-            end,
-        },
         quick_settings_item,
-        { text = _("Library"),  sub_item_table = filebrowser_items },
+        app_launcher_item,
+        home_item,
+        IconItem.decorate({ text = _("Library"), sub_item_table = filebrowser_items }, icons.settings_library),
         navbar_item,
-        { text = _("Reader"),   sub_item_table = reader_items      },
-        { text = _("Global"),   sub_item_table = global_items      },
-        { text = _("Advanced"), sub_item_table = advanced_items    },
-        {
+        IconItem.decorate({ text = _("Reader"), sub_item_table = reader_items }, icons.settings_reader),
+        IconItem.decorate({ text = _("Global"), sub_item_table = global_items }, icons.settings_global),
+        IconItem.decorate({ text = _("Advanced"), sub_item_table = advanced_items }, icons.settings_advanced),
+        IconItem.decorate({
             text = _("About"),
             sub_item_table = general_items,
-        },
+        }, icons.settings_about),
     }
 
     -- Insert banner if an update is already known.
