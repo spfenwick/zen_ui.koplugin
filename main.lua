@@ -157,6 +157,11 @@ function ZenUI:init()
     -- Initialize updater state; release metadata stays live-only.
     zen_updater.init_banner()
 
+    -- Clamp persisted list items-per-page before any browser reads it,
+    -- so covers stay legible regardless of where it was set (zen UI,
+    -- KOReader's coverbrowser, or a legacy save).
+    pcall(function() require("common/cover_utils").getFilesPerPage() end)
+
     -- Run incompatible-plugin detection before ANY module or patch loads.
     do
         local ok_compat, incompatible_check = pcall(require,
@@ -212,6 +217,21 @@ function ZenUI:init()
             self.config._meta.footer_backup_created = true
             self:saveConfig()
         end
+    end
+
+    -- First-run: color e-ink screens clip the footer bottom, so bump the
+    -- container bottom margin from KOReader's default of 1 to 6.
+    if not self.config._meta.footer_color_bottom_padding_applied then
+        local Device = require("device")
+        if Device:hasColorScreen() then
+            local footer_settings = G_reader_settings:readSetting("footer")
+            if type(footer_settings) == "table" then
+                footer_settings.container_bottom_padding = 6
+                G_reader_settings:saveSetting("footer", footer_settings)
+            end
+        end
+        self.config._meta.footer_color_bottom_padding_applied = true
+        self:saveConfig()
     end
 
     -- First-run: default to swipe-only menu activation (KOReader default is tap+swipe).
@@ -698,6 +718,26 @@ function ZenUI:deletePluginSettings()
         pcall(gs.delSetting, gs, ConfigManager.key())
         pcall(gs.flush, gs)
     end
+
+    -- Remove userpatches installed alongside the plugin (e.g. the startup-alert
+    -- suppressor seeded into koreader/patches/ at install time). Match any
+    -- priority prefix so the patch is removed regardless of load order.
+    pcall(function()
+        local DataStorage = require("datastorage")
+        local lfs = require("libs/libkoreader-lfs")
+        local patches_dir = DataStorage:getPatchesDir()
+        if lfs.attributes(patches_dir, "mode") ~= "directory" then return end
+        for entry in lfs.dir(patches_dir) do
+            if entry:match("^%d+%-zen.*%-suppress%-startup%-alerts%.lua$")
+                or entry:match("^%d+%-zen[%-_]ui[%-_].*%.lua$") then
+                local fullpath = patches_dir .. "/" .. entry
+                if lfs.attributes(fullpath, "mode") == "file" then
+                    os.remove(fullpath)
+                    logger.info("ZenUI: removed userpatch", entry)
+                end
+            end
+        end
+    end)
 
     logger.info("ZenUI: deletePluginSettings completed")
     return true

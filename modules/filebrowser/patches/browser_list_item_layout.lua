@@ -48,16 +48,18 @@ local function apply_browser_list_item_layout()
         -- Corner-mask helpers
         local corner_radius = Screen:scaleBySize(8)
 
-        local function paintCornerMasks(bb, tx, ty, tw, th, r)
-            local color = Blitbuffer.COLOR_WHITE
+        -- Restore corner pixels from a pre-paint background snapshot so the rounded
+        -- cut-outs reveal whatever was behind the cover (row bg / library bg image)
+        -- instead of an opaque white square. snap origin is absolute (ox, oy).
+        local function paintCornerMasks(bb, tx, ty, tw, th, r, snap, ox, oy)
             for j = 0, r - 1 do
                 local inner = math.sqrt(r * r - (r - j) * (r - j))
                 local cut = math.ceil(r - inner)
                 if cut > 0 then
-                    bb:paintRect(tx, ty + j, cut, 1, color)
-                    bb:paintRect(tx + tw - cut, ty + j, cut, 1, color)
-                    bb:paintRect(tx, ty + th - 1 - j, cut, 1, color)
-                    bb:paintRect(tx + tw - cut, ty + th - 1 - j, cut, 1, color)
+                    bb:blitFrom(snap, tx,            ty + j,          tx - ox,            ty + j - oy,          cut, 1)
+                    bb:blitFrom(snap, tx + tw - cut, ty + j,          tx + tw - cut - ox, ty + j - oy,          cut, 1)
+                    bb:blitFrom(snap, tx,            ty + th - 1 - j, tx - ox,            ty + th - 1 - j - oy, cut, 1)
+                    bb:blitFrom(snap, tx + tw - cut, ty + th - 1 - j, tx + tw - cut - ox, ty + th - 1 - j - oy, cut, 1)
                 end
             end
         end
@@ -728,8 +730,10 @@ local function apply_browser_list_item_layout()
             -- ── Favorite star overlay (top-right corner, absolute) ─────────
             if self.menu.name ~= "collections"
                 and ReadCollection:isFileInCollection(filepath, "favorites") then
-                local star_sz = Screen:scaleBySize(22)
                 local star_pad = Screen:scaleBySize(3)
+                -- Scale star to ~40% of row height (capped at 22) so it shrinks on
+                -- short rows (12 items/page) instead of overflowing.
+                local star_sz = math.max(1, math.min(Screen:scaleBySize(22), math.floor(dimen_h * 0.4)))
                 local star_icon = IconWidget:new{
                     icon = "star.empty",
                     width = star_sz,
@@ -766,14 +770,37 @@ local function apply_browser_list_item_layout()
         local orig_paintTo = ListMenuItem.paintTo
         if orig_paintTo then
             function ListMenuItem:paintTo(bb, x, y)
+                local plug = _plugin_ref or rawget(_G, "__ZEN_UI_PLUGIN")
+                local rounded = plug
+                    and type(plug.config) == "table"
+                    and type(plug.config.features) == "table"
+                    and plug.config.features.browser_cover_rounded_corners == true
+
+                -- Snapshot the row background *before* painting the cover, so the
+                -- corner cut-outs can restore it (row/library bg) instead of an
+                -- opaque white square.
+                local snap
+                if rounded then
+                    local sz = self:getSize()
+                    local w, h = sz and sz.w, sz and sz.h
+                    if w and h and w > 0 and h > 0 then
+                        snap = Blitbuffer.new(w, h, bb:getType())
+                        snap:blitFrom(bb, 0, 0, x, y, w, h)
+                    end
+                end
+
                 orig_paintTo(self, bb, x, y)
-                if not self._cover_frame then return end
+                if not self._cover_frame then
+                    if snap then snap:free() end
+                    return
+                end
                 local target = self._cover_frame
                 if not (target.dimen
                     and target.dimen.x and target.dimen.y
                     and target.dimen.w and target.dimen.h
                     and target.dimen.w > 0 and target.dimen.h > 0)
                 then
+                    if snap then snap:free() end
                     return
                 end
                 local tx, ty = target.dimen.x, target.dimen.y
@@ -787,17 +814,19 @@ local function apply_browser_list_item_layout()
                 bb:paintRect(tx,            ty,            bsz, th,  bc)
                 bb:paintRect(tx + tw - bsz, ty,            bsz, th,  bc)
 
-                local plug = _plugin_ref or rawget(_G, "__ZEN_UI_PLUGIN")
-                if plug
-                    and type(plug.config) == "table"
-                    and type(plug.config.features) == "table"
-                    and plug.config.features.browser_cover_rounded_corners == true
-                then
-                    -- Corner masks white-out the sharp corners (content + redrawn border).
-                    paintCornerMasks(bb, tx, ty, tw, th, corner_radius)
-                    -- Then draw the rounded arc border over the masked area.
-                    paintCornerBorderArcs(bb, tx, ty, tw, th, corner_radius, bsz, Blitbuffer.COLOR_BLACK)
+                if rounded and snap then
+                    -- Radius proportional to cover height so short covers (12 items/
+                    -- page) don't look over-rounded; capped at the mosaic radius and
+                    -- never more than half the cover.
+                    local r = math.min(corner_radius, math.floor(th / 5),
+                                       math.floor(tw / 2), math.floor(th / 2))
+                    if r >= 1 then
+                        -- Restore bg in the corners, then redraw arc border.
+                        paintCornerMasks(bb, tx, ty, tw, th, r, snap, x, y)
+                        paintCornerBorderArcs(bb, tx, ty, tw, th, r, bsz, Blitbuffer.COLOR_BLACK)
+                    end
                 end
+                if snap then snap:free() end
             end
         end
         ListMenuItem._zen_bll_patched = true

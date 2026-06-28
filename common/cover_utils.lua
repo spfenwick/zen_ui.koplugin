@@ -4,10 +4,38 @@
 local Blitbuffer = require("ffi/blitbuffer")
 local library_font = require("modules/filebrowser/patches/library_font")
 local TextBoxWidget = require("ui/widget/textboxwidget")
+local RenderText = require("ui/rendertext")
 local BD = require("ui/bidi")
 local _ = require("gettext")
 
 local CoverUtils = {}
+
+-- Max list items per page that still render legible covers. Above this,
+-- covers get too narrow for text. Enforced regardless of where the
+-- setting was changed (zen UI, KOReader's coverbrowser, legacy saves).
+CoverUtils.MAX_FILES_PER_PAGE = 12
+
+-- Read files_per_page, clamp to MAX, and self-heal the persisted setting
+-- if it was saved too high (e.g. by KOReader's own spinner). Returns the
+-- clamped value, or nil if unset (let ListMenu compute its default).
+function CoverUtils.getFilesPerPage()
+    local ok, BookInfoManager = pcall(require, "bookinfomanager")
+    if not ok then return nil end
+    local v = BookInfoManager:getSetting("files_per_page")
+    if not v then return nil end
+    if v > CoverUtils.MAX_FILES_PER_PAGE then
+        v = CoverUtils.MAX_FILES_PER_PAGE
+        BookInfoManager:saveSetting("files_per_page", v)
+        local ok_fc, FileChooser = pcall(require, "ui/widget/filechooser")
+        if ok_fc and FileChooser then FileChooser.files_per_page = v end
+        -- Also clamp the live file_chooser instance if one already exists,
+        -- so an in-flight render uses the capped value (not its own stale field).
+        local ok_fm, FM = pcall(require, "apps/filemanager/filemanager")
+        local fm = ok_fm and FM and FM.instance
+        if fm and fm.file_chooser then fm.file_chooser.files_per_page = v end
+    end
+    return v
+end
 
 -- ============================================================
 -- Helper: get_upvalue
@@ -138,6 +166,11 @@ function CoverUtils.genCover(filepath, target_w, target_h, no_fallback)
     local author_area_h = height - split_y - 10
     local max_text_width = width - 16
 
+    -- Cover too small to render any text: return gradient-only bb.
+    if max_text_width < 1 or title_area_h < 1 or author_area_h < 1 then
+        return final_bb, width, height
+    end
+
     local title_color = Blitbuffer.ColorRGB32(1, 68, 142, 255)
     local authors_color = Blitbuffer.ColorRGB32(8, 51, 93, 255)
 
@@ -163,20 +196,24 @@ function CoverUtils.genCover(filepath, target_w, target_h, no_fallback)
     end
 
     if title_widget and title_widget:getSize().h > title_area_h then
-        title_widget:free()
         local face = library_font.getFace(min_title_font)
-        title_widget = TextBoxWidget:new{
-            text = title,
-            face = face,
-            width = max_text_width,
-            alignment = "center",
-            bold = true,
-            fgcolor = title_color,
-            bgcolor = lighter_color,
-            height = title_area_h,
-            height_adjust = true,
-            height_overflow_show_ellipsis = true,
-        }
+        -- Ellipsis fallback re-runs makeLine with (width - ellipsis_width);
+        -- skip it when too narrow or makeLine gets non-positive width.
+        if max_text_width > RenderText:getEllipsisWidth(face) then
+            title_widget:free()
+            title_widget = TextBoxWidget:new{
+                text = title,
+                face = face,
+                width = max_text_width,
+                alignment = "center",
+                bold = true,
+                fgcolor = title_color,
+                bgcolor = lighter_color,
+                height = title_area_h,
+                height_adjust = true,
+                height_overflow_show_ellipsis = true,
+            }
+        end
     end
     if title_widget then title_widget.handleEvent = function() return false end end
 
@@ -201,19 +238,21 @@ function CoverUtils.genCover(filepath, target_w, target_h, no_fallback)
     end
 
     if authors_widget and authors_widget:getSize().h > author_area_h then
-        authors_widget:free()
         local face = library_font.getFace(min_authors_font)
-        authors_widget = TextBoxWidget:new{
-            text = authors,
-            face = face,
-            width = max_text_width,
-            alignment = "center",
-            fgcolor = authors_color,
-            bgcolor = darker_color,
-            height = author_area_h,
-            height_adjust = true,
-            height_overflow_show_ellipsis = true,
-        }
+        if max_text_width > RenderText:getEllipsisWidth(face) then
+            authors_widget:free()
+            authors_widget = TextBoxWidget:new{
+                text = authors,
+                face = face,
+                width = max_text_width,
+                alignment = "center",
+                fgcolor = authors_color,
+                bgcolor = darker_color,
+                height = author_area_h,
+                height_adjust = true,
+                height_overflow_show_ellipsis = true,
+            }
+        end
     end
     if authors_widget then
         authors_widget.handleEvent = function() return false end
@@ -613,51 +652,61 @@ function CoverUtils.drawNoImage(folder_name, portrait_w, portrait_h, border)
     local final_bb = Blitbuffer.new(portrait_w, portrait_h, Blitbuffer.TYPE_BBRGB32)
     final_bb:fill(bg)
 
-    local font_size = library_font.scaleValue(20)
-    local min_font = library_font.scaleValue(10)
-    local text_widget = nil
+    local text_width = portrait_w - 16
+    local text_area_h = portrait_h - 10
 
-    while font_size >= min_font do
-        if text_widget then text_widget:free() end
-        local face = library_font.getFace(font_size)
-        text_widget = TextBoxWidget:new{
-            text = folder_name,
-            face = face,
-            width = portrait_w - 16,
-            alignment = "center",
-            bold = true,
-            fgcolor = fg,
-            bgcolor = bg,
-        }
-        if text_widget:getSize().h <= portrait_h - 10 then
-            break
+    -- Folder too small to render any text: return blank framed bb.
+    if text_width >= 1 and text_area_h >= 1 then
+        local font_size = library_font.scaleValue(20)
+        local min_font = library_font.scaleValue(10)
+        local text_widget = nil
+
+        while font_size >= min_font do
+            if text_widget then text_widget:free() end
+            local face = library_font.getFace(font_size)
+            text_widget = TextBoxWidget:new{
+                text = folder_name,
+                face = face,
+                width = text_width,
+                alignment = "center",
+                bold = true,
+                fgcolor = fg,
+                bgcolor = bg,
+            }
+            if text_widget:getSize().h <= text_area_h then
+                break
+            end
+            font_size = font_size - 1
         end
-        font_size = font_size - 1
-    end
 
-    text_widget.handleEvent = function() return false end
-
-    if text_widget:getSize().h > portrait_h - 10 then
-        text_widget:free()
-        local face = library_font.getFace(min_font)
-        text_widget = TextBoxWidget:new{
-            text = folder_name,
-            face = face,
-            width = portrait_w - 16,
-            alignment = "center",
-            bold = true,
-            fgcolor = fg,
-            bgcolor = bg,
-            height = portrait_h - 10,
-            height_adjust = true,
-            height_overflow_show_ellipsis = true,
-        }
         text_widget.handleEvent = function() return false end
-    end
 
-    local y = (portrait_h - text_widget:getSize().h) / 2
-    text_widget:paintTo(final_bb, (portrait_w - text_widget:getSize().w) / 2, y)
-    text_widget:free()
+        if text_widget:getSize().h > text_area_h then
+            local face = library_font.getFace(min_font)
+            -- Ellipsis fallback re-runs makeLine with (width - ellipsis_width);
+            -- skip it when too narrow or makeLine gets non-positive width.
+            if text_width > RenderText:getEllipsisWidth(face) then
+                text_widget:free()
+                text_widget = TextBoxWidget:new{
+                    text = folder_name,
+                    face = face,
+                    width = text_width,
+                    alignment = "center",
+                    bold = true,
+                    fgcolor = fg,
+                    bgcolor = bg,
+                    height = text_area_h,
+                    height_adjust = true,
+                    height_overflow_show_ellipsis = true,
+                }
+                text_widget.handleEvent = function() return false end
+            end
+        end
+
+        local y = (portrait_h - text_widget:getSize().h) / 2
+        text_widget:paintTo(final_bb, (portrait_w - text_widget:getSize().w) / 2, y)
+        text_widget:free()
+    end
 
     local dimen = { w = portrait_w + 2 * border, h = portrait_h + 2 * border }
 
