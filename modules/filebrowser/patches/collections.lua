@@ -104,7 +104,7 @@ local function apply_collections()
         menu.nb_rows_portrait  = BookInfoManager:getSetting("nb_rows_portrait")  or 3
         menu.nb_cols_landscape = BookInfoManager:getSetting("nb_cols_landscape") or 4
         menu.nb_rows_landscape = BookInfoManager:getSetting("nb_rows_landscape") or 2
-        menu.files_per_page    = BookInfoManager:getSetting("files_per_page")
+        menu.files_per_page    = Cover.getFilesPerPage()
         menu.display_mode_type = display_mode_type
 
         if display_mode_type == "mosaic" then

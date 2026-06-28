@@ -157,6 +157,11 @@ function ZenUI:init()
     -- Initialize updater state; release metadata stays live-only.
     zen_updater.init_banner()
 
+    -- Clamp persisted list items-per-page before any browser reads it,
+    -- so covers stay legible regardless of where it was set (zen UI,
+    -- KOReader's coverbrowser, or a legacy save).
+    pcall(function() require("common/cover_utils").getFilesPerPage() end)
+
     -- Run incompatible-plugin detection before ANY module or patch loads.
     do
         local ok_compat, incompatible_check = pcall(require,
