@@ -26,6 +26,10 @@ local function apply_navbar()
     local _ = require("gettext")
     local lfs = require("libs/libkoreader-lfs")
 
+    local function getRakuyomi()
+        return rawget(_G, "__ZEN_UI_RAKUYOMI") or {}
+    end
+
     local zen_plugin = rawget(_G, "__ZEN_UI_PLUGIN")
     if not zen_plugin or type(zen_plugin.config) ~= "table" then
         return
@@ -470,15 +474,9 @@ local function apply_navbar()
             return
         end
 
-        -- Default: open Rakuyomi
-        local rakuyomi = fm.rakuyomi
-        if rakuyomi then
-            rakuyomi:openLibraryView()
-        else
-            local InfoMessage = require("ui/widget/infomessage")
-            UIManager:show(InfoMessage:new{
-                text = _("Rakuyomi plugin is not installed."),
-            })
+        local Rakuyomi = getRakuyomi()
+        if type(Rakuyomi.openLibraryView) == "function" then
+            Rakuyomi.openLibraryView({ hideTopClose = true })
         end
     end
 
@@ -1298,7 +1296,7 @@ local function apply_navbar()
         return h
     end
 
-    -- Standalone views (History, Favorites, Collections, Stats, Rakuyomi) that should get navbar
+    -- Standalone views (History, Favorites, Collections, Stats) that should get navbar
     local standalone_view_names = {
         history = true,
         collections = true,
@@ -1311,17 +1309,73 @@ local function apply_navbar()
         series_detail = true,
         tags_detail = true,
         stats = true,
-        library_view = true, -- Rakuyomi
     }
 
-    -- Views where we inject navbar via nextTick in Menu:init
-    -- (plugin views that can't be hooked via show functions)
-    local standalone_nexttick_tab_ids = {
-        library_view = "manga",
-    }
+    local function isRakuyomiView(menu)
+        local Rakuyomi = getRakuyomi()
+        return type(Rakuyomi.isLibraryView) == "function" and Rakuyomi.isLibraryView(menu)
+    end
+
+    local function closeStandaloneView(menu)
+        if not menu then return end
+        local Rakuyomi = getRakuyomi()
+        local closed = type(Rakuyomi.closeLibraryView) == "function"
+            and Rakuyomi.closeLibraryView(menu)
+        if not closed then
+            if menu.close_callback then
+                menu.close_callback()
+            elseif menu.onClose then
+                menu:onClose()
+            else
+                UIManager:close(menu)
+            end
+        end
+        if menu._zen_close_stack then menu._zen_close_stack() end
+    end
+
+    local function isStandaloneExitTarget(widget)
+        if not widget then return false end
+        local fm = FileManager.instance
+        if fm and (widget == fm or widget == fm.show_parent) then return true end
+        local ok_rui, RUI = pcall(require, "apps/reader/readerui")
+        if ok_rui and RUI and RUI.instance
+                and (widget == RUI.instance or widget == RUI.instance.show_parent) then
+            return true
+        end
+        return standalone_view_names[widget.name] == true
+            or isRakuyomiView(widget)
+            or widget._zen_standalone_navbar_injected == true
+    end
+
+    local function getStandaloneNextTickTabId(menu)
+        local Rakuyomi = getRakuyomi()
+        if type(Rakuyomi.getStandaloneTabId) == "function" then
+            return Rakuyomi.getStandaloneTabId(menu)
+        end
+    end
+
+    local function shouldCloseStandaloneBeforeAction(menu, tab_id)
+        local Rakuyomi = getRakuyomi()
+        return type(Rakuyomi.shouldCloseBeforeActionTab) == "function"
+            and Rakuyomi.shouldCloseBeforeActionTab(menu, tab_id)
+    end
+
+    local function onStandaloneNavbarInjected(menu)
+        local Rakuyomi = getRakuyomi()
+        if type(Rakuyomi.onStandaloneNavbarInjected) == "function" then
+            Rakuyomi.onStandaloneNavbarInjected(menu, isStandaloneExitTarget)
+        end
+    end
+
+    local function refreshStandaloneAfterResize(menu)
+        local Rakuyomi = getRakuyomi()
+        return type(Rakuyomi.refreshAfterResize) == "function"
+            and Rakuyomi.refreshAfterResize(menu)
+    end
 
     local function isStandaloneNavbarView(menu)
         if standalone_view_names[menu.name] then return true end
+        if isRakuyomiView(menu) then return true end
         -- Collections list has no name but has these flags
         if not menu.name and menu.covers_fullscreen and menu.is_borderless and menu.title_bar_fm_style then
             return true
@@ -1367,10 +1421,10 @@ local function apply_navbar()
         if not _skip_standalone_navbar and isStandaloneNavbarView(self) then
             preventStandaloneSwipeClose(self)
         end
-        -- Plugin views (e.g. Rakuyomi) can't be hooked via show functions,
+        -- Plugin views can need delayed injection when they can't be hooked via show functions.
         -- so inject navbar via nextTick from here. Hide-pagination doesn't
         -- apply to these views so there's no ordering conflict.
-        local nexttick_tab_id = standalone_nexttick_tab_ids[self.name]
+        local nexttick_tab_id = getStandaloneNextTickTabId(self)
         if nexttick_tab_id and not self._zen_standalone_navbar_pending
                 and not self._zen_standalone_navbar_injected then
             self._zen_standalone_navbar_pending = true
@@ -1825,6 +1879,9 @@ local function apply_navbar()
             end
 
             if not shouldTrackActiveTab(tapped_id) then
+                if shouldCloseStandaloneBeforeAction(menu, tapped_id) then
+                    closeStandaloneView(menu)
+                end
                 runTabCallback(tapped_id)
                 return true
             end
@@ -1832,23 +1889,12 @@ local function apply_navbar()
             -- Close this standalone view first
             if tapped_id == "books" then
                 setActiveTab(tapped_id)
+                closeStandaloneView(menu)
                 runTabCallback(tapped_id)
-                UIManager:close(menu)
-                if menu._zen_close_stack then menu._zen_close_stack() end
                 return true
             end
 
-            if menu.close_callback then
-                menu.close_callback()
-            elseif menu.onClose then
-                menu:onClose()
-            else
-                UIManager:close(menu)
-            end
-            -- Unwind any parent stack (e.g. authors/series group view under a detail view)
-            if menu._zen_close_stack then
-                menu._zen_close_stack()
-            end
+            closeStandaloneView(menu)
 
             -- Update FM navbar active tab only for persistent views.
             if shouldTrackActiveTab(tapped_id) then
@@ -1863,6 +1909,7 @@ local function apply_navbar()
 
         -- Expand dimen to full screen so gestures and repaints cover the navbar area
         menu.dimen.h = Screen:getHeight()
+        onStandaloneNavbarInjected(menu)
         -- Suppress the spurious partial_page_repaint nextTick forceRePaint that fires
         -- after updateItems on initial load — the UIManager:show() paint already covers it.
         menu._zen_no_forced_repaint = true
@@ -1919,10 +1966,7 @@ local function apply_navbar()
                 end
                 if body_widget.resetLayout then body_widget:resetLayout() end
             end
-            if menu.name == "library_view" and type(menu.updateItems) == "function"
-                    and menu.item_group and menu.content_group then
-                menu:updateItems(menu.itemnumber)
-            end
+            refreshStandaloneAfterResize(menu)
             if vg.resetLayout then vg:resetLayout() end
             if menu[1] and menu[1].resetLayout then menu[1]:resetLayout() end
         end
@@ -2065,20 +2109,19 @@ local function apply_navbar()
                     menu.page = 1; menu:updateItems(); return
                 end
                 if not shouldTrackActiveTab(tapped_id) then
+                    if shouldCloseStandaloneBeforeAction(menu, tapped_id) then
+                        closeStandaloneView(menu)
+                    end
                     runTabCallback(tapped_id)
                     return
                 end
                 if tapped_id == "books" then
                     setActiveTab(tapped_id)
+                    closeStandaloneView(menu)
                     runTabCallback(tapped_id)
-                    UIManager:close(menu)
-                    if menu._zen_close_stack then menu._zen_close_stack() end
                     return
                 end
-                if menu.close_callback then menu.close_callback()
-                elseif menu.onClose then menu:onClose()
-                else UIManager:close(menu) end
-                if menu._zen_close_stack then menu._zen_close_stack() end
+                closeStandaloneView(menu)
                 if shouldTrackActiveTab(tapped_id) then
                     setActiveTab(tapped_id)
                 end

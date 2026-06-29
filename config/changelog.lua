@@ -132,5 +132,8 @@ return {
         "Fix some untranslated strings falling back to English",
         "Bug fixes",
     },
+    ["2.2.0"] = {
+        "Improve integration with Rakuyomi"
+    },
 
 }
