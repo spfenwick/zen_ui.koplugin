@@ -133,7 +133,10 @@ return {
         "Bug fixes",
     },
     ["2.2.0"] = {
-        "Improve integration with Rakuyomi"
+        "Improve integration with Rakuyomi",
+        "Add new action Zen UI - Library (Respects Restore last location)",
+        "Fix a bug in reader top status bar showing after being hidden with action",
+        "Fix a bug in reader bottom status bar on starting KOReader with last file"
     },
 
 }

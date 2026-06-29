@@ -78,6 +78,34 @@ local function show_zen_tab(plugin, tab_id, opts)
     return show_tab_from_filemanager(plugin, tab_id)
 end
 
+local function show_library_from_filemanager()
+    local ok_fm, FileManager = pcall(require, "apps/filemanager/filemanager")
+    local fm = ok_fm and FileManager and FileManager.instance
+    if fm then require("common/utils").closeWidgetsAbove(fm) end
+
+    local open_default = rawget(_G, "__ZEN_UI_NAVBAR_OPEN_DEFAULT_TAB")
+    if type(open_default) == "function" then
+        open_default()
+        return true
+    end
+
+    local home_dir = require("common/paths").getHomeDir()
+    if fm and fm.file_chooser and home_dir then
+        fm.file_chooser.path_items[home_dir] = nil
+        fm.file_chooser:changeToPath(home_dir)
+        return true
+    end
+    return false
+end
+
+local function show_library(plugin)
+    local reader = get_reader()
+    if reader and reader.document then
+        return require("common/library_navigation").showFromReader(reader, plugin)
+    end
+    return show_library_from_filemanager()
+end
+
 local function show_folder_from_filemanager(folder)
     if type(folder) ~= "string" or folder == "" then return false end
     local lfs = require("libs/libkoreader-lfs")
@@ -287,6 +315,12 @@ function M.onDispatcherRegisterActions()
         title = _("Zen UI - Home"),
         general = true,
     })
+    Dispatcher:registerAction("zen_ui_show_library", {
+        category = "none",
+        event = "ShowZenUILibrary",
+        title = _("Zen UI - Library"),
+        general = true,
+    })
     Dispatcher:registerAction("zen_ui_show_authors", {
         category = "none",
         event = "ShowZenUIAuthors",
@@ -368,6 +402,10 @@ function M.onShowZenUIHome(plugin)
     return show_zen_tab(plugin, "home", { open_home = true })
 end
 
+function M.onShowZenUILibrary(plugin)
+    return show_library(plugin)
+end
+
 function M.onShowZenUIAuthors(plugin)
     return show_zen_tab(plugin, "authors")
 end
@@ -393,6 +431,7 @@ function M.install(target)
     target.onToggleReaderBottomStatusBar = M.onToggleReaderBottomStatusBar
     target.onToggleReaderStatusBars = M.onToggleReaderStatusBars
     target.onShowZenUIHome = M.onShowZenUIHome
+    target.onShowZenUILibrary = M.onShowZenUILibrary
     target.onShowZenUIAuthors = M.onShowZenUIAuthors
     target.onShowZenUISeries = M.onShowZenUISeries
     target.onShowZenUITags = M.onShowZenUITags
