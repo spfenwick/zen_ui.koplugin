@@ -96,6 +96,8 @@ end
 -- bigger. A third of the screen's linear size comfortably covers the largest
 -- home-screen cover (the featured widget); extraction is still bounded by the
 -- source cover's own resolution, so this never costs more than the book has.
+-- Returns the {max_cover_w, max_cover_h} spec table to extract/cache covers at
+-- for home-screen display, derived from the current screen size.
 local function home_cover_specs()
     local Screen = require("device").screen
     return { max_cover_w = math.floor(Screen:getWidth() / 3), max_cover_h = math.floor(Screen:getHeight() / 3) }
@@ -135,6 +137,11 @@ local _cover_upgrade_scheduled = false
 -- through a batch was terminating the whole batch and orphaning the rest.
 local _inflight_cover_upgrade_paths = {}
 
+-- Takes everything queued in _pending_cover_upgrade_paths and launches a
+-- single extractInBackground() batch for them at home-screen cover size, then
+-- polls until each path's extraction completes (or the subprocess dies),
+-- invalidating that book's home-cache entry and triggering a home rebuild as
+-- results land.
 local function flush_cover_upgrade_queue()
     _cover_upgrade_scheduled = false
     local paths = {}
@@ -205,6 +212,10 @@ local function flush_cover_upgrade_queue()
     UIManager:scheduleIn(1, poll)
 end
 
+-- Adds `path` to the pending cover-upgrade queue (unless it's already
+-- pending or mid-extraction) and schedules a debounced
+-- flush_cover_upgrade_queue() call so several books queued in quick
+-- succession are batched into one extraction run.
 local function queue_cover_upgrade(path)
     if type(path) ~= "string" or path == "" then return end
     if _pending_cover_upgrade_paths[path] or _inflight_cover_upgrade_paths[path] then return end
