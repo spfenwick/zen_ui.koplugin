@@ -73,7 +73,7 @@ function M.getGroupedByAuthor()
 
             -- Keep raw path so BookInfoManager can find the SQLite entry by its key.
             local author_list = splitAuthors(authors_str)
-            for _, author in ipairs(author_list) do
+            for _i, author in ipairs(author_list) do
                 if not author_map[author] then
                     author_map[author] = {}
                 end
@@ -249,16 +249,25 @@ function M.getTBRBooks()
     local ok_ds, DocSettings = pcall(require, "docsettings")
     if not ok_ds then return {} end
 
+    local BookStatus = require("common/book_status")
     local result = {}
-    for _, filepath in ipairs(candidates) do
+    for _i, filepath in ipairs(candidates) do
         if DocSettings:hasSidecarFile(filepath) then
             local ok3, doc = pcall(DocSettings.open, DocSettings, filepath)
             if ok3 and doc then
                 local summary = doc:readSetting("summary")
-                if summary and summary.status == "abandoned" then
+                local status = BookStatus.autoMarkNewBookAsTBR(
+                    filepath,
+                    summary and summary.status,
+                    doc:readSetting("percent_finished"),
+                    doc
+                )
+                if status == "abandoned" then
                     table.insert(result, filepath)
                 end
             end
+        elseif BookStatus.autoMarkNewBookAsTBR(filepath) == "abandoned" then
+            table.insert(result, filepath)
         end
     end
 
