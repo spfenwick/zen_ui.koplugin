@@ -103,23 +103,22 @@ local function home_cover_specs()
     return { max_cover_w = math.floor(Screen:getWidth() / 3), max_cover_h = math.floor(Screen:getHeight() / 3) }
 end
 
--- BookInfoManager.isCachedCoverInvalid() only flags an upgrade when the cover's
--- *native* resolution exceeds the requested spec; it assumes that whenever the
--- native size already fits within spec, the cache must already hold the native
--- size. That assumption breaks for us: home_cover_specs() is often larger than
--- a book's native cover resolution, so for those books it silently reports
--- "not invalid" even though what's cached is a tiny list-row thumbnail, not
--- the native image. Recompute what extraction at our spec would actually
--- produce and compare that against what's cached, instead of trusting that
--- one short-circuit.
-local function home_cover_too_small(BookInfoManager, bi, specs)
+-- cover_sizetag stores the native (original) image dimensions, e.g. "600x900".
+-- cover_w/cover_h are the actual cached bitmap size after scaling to fit whatever
+-- spec was used at extraction time. To decide whether a larger home-screen spec
+-- would produce a bigger result: compute what getCachedCoverSize would yield at
+-- our spec, then compare that against what is currently cached.
+local function home_cover_too_small(bi, specs)
     if not bi.cover_w or not bi.cover_h then return true end
     local img_w, img_h = tostring(bi.cover_sizetag or ""):match("(%d+)x(%d+)")
     if not img_w then return true end
     img_w, img_h = tonumber(img_w), tonumber(img_h)
+    local max_w, max_h = specs.max_cover_w, specs.max_cover_h
     local target_w, target_h
-    if img_w > specs.max_cover_w or img_h > specs.max_cover_h then
-        target_w, target_h = BookInfoManager.getCachedCoverSize(img_w, img_h, specs.max_cover_w, specs.max_cover_h)
+    if img_w > max_w or img_h > max_h then
+        local scale = math.min(max_w / img_w, max_h / img_h)
+        target_w = math.floor(img_w * scale)
+        target_h = math.floor(img_h * scale)
     else
         target_w, target_h = img_w, img_h
     end
@@ -766,7 +765,7 @@ local function build_data_provider(cfg, dcfg)
                 -- Cached cover may be too small (e.g. extracted for a small
                 -- list row); queue a background re-extraction at full size
                 -- and use today's (possibly upscaled) cover in the meantime.
-                if home_cover_too_small(BookInfoManager, bi, home_cover_specs()) then
+                if home_cover_too_small(bi, home_cover_specs()) then
                     queue_cover_upgrade(path)
                 end
             elseif bi and (bi.cover_fetched or bi.ignore_cover) then
