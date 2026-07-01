@@ -864,7 +864,7 @@ function M.build(ctx)
                         local max_fpp = require("common/cover_utils").MAX_FILES_PER_PAGE
                         local bim = get_bim()
                         local fc = get_fc()
-                        local fpp = (fc and fc.files_per_page) or (bim and bim:getSetting("files_per_page")) or 10
+                        local fpp = (fc and fc.files_per_page) or (bim and bim:getSetting("files_per_page")) or 5
                         fpp = math.min(fpp, max_fpp)
                         return _("List: ") .. tostring(fpp) .. " " .. _("items per page")
                     end,
@@ -874,13 +874,13 @@ function M.build(ctx)
                         local bim = get_bim()
                         if not bim then return end
                         local fc = get_fc()
-                        local fpp = (fc and fc.files_per_page) or bim:getSetting("files_per_page") or 10
+                        local fpp = (fc and fc.files_per_page) or bim:getSetting("files_per_page") or 5
                         UIManager:show(require("ui/widget/spinwidget"):new{
                             title_text = _("Portrait list mode"),
                             value = math.min(fpp, max_fpp),
                             value_min = 4,
                             value_max = max_fpp,
-                            default_value = 10,
+                            default_value = 5,
                             keep_shown_on_apply = true,
                             callback = function(spin)
                                 if fc then
