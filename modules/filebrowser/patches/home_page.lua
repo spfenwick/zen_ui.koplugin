@@ -774,7 +774,7 @@ local function build_data_provider(cfg, dcfg)
                 if home_cover_too_small(bi, home_cover_specs()) then
                     queue_cover_upgrade(path)
                 end
-            elseif bi and (bi.cover_fetched or bi.ignore_cover) then
+            elseif bi and (bi.cover_fetched or bi.ignore_cover) then -- luacheck: ignore 542
                 -- Extraction was already tried and found no usable cover (or the
                 -- user chose to ignore it): nothing to gain from retrying.
             else
