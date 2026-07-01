@@ -178,6 +178,9 @@ local defaults = {
     browser_series_badge = {
         show_series_badge = false,
     },
+    opds = {
+        display_mode = "mosaic", -- "mosaic" | "list" | "classic"
+    },
     mosaic_title_strip = {
         show_title  = false,
         show_author = false,
