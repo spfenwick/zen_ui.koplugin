@@ -589,6 +589,7 @@ local function apply_reader_top_status_bar()
     -- ReaderView:paintTo (full page repaint) on every clock tick -- critical on
     -- color e-ink devices (e.g. Kobo Libre Color).
     local function repaintHeader(view)
+        if not is_enabled() then return end
         -- Strict guard: only repaint if the reader itself is the top window.
         -- is_view_active_top() allows child overlays (e.g. quick settings), which
         -- would cause repaintHeader to paint over them. Check the stack directly.
@@ -676,6 +677,11 @@ local function apply_reader_top_status_bar()
             local _autoRefreshFn
             _autoRefreshFn = function()
                 if not (view.ui and view.ui.document) then
+                    _autoRefresh = nil
+                    return
+                end
+                if not is_enabled() then
+                    view._header_clock_refresh = nil
                     _autoRefresh = nil
                     return
                 end

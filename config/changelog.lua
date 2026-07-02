@@ -132,5 +132,18 @@ return {
         "Fix some untranslated strings falling back to English",
         "Bug fixes",
     },
+    ["2.2.0"] = {
+        "Improve integration with Rakuyomi",
+        "Add new action Zen UI - Library (Respects Restore last location)",
+        "Add toggles in recently read strip widget to hide unread/finished books",
+        "Add mark new and updated books as TBR (Advanced > Mark new and updated books as TBR)",
+        "Update: Folder covers match order inside",
+        "Add display mode per folder & collections",
+        "Add separate display modes for OPDS (Advanced > Zen OPDS)",
+        "Fixed a bug in Launcher settings showing reader actions",
+        "Fixed a bug in reader top status bar showing after being hidden with action",
+        "Fixed a bug in reader bottom status bar on starting KOReader with last file",
+        "Bug fixes"
+    },
 
 }

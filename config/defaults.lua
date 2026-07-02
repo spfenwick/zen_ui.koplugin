@@ -148,6 +148,8 @@ local defaults = {
         hide_up_folder = true,
         lock_home_folder = "zen", -- "off" | "zen" | "on"
     },
+    folder_sort = {},
+    folder_display_mode = {},
     library_background = {
         enabled = false,
         path = "",  -- "" = none; absolute image path otherwise
@@ -177,6 +179,9 @@ local defaults = {
     },
     browser_series_badge = {
         show_series_badge = false,
+    },
+    opds = {
+        display_mode = "mosaic", -- "mosaic" | "list" | "classic"
     },
     mosaic_title_strip = {
         show_title  = false,
@@ -242,6 +247,7 @@ local defaults = {
         rows = { "today", "this_month", "this_year", "all_time", "library" },
     },
     group_view = {
+        include_new_in_tbr = false,
         display_mode = {
             authors = "list_image_meta",
             series = "list_image_meta",

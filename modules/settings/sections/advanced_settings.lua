@@ -6,6 +6,7 @@ local _ = require("gettext")
 local UIManager = require("ui/uimanager")
 local utils = require("modules/settings/zen_settings_utils")
 local paths = require("common/paths")
+local SharedState = require("common/shared_state")
 
 local M = {}
 
@@ -34,18 +35,59 @@ function M.build(ctx)
         keep_menu_open = true,
     })
 
-    table.insert(items, {
-        text = _("Zen OPDS"),
-        help_text = _("Enable Zen UI enhancements to the OPDS browser: cover art, list view, hold menu, and navigation improvements."),
-        checked_func = function()
-            return config.features.zen_opds ~= false
-        end,
-        callback = function()
-            config.features.zen_opds = config.features.zen_opds == false
-            plugin:saveConfig()
-            settings_apply.prompt_restart()
-        end,
-    })
+    do
+        if type(config.opds) ~= "table" then
+            config.opds = {}
+        end
+        if config.opds.display_mode ~= "list" and config.opds.display_mode ~= "classic" then
+            config.opds.display_mode = "mosaic"
+        end
+
+        local display_modes = {
+            { text = _("Mosaic"),  mode = "mosaic"  },
+            { text = _("List"),    mode = "list"    },
+            { text = _("Classic"), mode = "classic" },
+        }
+        local display_mode_items = {}
+        for _i, entry in ipairs(display_modes) do
+            table.insert(display_mode_items, {
+                text = entry.text,
+                radio = true,
+                checked_func = function()
+                    return config.opds.display_mode == entry.mode
+                end,
+                callback = function(touchmenu_instance)
+                    if config.opds.display_mode == entry.mode then return end
+                    config.opds.display_mode = entry.mode
+                    plugin:saveConfig()
+                    if touchmenu_instance then touchmenu_instance:updateItems() end
+                end,
+            })
+        end
+
+        table.insert(items, {
+            text = _("Zen OPDS"),
+            help_text = _("Enable Zen UI enhancements to the OPDS browser: cover art, list view, hold menu, and navigation improvements."),
+            sub_item_table = {
+                {
+                    text = _("Enable Zen OPDS"),
+                    checked_func = function()
+                        return config.features.zen_opds ~= false
+                    end,
+                    callback = function(touchmenu_instance)
+                        config.features.zen_opds = config.features.zen_opds == false
+                        plugin:saveConfig()
+                        if touchmenu_instance then touchmenu_instance:updateItems() end
+                        settings_apply.prompt_restart()
+                    end,
+                },
+                {
+                    text = _("Display mode"),
+                    sub_item_table = display_mode_items,
+                },
+            },
+        })
+    end
 
     table.insert(items, {
         text = _("Partial pages refresh"),
@@ -69,6 +111,26 @@ function M.build(ctx)
             config.features.custom_icons_enabled = config.features.custom_icons_enabled ~= true
             plugin:saveConfig()
             settings_apply.prompt_restart()
+        end,
+    })
+
+    table.insert(items, {
+        text = _("Include New books in To Be Read"),
+        help_text = _("New includes unread books and books modified since they were last opened."),
+        checked_func = function()
+            return type(config.group_view) == "table"
+                and config.group_view.include_new_in_tbr == true
+        end,
+        callback = function(touchmenu_instance)
+            if type(config.group_view) ~= "table" then config.group_view = {} end
+            config.group_view.include_new_in_tbr =
+                config.group_view.include_new_in_tbr ~= true
+            plugin:saveConfig()
+            local home = SharedState.get(plugin, "home")
+            if home and home.rebuildActive then
+                home.rebuildActive()
+            end
+            if touchmenu_instance then touchmenu_instance:updateItems() end
         end,
     })
 
@@ -143,7 +205,7 @@ function M.build(ctx)
                     if not ok_ds or not ok_ls then return end
                     local gestures_path = DataStorage:getSettingsDir() .. "/gestures.lua"
                     local settings = LuaSettings:open(gestures_path)
-                    for _, section in ipairs({ "gesture_fm", "gesture_reader" }) do
+                    for _i, section in ipairs({ "gesture_fm", "gesture_reader" }) do
                         if type(settings.data[section]) == "table" then
                             for k in pairs(settings.data[section]) do
                                 settings.data[section][k] = nil

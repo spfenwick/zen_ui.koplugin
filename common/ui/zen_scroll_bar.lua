@@ -13,8 +13,11 @@ local function apply_zen_scroll_bar()
         filemanager = true,
         history = true,
         collections = true,
-        library_view = true, -- Rakuyomi
     }
+
+    local function getRakuyomi()
+        return rawget(_G, "__ZEN_UI_RAKUYOMI") or {}
+    end
 
     local BAR_W_PCT = 0.92  -- track width as fraction of screen width
 
@@ -30,8 +33,12 @@ local function apply_zen_scroll_bar()
         local is_bookmarks_menu = self.is_borderless
             and self.title_bar_fm_style
             and self.title_bar_left_icon == "appbar.menu"
+        local Rakuyomi = getRakuyomi()
+        local is_rakuyomi = type(Rakuyomi.isScrollBarMenu) == "function"
+            and Rakuyomi.isScrollBarMenu(self)
 
         if not target_menus[self.name]
+           and not is_rakuyomi
            and not (self.covers_fullscreen and self.is_borderless and self.title_bar_fm_style)
            and not is_bookmarks_menu then
             return
@@ -52,7 +59,10 @@ local function apply_zen_scroll_bar()
         -- _recalculateDimen uses getSize().h on these two widgets to compute
         -- bottom_height.  Returning foot reserves exactly that strip.
         self.page_info_text.getSize    = function() return foot end
-        self.page_return_arrow.getSize = function() return foot end
+        if not (is_rakuyomi and type(Rakuyomi.configureScrollBarFooter) == "function"
+                and Rakuyomi.configureScrollBarFooter(self)) then
+            self.page_return_arrow.getSize = function() return foot end
+        end
 
         -- BottomContainer positions page_info at y = inner_dimen.h - h.
         self.page_info.getSize = function() return foot end

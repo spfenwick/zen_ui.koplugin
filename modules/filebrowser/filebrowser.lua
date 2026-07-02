@@ -23,6 +23,7 @@ local PATCH_MODULES = {
     disable_modal_drag = "modules/filebrowser/patches/disable_modal_drag",
     menu_single_page_scroll_guard = "modules/filebrowser/patches/menu_single_page_scroll_guard",
     partial_page_repaint = "modules/filebrowser/patches/partial_page_repaint",
+    rakuyomi = "modules/filebrowser/patches/rakuyomi",
     navbar = "modules/filebrowser/patches/navbar",
     status_bar = "modules/filebrowser/patches/status_bar",
     zen_scroll_bar = "common/ui/zen_scroll_bar",
@@ -214,15 +215,23 @@ function M.init(logger, plugin)
         run_feature(logger, plugin, "library_background", library_background_fn)
     end
 
-    local zen_scroll_bar_fn = load_patch("zen_scroll_bar")
-    if zen_scroll_bar_fn then
-        run_feature(logger, plugin, "zen_scroll_bar", zen_scroll_bar_fn)
-    end
-
     local runtime_patches = rawget(_G, "__ZEN_UI_RUNTIME_PATCHES")
     if type(runtime_patches) ~= "table" then
         runtime_patches = {}
         _G.__ZEN_UI_RUNTIME_PATCHES = runtime_patches
+    end
+
+    local rakuyomi_fn = load_patch("rakuyomi")
+    if rakuyomi_fn then
+        local ok = run_feature(logger, plugin, "rakuyomi", rakuyomi_fn)
+        if ok then
+            runtime_patches["rakuyomi"] = true
+        end
+    end
+
+    local zen_scroll_bar_fn = load_patch("zen_scroll_bar")
+    if zen_scroll_bar_fn then
+        run_feature(logger, plugin, "zen_scroll_bar", zen_scroll_bar_fn)
     end
 
     for _i, feature in ipairs(FEATURES) do
