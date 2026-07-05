@@ -161,6 +161,7 @@ return {
         "Add unified push/pull sync button to Actions",
         "Add home api for 3rd party plugins",
         "Update status bar API to allow images",
+        "Bug fixes"
     },
 
 }

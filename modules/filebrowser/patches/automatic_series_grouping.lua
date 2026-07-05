@@ -611,6 +611,13 @@ local function apply_automatic_series_grouping()
         if current_series_group and current_series_group.should_restore_focus then
             for index, item in ipairs(file_chooser.item_table) do
                 if item.is_series_group and item.text == current_series_group.series_name then
+                    -- Refresh perpage for the library grid before computing the
+                    -- page. file_chooser.perpage is still the virtual folder's
+                    -- stale value here (old_updateItems recalcs it only later),
+                    -- so using it directly mis-pages folders near a page boundary.
+                    if file_chooser._recalculateDimen then
+                        pcall(function() file_chooser:_recalculateDimen() end)
+                    end
                     local perpage = file_chooser.perpage or #file_chooser.item_table
                     local page = math.ceil(index / perpage)
                     local select_number = ((index - 1) % perpage) + 1
