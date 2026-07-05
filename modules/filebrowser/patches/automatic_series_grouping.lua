@@ -22,6 +22,26 @@ local function apply_automatic_series_grouping()
     local current_series_group
     local NO_SERIES = "\239\191\191"
 
+    local function log_navigation(event, file_chooser, detail)
+        local item_table = file_chooser and file_chooser.item_table
+        local path = file_chooser and file_chooser.path
+        local path_item = file_chooser and file_chooser.path_items
+            and path and file_chooser.path_items[path]
+        logger.info(
+            "zen-ui series-nav:", event,
+            detail or "",
+            "page=", tostring(file_chooser and file_chooser.page),
+            "page_num=", tostring(file_chooser and file_chooser.page_num),
+            "perpage=", tostring(file_chooser and file_chooser.perpage),
+            "itemnumber=", tostring(file_chooser and file_chooser.itemnumber),
+            "path_item=", tostring(path_item),
+            "items=", tostring(item_table and #item_table),
+            "series_view=", tostring(item_table and item_table.is_in_series_view),
+            "display=", tostring(file_chooser
+                and (file_chooser.display_mode_type or file_chooser.display_mode))
+        )
+    end
+
     local Icon = {
         up = BD.mirroredUILayout() and "back.top.rtl" or "back.top",
     }
@@ -402,6 +422,7 @@ local function apply_automatic_series_grouping()
 
         local items = clone_series_items(group_item.series_items)
         local parent_path = file_chooser.path
+        local parent_page = file_chooser.page
         local parent_item_index
         for index, item in ipairs(file_chooser.item_table or {}) do
             if item == group_item then
@@ -415,10 +436,19 @@ local function apply_automatic_series_grouping()
         self:sortSeriesItems(items, group_item, file_chooser)
         local display_api = rawget(_G, "__ZEN_FOLDER_DISPLAY_MODE")
         local display_key = group_item._zen_sort_key or group_item.path
-        if display_api and type(display_api.get) == "function"
-                and display_api.get(display_key)
+        local display_override = display_api and type(display_api.get) == "function"
+            and display_api.get(display_key)
+        log_navigation("open:before-display", file_chooser,
+            "series=" .. tostring(group_item.text)
+                .. " index=" .. tostring(parent_item_index)
+                .. " captured_page=" .. tostring(parent_page)
+                .. " override=" .. tostring(display_override))
+        if display_override
                 and type(display_api.apply) == "function" then
-            display_api.apply(display_key)
+            local applied = display_api.apply(display_key)
+            log_navigation("open:after-display", file_chooser,
+                "series=" .. tostring(group_item.text)
+                    .. " applied=" .. tostring(applied))
         end
 
         current_series_group = {
@@ -427,6 +457,7 @@ local function apply_automatic_series_grouping()
             group_item = group_item,
             sort_key = group_item._zen_sort_key or group_item.path,
             parent_item_index = parent_item_index,
+            parent_page = parent_page,
         }
 
         local up_item_already_present = items[1] and items[1].is_go_up
@@ -449,6 +480,8 @@ local function apply_automatic_series_grouping()
         items._zen_series_group_item = group_item
         items._zen_series_sort_key = group_item._zen_sort_key or group_item.path
         file_chooser:switchItemTable(nil, items, nil, nil, group_item.text)
+        log_navigation("open:after-switch", file_chooser,
+            "series=" .. tostring(group_item.text))
 
         if hide_up_folder then
             file_chooser:_changeLeftIcon(Icon.up, function() file_chooser:onFolderUp() end)
@@ -468,6 +501,9 @@ local function apply_automatic_series_grouping()
         if file_chooser and file_chooser.item_table and file_chooser.item_table.is_in_series_view then
             local parent_path = file_chooser.item_table.parent_path
             if parent_path then
+                log_navigation("back:requested", file_chooser,
+                    "parent=" .. tostring(parent_path)
+                        .. " tracked=" .. tostring(current_series_group ~= nil))
                 if current_series_group then
                     current_series_group.should_restore_focus = true
                 end
@@ -508,11 +544,55 @@ local function apply_automatic_series_grouping()
     local old_switchItemTable = FileChooser.switchItemTable
 
     FileChooser.switchItemTable = function(file_chooser, new_title, new_item_table, itemnumber, itemmatch, new_subtitle)
+        local restore_state = current_series_group
+        if not (restore_state and restore_state.should_restore_focus
+                and new_item_table and not new_item_table.is_in_series_view) then
+            restore_state = nil
+        end
+        local trace_navigation = current_series_group ~= nil
+            or (new_item_table and new_item_table.is_in_series_view)
+        local restore_index
         if is_enabled() and new_item_table and not new_item_table.is_in_series_view then
             new_item_table = clone_item_table(new_item_table)
             AutomaticSeries:processItemTable(new_item_table, file_chooser)
         end
-        return old_switchItemTable(file_chooser, new_title, new_item_table, itemnumber, itemmatch, new_subtitle)
+        if restore_state then
+            restore_index = restore_state.parent_item_index
+            for index, item in ipairs(new_item_table) do
+                if item.is_series_group and item.text == restore_state.series_name then
+                    restore_index = index
+                    break
+                end
+            end
+            file_chooser.page = restore_state.parent_page or 1
+            file_chooser.itemnumber = nil
+            -- A negative itemnumber tells Menu:switchItemTable to preserve page.
+            -- This avoids calculating it with the virtual view's stale perpage.
+            itemnumber = -1
+            itemmatch = nil
+            log_navigation("switch:restore-captured-page", file_chooser,
+                "series=" .. tostring(restore_state.series_name)
+                    .. " captured_page=" .. tostring(restore_state.parent_page)
+                    .. " restore_index=" .. tostring(restore_index))
+            current_series_group = nil
+        end
+        if trace_navigation then
+            log_navigation("switch:before", file_chooser,
+                "incoming_itemnumber=" .. tostring(itemnumber)
+                    .. " incoming_items=" .. tostring(new_item_table and #new_item_table)
+                    .. " incoming_series_view="
+                    .. tostring(new_item_table and new_item_table.is_in_series_view))
+        end
+        local ret = old_switchItemTable(
+            file_chooser, new_title, new_item_table, itemnumber, itemmatch, new_subtitle)
+        if restore_state and file_chooser.path_items and restore_state.parent_path
+                and restore_index then
+            file_chooser.path_items[restore_state.parent_path] = restore_index
+        end
+        if trace_navigation then
+            log_navigation("switch:after", file_chooser)
+        end
+        return ret
     end
 
     FileChooser.goHome = function(file_chooser)
@@ -570,6 +650,13 @@ local function apply_automatic_series_grouping()
     FileChooser.changeToPath = function(file_chooser, path, ...)
         if file_chooser.item_table and file_chooser.item_table.is_in_series_view then
             local parent_path = file_chooser.item_table.parent_path
+            log_navigation("change-path:before", file_chooser,
+                "requested=" .. tostring(path)
+                    .. " parent=" .. tostring(parent_path)
+                    .. " captured_page="
+                    .. tostring(current_series_group and current_series_group.parent_page)
+                    .. " captured_index="
+                    .. tostring(current_series_group and current_series_group.parent_item_index))
             if parent_path and path and (path:match("/%.%.") or path:match("^%.%.")) then
                 path = parent_path
             end
@@ -580,6 +667,10 @@ local function apply_automatic_series_grouping()
                     file_chooser.path_items[parent_path] = current_series_group.parent_item_index
                 end
             end
+            local ret = old_changeToPath(file_chooser, path, ...)
+            log_navigation("change-path:after", file_chooser,
+                "resolved=" .. tostring(path))
+            return ret
         else
             current_series_group = nil
         end
@@ -603,33 +694,13 @@ local function apply_automatic_series_grouping()
             -- returns the parent listing to its original page/focus.
             local pi = file_chooser.path_items
             local saved = pi and pi[file_chooser.path]
+            log_navigation("update:virtual-before", file_chooser,
+                "saved_path_item=" .. tostring(saved))
             local ret = old_updateItems(file_chooser, ...)
             if pi then pi[file_chooser.path] = saved end
+            log_navigation("update:virtual-after", file_chooser,
+                "restored_path_item=" .. tostring(saved))
             return ret
-        end
-
-        if current_series_group and current_series_group.should_restore_focus then
-            for index, item in ipairs(file_chooser.item_table) do
-                if item.is_series_group and item.text == current_series_group.series_name then
-                    -- Refresh perpage for the library grid before computing the
-                    -- page. file_chooser.perpage is still the virtual folder's
-                    -- stale value here (old_updateItems recalcs it only later),
-                    -- so using it directly mis-pages folders near a page boundary.
-                    if file_chooser._recalculateDimen then
-                        pcall(function() file_chooser:_recalculateDimen() end)
-                    end
-                    local perpage = file_chooser.perpage or #file_chooser.item_table
-                    local page = math.ceil(index / perpage)
-                    local select_number = ((index - 1) % perpage) + 1
-                    file_chooser.page = page
-                    if file_chooser.path_items then
-                        file_chooser.path_items[file_chooser.path] = index
-                    end
-                    current_series_group = nil
-                    return old_updateItems(file_chooser, select_number)
-                end
-            end
-            current_series_group = nil
         end
 
         return old_updateItems(file_chooser, ...)
