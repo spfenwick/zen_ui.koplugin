@@ -448,7 +448,27 @@ local function read_sha_from_command(cmd)
     return nil
 end
 
+-- Pure-Lua SHA-256 via KOReader's bundled ffi/sha2 (no external tools needed).
+local function compute_sha256_native(path)
+    local ok_sha, sha2 = pcall(require, "ffi/sha2")
+    if not ok_sha or not sha2 or not sha2.sha256 then return nil end
+    local f = io.open(path, "rb")
+    if not f then return nil end
+    local append = sha2.sha256()
+    while true do
+        local chunk = f:read(64 * 1024)
+        if not chunk then break end
+        append(chunk)
+    end
+    f:close()
+    local ok_digest, digest = pcall(append)
+    if not ok_digest or type(digest) ~= "string" then return nil end
+    return digest:lower()
+end
+
 local function compute_sha256(path)
+    local native = compute_sha256_native(path)
+    if native then return native end
     local q = string.format("%q", path)
     return read_sha_from_command("shasum -a 256 " .. q .. " 2>/dev/null")
         or read_sha_from_command("sha256sum " .. q .. " 2>/dev/null")
@@ -638,7 +658,7 @@ local function do_network_check()
         logger.warn("ZenUpdater: no response from releases API")
         local ok_nm, NetworkMgr = pcall(require, "ui/network/manager")
         if ok_nm and NetworkMgr and not NetworkMgr:isWifiOn() then
-            M._last_error = _("No network connection.")
+            M._last_error = _("Network unavailable.")
         else
             M._last_error = _("Could not reach update server.")
         end
@@ -647,7 +667,7 @@ local function do_network_check()
 
     local entries = parse_release_entries(body)
     if not entries then
-        M._last_error = _("Could not read release data from update server.")
+        M._last_error = _("Could not get release from update server.")
         return false
     end
 
@@ -748,10 +768,10 @@ local function network_check_async(trap_widget, setup_fn, on_done, on_cancelled)
     Trapper:wrap(function()
         local co = coroutine.running()
         if setup_fn then setup_fn(co) end
-        local completed, net_ok, has_upd, latest_ver, dl_url, latest_sha256, latest_notes =
+        local completed, net_ok, has_upd, latest_ver, dl_url, latest_sha256, latest_notes, last_error =
             Trapper:dismissableRunInSubprocess(function()
                 local ok = do_network_check()
-                return ok, M._has_update, M._latest_ver, M._dl_url, M._latest_sha256, M._latest_notes
+                return ok, M._has_update, M._latest_ver, M._dl_url, M._latest_sha256, M._latest_notes, M._last_error
             end, trap_widget)
         if completed and net_ok then
             M._has_update = has_upd
@@ -759,6 +779,11 @@ local function network_check_async(trap_widget, setup_fn, on_done, on_cancelled)
             M._dl_url     = dl_url
             M._latest_sha256 = latest_sha256
             M._latest_notes = latest_notes
+        end
+        -- do_network_check() mutates M._last_error inside the forked subprocess,
+        -- so it never reaches the parent unless propagated via the return tuple.
+        if completed then
+            M._last_error = last_error
         end
         if not completed then
             if on_cancelled then on_cancelled() end
