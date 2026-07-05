@@ -3,6 +3,7 @@
 -- release.zip asset, unpacks it in-place, and prompts for a KOReader restart.
 
 local _ = require("gettext")
+local Archiver = require("ffi/archiver")
 local json = require("json")
 local logger = require("logger")
 local ConfigManager = require("config/manager")
@@ -968,122 +969,31 @@ local function get_file_size_bytes(path)
     return size
 end
 
-local function run_shell_capture_lines(cmd, label, max_lines)
-    logger.dbg("ZenUpdater: shell capture start", label or "", cmd)
-    local pipe = io.popen(cmd)
-    if not pipe then
-        logger.warn("ZenUpdater: shell capture popen failed label=", label or "")
-        return false, {}
-    end
-
-    local limit = tonumber(max_lines) or 20
-    local total_lines = 0
-    local lines = {}
-    for raw in pipe:lines() do
-        local line = (raw or ""):gsub("\r", "")
-        if line ~= "" then
-            total_lines = total_lines + 1
-            if #lines < limit then
-                lines[#lines + 1] = line
-            end
-        end
-    end
-
-    local close_ok, rc, how, code = pcall(pipe.close, pipe)
-    if not close_ok then
-        logger.warn("ZenUpdater: shell capture close failed label=", label or "")
-        return false, lines
-    end
-
-    local ok = shell_result_ok(rc, how, code)
-    logger.dbg(
-        "ZenUpdater: shell capture done",
-        label or "",
-        "ok=",
-        tostring(ok),
-        "rc=",
-        tostring(rc),
-        "how=",
-        tostring(how),
-        "code=",
-        tostring(code),
-        "line_count=",
-        total_lines,
-        "stored_lines=",
-        #lines
-    )
-    return ok, lines
-end
-
-local function collect_zip_entries_with_command(cmd, label)
-    logger.dbg("ZenUpdater: zip list start", label, cmd)
-    local pipe = io.popen(cmd)
-    if not pipe then
-        logger.warn("ZenUpdater: zip list popen failed method=", label)
+local function collect_zip_entries(zip_path)
+    local reader = Archiver.Reader:new()
+    if not reader:open(zip_path) then
+        logger.warn("ZenUpdater: archive open failed:", tostring(reader.err))
         return nil
     end
 
     local entries = {}
-    for line in pipe:lines() do
-        local entry = (line or ""):gsub("\r", "")
-        if entry ~= "" then
-            entries[#entries + 1] = entry
-        end
+    for entry in reader:iterate() do
+        entries[#entries + 1] = entry.path
     end
+    local read_error = reader.err
+    reader:close()
 
-    local close_ok, rc, how, code = pcall(pipe.close, pipe)
-    if not close_ok then
-        logger.warn("ZenUpdater: zip list close failed method=", label)
-        return nil
-    end
-    local ok = shell_result_ok(rc, how, code)
-
-    logger.dbg(
-        "ZenUpdater: zip list done method=",
-        label,
-        "entry_count=",
-        #entries,
-        "ok=",
-        tostring(ok),
-        "rc=",
-        tostring(rc),
-        "how=",
-        tostring(how),
-        "code=",
-        tostring(code)
-    )
-    if not ok then
-        logger.warn("ZenUpdater: zip list command returned non-zero method=", label)
+    if read_error then
+        logger.warn("ZenUpdater: archive listing failed:", tostring(read_error))
         return nil
     end
     if #entries == 0 then
+        logger.warn("ZenUpdater: archive contains no entries")
         return nil
     end
+
+    logger.dbg("ZenUpdater: zip list parsed method=ffi_archiver entry_count=", #entries)
     return entries
-end
-
-local function collect_zip_entries(zip_path)
-    local listed = collect_zip_entries_with_command(
-        string.format("unzip -l %q 2>/dev/null", zip_path),
-        "unzip_list"
-    )
-    if not listed then
-        return nil
-    end
-
-    local parsed = {}
-    for _i, line in ipairs(listed) do
-        local name = line:match("^%s*%d+%s+[%d%-%/]+%s+[%d:]+%s+(.+)%s*$")
-        if name and name ~= "Name" then
-            parsed[#parsed + 1] = name
-        end
-    end
-
-    logger.dbg("ZenUpdater: zip list parsed method=unzip_list entry_count=", #parsed)
-    if #parsed == 0 then
-        return nil
-    end
-    return parsed
 end
 
 local function check_zip_integrity(zip_path)
@@ -1096,40 +1006,24 @@ local function check_zip_integrity(zip_path)
         tostring(get_file_size_bytes(zip_path))
     )
 
-    if run_shell_ok(string.format("unzip -t %q >/dev/null 2>&1", zip_path), "zip_integrity") then
-        logger.dbg("ZenUpdater: zip integrity unzip -t passed")
-        return true
-    end
-
-    local test_lines = select(2, run_shell_capture_lines(
-        string.format("unzip -t %q 2>&1", zip_path),
-        "zip_integrity_fail_output",
-        16
-    ))
-    if #test_lines > 0 then
-        logger.warn("ZenUpdater: unzip -t output:\n" .. table.concat(test_lines, "\n"))
-    else
-        logger.warn("ZenUpdater: unzip -t produced no diagnostic output")
-    end
-
-    logger.warn("ZenUpdater: unzip -t failed, falling back to zip listing validation")
     local entries = collect_zip_entries(zip_path)
-    if entries and #entries > 0 then
-        local sample = {}
-        for _i, entry in ipairs(entries) do
-            if #sample >= 8 then break end
-            sample[#sample + 1] = entry
-        end
-        logger.dbg(
-            "ZenUpdater: zip integrity fallback accepted entry_count=",
-            #entries,
-            "sample=",
-            table.concat(sample, " | ")
-        )
+    if entries then
+        logger.dbg("ZenUpdater: zip integrity ffi/archiver passed")
         return true
     end
+    logger.warn("ZenUpdater: zip integrity ffi/archiver failed")
+    return false
+end
 
-    logger.warn("ZenUpdater: zip integrity fallback failed to parse entries")
+local function is_unsafe_zip_entry(entry)
+    if entry == "" or entry:sub(1, 1) == "/" or entry:sub(1, 1) == "\\" then
+        return true
+    end
+    for component in entry:gmatch("[^/\\]+") do
+        if component == ".." then
+            return true
+        end
+    end
     return false
 end
 
@@ -1149,7 +1043,7 @@ local function validate_zip_layout(zip_path, plugin_name)
         if #sample_entries < 8 then
             sample_entries[#sample_entries + 1] = entry
         end
-        if entry:sub(1, 1) == "/" or entry:find("%.%./", 1, true) or entry:find("/%.%.", 1, true) then
+        if is_unsafe_zip_entry(entry) then
             logger.warn("ZenUpdater: validate_zip_layout unsafe entry:", entry)
             return false, "unsafe zip entry path"
         end
@@ -1180,6 +1074,37 @@ local function validate_zip_layout(zip_path, plugin_name)
         "sample=",
         table.concat(sample_entries, " | ")
     )
+    return true
+end
+
+local function extract_zip_with_archiver(zip_path, destination)
+    local reader = Archiver.Reader:new()
+    if not reader:open(zip_path) then
+        return false, reader.err or "archive open failed"
+    end
+
+    local extracted = 0
+    for entry in reader:iterate() do
+        if entry.mode ~= "file" and entry.mode ~= "directory" then
+            reader:close()
+            return false, "unsupported archive entry type: " .. tostring(entry.mode)
+        end
+        if not reader:extractToPath(entry.path, destination .. "/" .. entry.path) then
+            local extract_error = reader.err or ("failed to extract " .. entry.path)
+            reader:close()
+            return false, extract_error
+        end
+        extracted = extracted + 1
+    end
+
+    local read_error = reader.err
+    reader:close()
+    if read_error then
+        return false, read_error
+    end
+    if extracted == 0 then
+        return false, "archive contains no entries"
+    end
     return true
 end
 
@@ -1413,17 +1338,9 @@ local function _do_install(screen, plugin_root, plugins_dir)
             return
         end
 
-        if not run_shell_ok(string.format("unzip -q %q -d %q", zip_path, stage_parent), "unzip_to_stage") then
-            local unpack_lines = select(2, run_shell_capture_lines(
-                string.format("unzip %q -d %q 2>&1", zip_path, stage_parent),
-                "unzip_to_stage_fail_output",
-                20
-            ))
-            if #unpack_lines > 0 then
-                logger.warn("ZenUpdater: unzip_to_stage output:\n" .. table.concat(unpack_lines, "\n"))
-            else
-                logger.warn("ZenUpdater: unzip_to_stage produced no diagnostic output")
-            end
+        local unpack_ok, unpack_reason = extract_zip_with_archiver(zip_path, stage_parent)
+        if not unpack_ok then
+            logger.warn("ZenUpdater: ffi/archiver extraction failed:", tostring(unpack_reason))
             safe_remove_tree(stage_parent)
             os.remove(zip_path)
             fail_with(_("Update failed: could not unpack update package."))
