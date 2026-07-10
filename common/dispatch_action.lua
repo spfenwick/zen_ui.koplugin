@@ -428,6 +428,9 @@ function M.onToggleReaderTopStatusBar(plugin)
     return set_top_status_bar(plugin, not is_top_status_bar_enabled(plugin))
 end
 
+M.isBottomStatusBarVisible = is_bottom_status_bar_visible
+M.setBottomStatusBar = set_bottom_status_bar
+
 function M.onToggleReaderBottomStatusBar(plugin)
     return set_bottom_status_bar(plugin, not is_bottom_status_bar_visible())
 end
