@@ -28,6 +28,7 @@ local _zen_shared = nil
 local _zen_plugin = nil
 local _home_book_cache = {}
 local _home_book_cache_order = {}
+local _home_library_paths_cache = nil
 local HOME_BOOK_CACHE_MAX = 32
 
 local function free_cached_book(book)
@@ -608,6 +609,8 @@ local function build_data_provider(cfg, dcfg)
     local stats_cached = nil
     local stats_cached_key = nil
     local history_cached = nil
+    local library_paths_cached = nil
+    local effective_status_cached = {}
     local tbr_cached = nil
     local strip_offsets = {}
 
@@ -705,6 +708,97 @@ local function build_data_provider(cfg, dcfg)
         end
 
         return history_cached
+    end
+
+    -- History stays first, while this cached library list supplies unread books
+    -- for any remaining Home slots without adding them to KOReader history.
+    local function get_library_paths()
+        if library_paths_cached then return library_paths_cached end
+
+        local paths = require("common/paths")
+        local roots = {}
+        local seen_roots = {}
+        local function add_root(path)
+            if type(path) ~= "string" then return end
+            path = paths.normPath(path:gsub("/*$", ""))
+            if path == "" or seen_roots[path] then return end
+            seen_roots[path] = true
+            roots[#roots + 1] = path
+        end
+
+        add_root(paths.getHomeDir())
+        local extra = type(cfg) == "table" and cfg.additional_home_dirs
+        if type(extra) == "table" then
+            for _i, path in ipairs(extra) do
+                add_root(path)
+            end
+        end
+
+        local ok_lfs, lfs = pcall(require, "libs/libkoreader-lfs")
+        local cache_key = table.concat(roots, "\n")
+        local cached = _home_library_paths_cache
+        if ok_lfs and cached and cached.key == cache_key then
+            local unchanged = true
+            for path, modification in pairs(cached.dirs) do
+                if (lfs.attributes(path, "modification") or false) ~= modification then
+                    unchanged = false
+                    break
+                end
+            end
+            if unchanged then
+                logger.dbg("zen-ui home: reusing library fallback cache:", #cached.paths, "books")
+                library_paths_cached = cached.paths
+                return library_paths_cached
+            end
+        end
+
+        library_paths_cached = {}
+        local ok_docs, DocumentRegistry = pcall(require, "document/documentregistry")
+        if not (ok_lfs and ok_docs and DocumentRegistry) then
+            return library_paths_cached
+        end
+
+        local BookWalker = require("common/book_walker")
+        local items = {}
+        local dirs = {}
+        local seen_paths = {}
+        logger.dbg("zen-ui home: starting library fallback walk:", #roots, "roots")
+        for _i, root in ipairs(roots) do
+            dirs[root] = lfs.attributes(root, "modification") or false
+        end
+        BookWalker.walk(roots, {
+            on_scan_dir = function(path, attributes)
+                dirs[path] = attributes and attributes.modification or false
+            end,
+            on_file = function(_name, fullpath, attributes)
+                local ok_provider, has_provider = pcall(
+                    DocumentRegistry.hasProvider, DocumentRegistry, fullpath
+                )
+                if ok_provider and has_provider and not book_status.isImageFile(fullpath)
+                        and not seen_paths[fullpath] then
+                    seen_paths[fullpath] = true
+                    items[#items + 1] = {
+                        path = fullpath,
+                        modification = attributes.modification or 0,
+                    }
+                end
+            end,
+        })
+
+        table.sort(items, function(a, b)
+            if a.modification == b.modification then return a.path < b.path end
+            return a.modification > b.modification
+        end)
+        for _i, item in ipairs(items) do
+            library_paths_cached[#library_paths_cached + 1] = item.path
+        end
+        _home_library_paths_cache = {
+            key = cache_key,
+            paths = library_paths_cached,
+            dirs = dirs,
+        }
+        logger.dbg("zen-ui home: library fallback walk found:", #library_paths_cached, "books")
+        return library_paths_cached
     end
 
     local function get_book(path, need_time_left)
@@ -917,11 +1011,19 @@ local function build_data_provider(cfg, dcfg)
         return tbr_cached
     end
 
+    local function get_effective_status(path)
+        local cached = effective_status_cached[path]
+        if cached then return cached end
+        local status = book_status.getEffectiveStatusFromFile(path)
+        effective_status_cached[path] = status
+        return status
+    end
+
     local function get_paths_by_statuses(statuses, limit)
         local hist = get_history()
         local out = {}
         for _i, path in ipairs(hist) do
-            local eff = book_status.getEffectiveStatusFromFile(path)
+            local eff = get_effective_status(path)
             if statuses[eff] then
                 table.insert(out, path)
                 if #out >= limit then break end
@@ -934,7 +1036,7 @@ local function build_data_provider(cfg, dcfg)
         return get_paths_by_statuses({ [status_key] = true }, limit)
     end
 
-    local function append_unique_paths(dst, src, limit)
+    local function append_unique_paths(dst, src, limit, include_path)
         if type(src) ~= "table" then return end
         local seen = {}
         for _i, path in ipairs(dst) do
@@ -943,7 +1045,8 @@ local function build_data_provider(cfg, dcfg)
             end
         end
         for _i, path in ipairs(src) do
-            if type(path) == "string" and path ~= "" and not seen[path] then
+            if type(path) == "string" and path ~= "" and not seen[path]
+                    and (not include_path or include_path(path)) then
                 seen[path] = true
                 table.insert(dst, path)
                 if #dst >= limit then break end
@@ -968,7 +1071,7 @@ local function build_data_provider(cfg, dcfg)
                 and source ~= "to_be_read" then
             source = "recently_read"
         end
-        local lim = tonumber(limit) or 5000
+        local lim = tonumber(limit) or math.huge
         if source == "custom_featured" then
             local mcfg = dcfg and dcfg.modules and dcfg.modules.featured_custom or {}
             local path = type(mcfg.path) == "string" and mcfg.path or nil
@@ -1002,14 +1105,52 @@ local function build_data_provider(cfg, dcfg)
         if opts.filter_unread ~= true then statuses.new = true end
         if opts.filter_tbr ~= true then statuses.abandoned = true end
         if opts.filter_finished ~= true then statuses.complete = true end
-        return get_paths_by_statuses(statuses, lim)
+        local recent = get_paths_by_statuses(statuses, lim)
+        local filters_active = opts.filter_unread == true
+            or opts.filter_tbr == true
+            or opts.filter_finished == true
+        local include_path
+        if filters_active then
+            include_path = function(path)
+                return statuses[get_effective_status(path)] == true
+            end
+        end
+        local library = get_library_paths()
+        if opts.reverse_sections == true then
+            recent = reverse_copy(recent)
+            library = reverse_copy(library)
+        end
+        append_unique_paths(recent, library, lim, include_path)
+        return recent
+    end
+
+    local function is_recent_source(source)
+        return source ~= "custom_featured"
+            and source ~= "custom_strip"
+            and source ~= "currently_reading"
+            and source ~= "to_be_read"
+    end
+
+    local function get_ordered_paths(source, limit, order_key, opts)
+        local reverse = normalize_order(order_key) == "reverse"
+        local collect_opts = {}
+        for key, value in pairs(opts or {}) do
+            collect_opts[key] = value
+        end
+        if reverse and is_recent_source(source) then
+            collect_opts.reverse_sections = true
+        end
+
+        local paths = collect_paths_for_source(source, limit, collect_opts)
+        if reverse and not is_recent_source(source)
+                and source ~= "custom_featured" and source ~= "custom_strip" then
+            paths = reverse_copy(paths)
+        end
+        return paths
     end
 
     function provider:getFeaturedBook(source_key, order_key)
-        local paths = collect_paths_for_source(source_key)
-        if source_key ~= "custom_featured" and normalize_order(order_key) == "reverse" then
-            paths = reverse_copy(paths)
-        end
+        local paths = get_ordered_paths(source_key, nil, order_key)
         local path = paths[1]
         local module_id = featured_widget_for_source(source_key)
         local featured_cfg = dcfg and dcfg.modules and dcfg.modules[module_id] or {}
@@ -1027,21 +1168,19 @@ local function build_data_provider(cfg, dcfg)
             source = "recently_read"
         end
         local mcfg = dcfg and dcfg.modules and dcfg.modules[component_id] or {}
-        local paths = collect_paths_for_source(source, 5000, {
+        local paths = get_ordered_paths(source, nil, order_key, {
             filter_unread = source == "recently_read" and mcfg.filter_unread == true,
             filter_tbr = source == "recently_read" and mcfg.filter_tbr == true,
             filter_finished = source == "recently_read" and mcfg.filter_finished == true,
         })
 
-        if source ~= "custom_strip" and normalize_order(order_key) == "reverse" then
-            paths = reverse_copy(paths)
-        end
-
         -- Keep strip distinct from featured only when that featured widget is visible.
         local featured_widget_id = featured_widget_for_source(source)
         local should_dedupe_featured = source ~= "custom_strip" and is_widget_visible(featured_widget_id)
         if should_dedupe_featured and #paths > 0 then
-            local featured_path = paths[1]
+            local featured_source = source == "currently_reading" and "recently_read" or source
+            local featured_paths = get_ordered_paths(featured_source, nil, order_key)
+            local featured_path = featured_paths[1]
             if featured_path and featured_path ~= "" then
                 local filtered = {}
                 for _i, path in ipairs(paths) do
