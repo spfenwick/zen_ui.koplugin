@@ -175,5 +175,8 @@ return {
         "Persist library rotation state",
         "Bug fixes"
     },
+    ["2.4.1"] = {
+        "Fix reverse page scrolling applying to non Rakuyomi books"
+    }
 
 }

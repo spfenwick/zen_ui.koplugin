@@ -120,7 +120,6 @@ function M.build(ctx)
                     callback = function(touchmenu_instance)
                         local enabled = config.rakuyomi.reverse_page_scrolling ~= true
                         config.rakuyomi.reverse_page_scrolling = enabled
-                        G_reader_settings:saveSetting("inverse_reading_order", enabled)
                         plugin:saveConfig()
                         local RakuyomiPatch = rawget(_G, "__ZEN_UI_RAKUYOMI")
                         if type(RakuyomiPatch) == "table"
