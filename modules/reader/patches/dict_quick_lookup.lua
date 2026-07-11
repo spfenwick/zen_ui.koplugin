@@ -80,8 +80,7 @@ local function apply()
                 local NetworkMgr = require("ui/network/manager")
                 NetworkMgr:runWhenOnline(function()
                     UIManager:nextTick(function()
-                        assistant.assistant_dialog:show(
-                            dict_widget.lookupword or dict_widget.word)
+                        assistant.assistant_dialog:show(dict_widget.word)
                     end)
                 end)
             end,
@@ -200,7 +199,7 @@ local function apply()
                 -- WordLookedUp event fires and toggles state.
                 -- We use a simple add-then-remove cycle via DB.
                 local DB = package.loaded["db"]
-                local vocab_word = self_dql.lookupword or self_dql.word
+                local vocab_word = self_dql.word
                 local is_in_vocab = false
 
                 local function get_book_title()
@@ -418,7 +417,7 @@ local function apply()
                         -- Build a toggle-aware vocab icon button.
                         -- DB is cached in package.loaded by VocabBuilder on load.
                         local DB = package.loaded["db"]
-                        local vocab_word = self_dql.lookupword or self_dql.word
+                        local vocab_word = self_dql.word
                         local is_in_vocab = false -- start as "add" (matches VocabBuilder's own UX)
 
                         local function get_book_title()
