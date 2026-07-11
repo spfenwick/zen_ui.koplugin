@@ -24,7 +24,7 @@ local function apply_browser_flat_view_compat()
     if FileChooser._zen_flat_view_compat_patched then return end
     FileChooser._zen_flat_view_compat_patched = true
 
-    local has_native_flat_view = FileChooser.show_flat_view ~= nil
+    -- local has_native_flat_view = FileChooser.show_flat_view ~= nil
 
     local function is_in_home(path)
         if type(path) ~= "string" then return false end
@@ -43,7 +43,8 @@ local function apply_browser_flat_view_compat()
 
     sync_flat_view_flag()
 
-    if has_native_flat_view then return end
+    -- Temporarily prefer Zen UI's scanner over KOReader's native flat view.
+    -- if has_native_flat_view then return end
 
     local function flat_view_enabled(path)
         return sync_flat_view_flag() and is_in_home(path)
