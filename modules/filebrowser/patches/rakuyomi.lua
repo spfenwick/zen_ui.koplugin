@@ -60,15 +60,6 @@ local function return_to_chapter_list_on_exit_enabled()
     return true
 end
 
-local function apply_reverse_page_scrolling_setting()
-    local config = get_zen_config()
-    local rakuyomi = config and config.rakuyomi
-    if type(rakuyomi) == "table" and rakuyomi.reverse_page_scrolling == true
-            and G_reader_settings then
-        G_reader_settings:makeTrue("inverse_reading_order")
-    end
-end
-
 local function reverse_page_scrolling_enabled()
     local config = get_zen_config()
     local rakuyomi = config and config.rakuyomi
@@ -587,7 +578,6 @@ local function apply_rakuyomi()
 
     zen_plugin = rawget(_G, "__ZEN_UI_PLUGIN")
     _G.__ZEN_UI_RAKUYOMI = M
-    apply_reverse_page_scrolling_setting()
     M.installShowReaderCapture()
 end
 
