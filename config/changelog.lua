@@ -161,6 +161,8 @@ return {
         "Add unified push/pull sync button to Actions",
         "Add Incognito mode to Controls/Actions",
         "Add AI Assistant icon in lookup/highlight",
+        "Add Zen TOC action for gestures/launcher",
+        "Add option to center books in Home strip widgets",
         "Add home API for plugin developers",
         "Update status bar API to allow images",
         "Update Zen Updater plumbing",
@@ -169,7 +171,16 @@ return {
         "Moved Navbar settings to Library > Navbar",
         "Moved Advanced settings to About > Advanced",
         "Moved Global settings to Extras",
+        "Ignore English articles in title sort",
+        "Persist library rotation state",
         "Bug fixes"
     },
+    ["2.4.1"] = {
+        "Fix reverse page scrolling applying to non Rakuyomi books"
+    },
+    ["2.4.2"] = {
+        "Add flat library layout for unsupported devices",
+        "Bug fixes"
+    }
 
 }

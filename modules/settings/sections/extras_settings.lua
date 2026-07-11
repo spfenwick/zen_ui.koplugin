@@ -69,39 +69,6 @@ function M.build(ctx)
         })
     end
 
-    table.insert(items, {
-        text = _("Include new books in TBR"),
-        help_text = _("New includes unread books and books modified since they were last opened."),
-        checked_func = function()
-            return type(config.group_view) == "table"
-                and config.group_view.include_new_in_tbr == true
-        end,
-        callback = function(touchmenu_instance)
-            if type(config.group_view) ~= "table" then config.group_view = {} end
-            config.group_view.include_new_in_tbr =
-                config.group_view.include_new_in_tbr ~= true
-            plugin:saveConfig()
-            local home = SharedState.get(plugin, "home")
-            if home and home.rebuildActive then
-                home.rebuildActive()
-            end
-            if touchmenu_instance then touchmenu_instance:updateItems() end
-        end,
-    })
-
-    table.insert(items, {
-        text = _("Allow custom icons"),
-        help_text = _("When enabled, icons placed in KOReader's user icons folder override the bundled Zen UI icons. Falls back to Zen UI icons, then KOReader built-ins."),
-        checked_func = function()
-            return config.features.custom_icons_enabled == true
-        end,
-        callback = function()
-            config.features.custom_icons_enabled = config.features.custom_icons_enabled ~= true
-            plugin:saveConfig()
-            settings_apply.prompt_restart()
-        end,
-    })
-
     if Rakuyomi.is_available() then
         if type(config.rakuyomi) ~= "table" then
             config.rakuyomi = {}
@@ -153,7 +120,6 @@ function M.build(ctx)
                     callback = function(touchmenu_instance)
                         local enabled = config.rakuyomi.reverse_page_scrolling ~= true
                         config.rakuyomi.reverse_page_scrolling = enabled
-                        G_reader_settings:saveSetting("inverse_reading_order", enabled)
                         plugin:saveConfig()
                         local RakuyomiPatch = rawget(_G, "__ZEN_UI_RAKUYOMI")
                         if type(RakuyomiPatch) == "table"
@@ -171,6 +137,39 @@ function M.build(ctx)
     for _i, item in ipairs(global_items) do
         table.insert(items, item)
     end
+
+     table.insert(items, {
+        text = _("Include new books in TBR"),
+        help_text = _("New includes unread books and books modified since they were last opened."),
+        checked_func = function()
+            return type(config.group_view) == "table"
+                and config.group_view.include_new_in_tbr == true
+        end,
+        callback = function(touchmenu_instance)
+            if type(config.group_view) ~= "table" then config.group_view = {} end
+            config.group_view.include_new_in_tbr =
+                config.group_view.include_new_in_tbr ~= true
+            plugin:saveConfig()
+            local home = SharedState.get(plugin, "home")
+            if home and home.rebuildActive then
+                home.rebuildActive()
+            end
+            if touchmenu_instance then touchmenu_instance:updateItems() end
+        end,
+    })
+
+    table.insert(items, {
+        text = _("Allow custom icons"),
+        help_text = _("When enabled, icons placed in KOReader's user icons folder override the bundled Zen UI icons. Falls back to Zen UI icons, then KOReader built-ins."),
+        checked_func = function()
+            return config.features.custom_icons_enabled == true
+        end,
+        callback = function()
+            config.features.custom_icons_enabled = config.features.custom_icons_enabled ~= true
+            plugin:saveConfig()
+            settings_apply.prompt_restart()
+        end,
+    })
 
     return items
 end
