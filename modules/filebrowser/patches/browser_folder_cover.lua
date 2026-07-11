@@ -26,7 +26,7 @@ local function apply_browser_folder_cover()
     local VerticalSpan = require("ui/widget/verticalspan")
     local ffiUtil = require("ffi/util")
     local lfs = require("libs/libkoreader-lfs")
-    local logger = require("logger")
+    local logger = require("common/zen_logger").new("browser_folder_cover")
     local paths = require("common/paths")
     local library_font = require("modules/filebrowser/patches/library_font")
     local utils = require("common/utils")
@@ -573,7 +573,7 @@ local function apply_browser_folder_cover()
                             and candidate_bi.has_cover
                             and candidate_bi.cover_fetched
                             and not candidate_bi.ignore_cover then
-                        logger.dbg("[zen-ui] fallback: found cover at ancestor path",
+                        logger.dbg("fallback: found cover at ancestor path",
                             candidate, "for", path)
                         return candidate_bi, candidate
                     end
@@ -597,7 +597,7 @@ local function apply_browser_folder_cover()
                     "UPDATE bookinfo SET filepath='" .. sq_esc(new_path) ..
                     "' WHERE filepath='" .. sq_esc(old_path) .. "'"
                 )
-                logger.dbg("[zen-ui] migrated DB row", old_path, "->", new_path)
+                logger.dbg("migrated DB row", old_path, "->", new_path)
             end)
         end
 

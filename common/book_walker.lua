@@ -1,4 +1,5 @@
 local lfs = require("libs/libkoreader-lfs")
+local logger = require("common/zen_logger").new("book_walker")
 
 local M = {}
 
@@ -17,6 +18,10 @@ M.SKIP_DIRS = {
 }
 
 function M.walk(roots, opts)
+    local started_at = os.clock()
+    local scanned_dirs = 0
+    local scanned_files = 0
+    local failed_dirs = 0
     opts = opts or {}
     local max_depth = tonumber(opts.max_depth) or M.DEFAULT_MAX_DEPTH
     local include_hidden = opts.include_hidden == true
@@ -32,7 +37,11 @@ function M.walk(roots, opts)
     local function scan(path, depth, path_attributes)
         if depth > max_depth then return false end
         local ok, iter, dir_obj = pcall(lfs.dir, path)
-        if not ok then return false end
+        if not ok then
+            failed_dirs = failed_dirs + 1
+            return false
+        end
+        scanned_dirs = scanned_dirs + 1
         if on_scan_dir then
             on_scan_dir(path, path_attributes or lfs.attributes(path), depth)
         end
@@ -49,6 +58,7 @@ function M.walk(roots, opts)
                         return true
                     end
                 elseif attributes and attributes.mode == "file" and not name:match("^%._") then
+                    scanned_files = scanned_files + 1
                     if on_file and on_file(name, fullpath, attributes, depth, path) then
                         return true
                     end
@@ -58,15 +68,21 @@ function M.walk(roots, opts)
         return false
     end
 
+    local stopped = false
     if type(roots) == "string" then
-        return scan(roots, 0)
-    end
-    if type(roots) == "table" then
+        stopped = scan(roots, 0)
+    elseif type(roots) == "table" then
         for _i, root in ipairs(roots) do
-            if type(root) == "string" and scan(root, 0) then return true end
+            if type(root) == "string" and scan(root, 0) then
+                stopped = true
+                break
+            end
         end
     end
-    return false
+    logger.perf("Walk completed", (os.clock() - started_at) * 1000,
+        "dirs=", scanned_dirs, "files=", scanned_files,
+        "failed_dirs=", failed_dirs, "stopped=", tostring(stopped))
+    return stopped
 end
 
 return M

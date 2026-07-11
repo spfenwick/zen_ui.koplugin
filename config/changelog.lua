@@ -181,6 +181,7 @@ return {
     ["2.4.2"] = {
         "Fix flat library layout",
         "Fix No Books Found using fallback if history is empty",
+        "Normalize logging",
         "Bug fixes"
     }
 

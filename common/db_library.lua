@@ -10,7 +10,7 @@
 -- This module iterates ReadHistory, checks each book's DocSettings sidecar,
 -- and counts entries whose summary.status == "complete".
 
-local logger = require("logger")
+local logger = require("common/zen_logger").new("db_library")
 local paths = require("common/paths")
 
 local LibraryDB = {}
@@ -37,7 +37,7 @@ end
 function LibraryDB.getBookCounts()
     local now = os.time()
     if _cache.book_counts and (now - _cache.cache_time) < CACHE_TTL then
-        logger.info("zen-ui db_library: returning cached book counts")
+        logger.info("returning cached book counts")
         return _cache.book_counts
     end
 
@@ -81,10 +81,10 @@ function LibraryDB.getBookCounts()
     end)
 
     if not ok then
-        logger.warn("zen-ui db_library: finished count failed:", err)
+        logger.warn("finished count failed:", err)
     end
 
-    logger.info("zen-ui db_library: finished=", counts.finished,
+    logger.info("finished=", counts.finished,
                 "reading=", counts.reading,
                 "total=", counts.total)
     _cache.book_counts = counts

@@ -1,4 +1,4 @@
-local logger = require("logger")
+local logger = require("common/zen_logger").new("home_page")
 local ConfigManager = require("config/manager")
 local book_status = require("common/book_status")
 local Blitbuffer = require("ffi/blitbuffer")
@@ -160,7 +160,7 @@ local function flush_cover_upgrade_queue()
 
     local ok_bim, BookInfoManager = pcall(require, "bookinfomanager")
     if not ok_bim or not BookInfoManager then
-        logger.warn("zen-ui home: bookinfomanager require failed, cannot upgrade covers")
+        logger.warn("bookinfomanager require failed, cannot upgrade covers")
         return
     end
 
@@ -613,6 +613,9 @@ local function build_data_provider(cfg, dcfg)
     local effective_status_cached = {}
     local tbr_cached = nil
     local strip_offsets = {}
+    local book_cache_hits = 0
+    local book_cache_misses = 0
+    local book_lookup_ms = 0
 
     local function is_widget_visible(widget_id)
         if type(widget_id) ~= "string" or widget_id == "" then return false end
@@ -713,7 +716,12 @@ local function build_data_provider(cfg, dcfg)
     -- History stays first, while this cached library list supplies unread books
     -- for any remaining Home slots without adding them to KOReader history.
     local function get_library_paths()
-        if library_paths_cached then return library_paths_cached end
+        local started_at = os.clock()
+        if library_paths_cached then
+            logger.perf("Library paths cache hit", (os.clock() - started_at) * 1000,
+                "books=", #library_paths_cached)
+            return library_paths_cached
+        end
 
         local paths = require("common/paths")
         local roots = {}
@@ -746,7 +754,8 @@ local function build_data_provider(cfg, dcfg)
                 end
             end
             if unchanged then
-                logger.dbg("zen-ui home: reusing library fallback cache:", #cached.paths, "books")
+                logger.perf("Library fallback cache hit", (os.clock() - started_at) * 1000,
+                    "books=", #cached.paths)
                 library_paths_cached = cached.paths
                 return library_paths_cached
             end
@@ -762,7 +771,8 @@ local function build_data_provider(cfg, dcfg)
         local items = {}
         local dirs = {}
         local seen_paths = {}
-        logger.dbg("zen-ui home: starting library fallback walk:", #roots, "roots")
+        local walk_started_at = os.clock()
+        logger.dbg("Starting library fallback walk", "roots=", #roots)
         for _i, root in ipairs(roots) do
             dirs[root] = lfs.attributes(root, "modification") or false
         end
@@ -797,18 +807,23 @@ local function build_data_provider(cfg, dcfg)
             paths = library_paths_cached,
             dirs = dirs,
         }
-        logger.dbg("zen-ui home: library fallback walk found:", #library_paths_cached, "books")
+        logger.perf("Library fallback walk completed", (os.clock() - walk_started_at) * 1000,
+            "books=", #library_paths_cached)
         return library_paths_cached
     end
 
     local function get_book(path, need_time_left)
         if not path then return nil end
+        local started_at = os.clock()
         local cache_key = get_home_book_cache_key(path)
             .. (need_time_left and "|time_left" or "")
         local cached = _home_book_cache[cache_key]
         if cached then
+            book_cache_hits = book_cache_hits + 1
+            book_lookup_ms = book_lookup_ms + (os.clock() - started_at) * 1000
             return clone_cached_book(cached)
         end
+        book_cache_misses = book_cache_misses + 1
         local ok_bim, BookInfoManager = pcall(require, "bookinfomanager")
         local cover_bb, title, authors, pages, description
         if ok_bim and BookInfoManager then
@@ -932,6 +947,7 @@ local function build_data_provider(cfg, dcfg)
             description = description,
         }
         cache_home_book(cache_key, book)
+        book_lookup_ms = book_lookup_ms + (os.clock() - started_at) * 1000
         return book
     end
 
@@ -1316,6 +1332,20 @@ local function build_data_provider(cfg, dcfg)
         stats_cached_key = nil
         self.stats = {}
         return self.stats
+    end
+
+    function provider:resetPerformanceStats()
+        book_cache_hits = 0
+        book_cache_misses = 0
+        book_lookup_ms = 0
+    end
+
+    function provider:getPerformanceStats()
+        return {
+            book_cache_hits = book_cache_hits,
+            book_cache_misses = book_cache_misses,
+            book_lookup_ms = math.floor(book_lookup_ms + 0.5),
+        }
     end
 
     return provider
@@ -2041,7 +2071,7 @@ local function build_home_content(menu, dcfg, rows, data_provider)
             })
             used_h = used_h + h
         else
-            logger.warn("zen-ui home: failed to build component:", comp.id, widget)
+            logger.warn("failed to build component:", comp.id, widget)
         end
         if row_gap > 0 and i < #rows then
             table.insert(children, VerticalSpan:new{ width = row_gap })
@@ -2143,6 +2173,10 @@ function M.showHomeView(injectNavbar)
     menu._zen_home_has_clock_refreshers = has_clock_refreshers
 
     local function rebuild(refresh_stats)
+        local started_at = os.clock()
+        if data_provider and type(data_provider.resetPerformanceStats) == "function" then
+            data_provider:resetPerformanceStats()
+        end
         if data_provider then
             if type(data_provider.prepareStats) == "function" then
                 data_provider:prepareStats(rows, refresh_stats == true)
@@ -2153,6 +2187,13 @@ function M.showHomeView(injectNavbar)
         local content = build_home_content(menu, dcfg, rows, data_provider)
         StandalonePage.mount_body(menu, content)
         UIManager:setDirty(menu, "ui")
+        local perf = data_provider and data_provider.getPerformanceStats
+            and data_provider:getPerformanceStats() or {}
+        logger.perf("Home content rebuild completed", (os.clock() - started_at) * 1000,
+            "rows=", #rows,
+            "book_cache_hits=", perf.book_cache_hits or 0,
+            "book_cache_misses=", perf.book_cache_misses or 0,
+            "book_lookup_ms=", perf.book_lookup_ms or 0)
     end
 
     function menu:_zen_home_refresh_clock_widgets()
@@ -2164,7 +2205,7 @@ function M.showHomeView(injectNavbar)
                 if ok and did_refresh then
                     refreshed = refreshed + 1
                 elseif not ok then
-                    logger.warn("zen-ui home: embedded clock refresh failed:", tostring(did_refresh))
+                    logger.warn("embedded clock refresh failed:", tostring(did_refresh))
                 end
             end
         end
