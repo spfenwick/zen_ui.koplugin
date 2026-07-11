@@ -35,11 +35,19 @@ local function apply_browser_flat_view_compat()
     -- Temporarily prefer Zen UI's scanner over KOReader's native flat view.
     -- if has_native_flat_view then return end
 
-    local function flat_view_enabled(path)
+    local function zen_flat_view_enabled()
         local config = ConfigManager.get()
         return type(config) == "table"
             and type(config.browser_flat_view) == "table"
             and config.browser_flat_view.enabled == true
+    end
+
+    if zen_flat_view_enabled() and G_reader_settings:isTrue("show_flat_view") then
+        G_reader_settings:saveSetting("show_flat_view", false)
+    end
+
+    local function flat_view_enabled(path)
+        return zen_flat_view_enabled()
             and not paths.hasUnsafeFlatViewHomeRoot()
             and is_in_home(path)
     end
