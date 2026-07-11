@@ -8,7 +8,7 @@ local json = require("json")
 local logger = require("logger")
 local ConfigManager = require("config/manager")
 
-local GITHUB_OWNER = "AnthonyGress"
+local GITHUB_OWNER = "spfenwick"
 local GITHUB_REPO = "zen_ui.koplugin"
 local RELEASE_ASSET_NAME = "zen_ui.koplugin.zip"
 local GITHUB_RELEASES_URL = string.format(
