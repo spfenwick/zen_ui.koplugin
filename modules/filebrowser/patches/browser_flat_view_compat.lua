@@ -4,8 +4,9 @@ local function apply_browser_flat_view_compat()
     local lfs = require("libs/libkoreader-lfs")
     local paths = require("common/paths")
     local util = require("util")
+    local ConfigManager = require("config/manager")
 
-    local MAX_DEPTH = 2
+    local MAX_DEPTH = 3
     local SKIP_DIRS = {
         [".sdr"] = true,
         [".adds"] = true,
@@ -31,23 +32,16 @@ local function apply_browser_flat_view_compat()
         return paths.isInHomeDir(ffiUtil.realpath(path) or path)
     end
 
-    local function sync_flat_view_flag()
-        local enabled = G_reader_settings:isTrue("show_flat_view")
-        if enabled and paths.hasUnsafeFlatViewHomeRoot() then
-            enabled = false
-            G_reader_settings:saveSetting("show_flat_view", false)
-        end
-        FileChooser.show_flat_view = enabled
-        return enabled
-    end
-
-    sync_flat_view_flag()
-
     -- Temporarily prefer Zen UI's scanner over KOReader's native flat view.
     -- if has_native_flat_view then return end
 
     local function flat_view_enabled(path)
-        return sync_flat_view_flag() and is_in_home(path)
+        local config = ConfigManager.get()
+        return type(config) == "table"
+            and type(config.browser_flat_view) == "table"
+            and config.browser_flat_view.enabled == true
+            and not paths.hasUnsafeFlatViewHomeRoot()
+            and is_in_home(path)
     end
 
     local function show_hidden(self)
