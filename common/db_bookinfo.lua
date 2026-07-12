@@ -2,7 +2,7 @@
 -- Queries KOReader's bookinfo_cache.sqlite3 to group books by author or series.
 -- Used by the Authors and Series navbar tabs.
 
-local logger = require("logger")
+local logger = require("common/zen_logger").new("db_bookinfo")
 local lfs = require("libs/libkoreader-lfs")
 local paths = require("common/paths")
 local bimOk, BookInfoManager = pcall(require, "bookinfomanager")
@@ -24,7 +24,7 @@ end
 -- Each book appears under every author it has (multi-author support).
 function M.getGroupedByAuthor()
     if not bimOk then
-        logger.warn("zen-ui getGroupedByAuthor: BookInfoManager not available")
+        logger.warn("BookInfoManager not available")
         return {}
     end
     BookInfoManager:openDbConnection()
@@ -49,7 +49,7 @@ function M.getGroupedByAuthor()
         local dirs      = res[1] or {}
         local filenames = res[2] or {}
         local authors_col = res[3] or {}
-        logger.info("zen-ui db_bookinfo: getGroupedByAuthor rows from SQL:", #dirs)
+        logger.info("getGroupedByAuthor rows from SQL:", #dirs)
 
         for i = 1, #dirs do
             local dir    = dirs[i]
@@ -85,7 +85,7 @@ function M.getGroupedByAuthor()
     end)
 
     if not ok2 then
-        logger.warn("zen-ui db_bookinfo: query error:", err)
+        logger.warn("query error:", err)
         return {}
     end
 
@@ -98,7 +98,7 @@ function M.getGroupedByAuthor()
         return a.author < b.author
     end)
 
-    logger.dbg("zen-ui db_bookinfo: getGroupedByAuthor result:", #groups, "authors")
+    logger.dbg("getGroupedByAuthor result:", #groups, "authors")
     return groups
 end
 
@@ -108,7 +108,7 @@ end
 -- Only includes books within home_dir that still exist on disk.
 function M.getGroupedBySeries()
     if not bimOk then
-        logger.warn("zen-ui automatic_series_grouping: BookInfoManager not available")
+        logger.warn("BookInfoManager not available")
         return {}
     end
     BookInfoManager:openDbConnection()
@@ -133,7 +133,7 @@ function M.getGroupedBySeries()
         local filenames    = res[2] or {}
         local series_col   = res[3] or {}
         local idx_col      = res[4] or {}
-        logger.dbg("zen-ui db_bookinfo: getGroupedBySeries rows from SQL:", #dirs)
+        logger.dbg("getGroupedBySeries rows from SQL:", #dirs)
 
         for i = 1, #dirs do
             local dir    = dirs[i]
@@ -169,7 +169,7 @@ function M.getGroupedBySeries()
     end)
 
     if not ok2 then
-        logger.warn("zen-ui db_bookinfo: query error:", err)
+        logger.warn("query error:", err)
         return {}
     end
 
@@ -188,14 +188,14 @@ function M.getGroupedBySeries()
         return a.series < b.series
     end)
 
-    logger.dbg("zen-ui db_bookinfo: getGroupedBySeries result:", #groups, "series")
+    logger.dbg("getGroupedBySeries result:", #groups, "series")
     return groups
 end
 
 -- Returns explicit TBR books plus computed-New books when configured.
 function M.getTBRBooks()
     if not bimOk then
-        logger.warn("zen-ui automatic_series_grouping: BookInfoManager not available")
+        logger.warn("BookInfoManager not available")
         return {}
     end
     BookInfoManager:openDbConnection()
@@ -241,7 +241,7 @@ function M.getTBRBooks()
 
 
     if not ok2 then
-        logger.warn("zen-ui db_bookinfo: getTBRBooks query error:", err)
+        logger.warn("getTBRBooks query error:", err)
         return {}
     end
 
@@ -272,7 +272,7 @@ function M.getTBRBooks()
         end
     end
 
-    logger.dbg("zen-ui db_bookinfo: getTBRBooks result:", #result, "books")
+    logger.dbg("getTBRBooks result:", #result, "books")
     return result
 end
 
@@ -282,7 +282,7 @@ end
 -- Only includes books within home_dir that still exist on disk.
 function M.getGroupedByTags()
     if not bimOk then
-        logger.warn("zen-ui automatic_series_grouping: BookInfoManager not available")
+        logger.warn("BookInfoManager not available")
         return {}
     end
     BookInfoManager:openDbConnection()
@@ -341,7 +341,7 @@ function M.getGroupedByTags()
 
 
     if not ok2 then
-        logger.warn("zen-ui db_bookinfo: getGroupedByTags query error:", err)
+        logger.warn("getGroupedByTags query error:", err)
         return {}
     end
 
@@ -353,7 +353,7 @@ function M.getGroupedByTags()
         return a.tag < b.tag
     end)
 
-    logger.dbg("zen-ui db_bookinfo: getGroupedByTags result:", #groups, "tags")
+    logger.dbg("getGroupedByTags result:", #groups, "tags")
     return groups
 end
 
@@ -361,7 +361,7 @@ end
 -- across all directories. Uses a SQL COUNT so no lfs calls are made.
 function M.getTotalBookCount()
     if not bimOk then
-        logger.warn("zen-ui automatic_series_grouping: BookInfoManager not available")
+        logger.warn("BookInfoManager not available")
         return {}
     end
     BookInfoManager:openDbConnection()
@@ -373,9 +373,9 @@ function M.getTotalBookCount()
         count = tonumber(row) or 0
     end)
     if not ok2 then
-        logger.warn("zen-ui db_bookinfo: getTotalBookCount error:", err)
+        logger.warn("getTotalBookCount error:", err)
     end
-    logger.info("zen-ui db_bookinfo: total_book_count=", count)
+    logger.info("total_book_count=", count)
     return count
 end
 
