@@ -9,6 +9,24 @@ local bimOk, BookInfoManager = pcall(require, "bookinfomanager")
 
 local M = {}
 
+-- In-memory cache so the expensive full-table scan + per-file lfs.attributes
+-- existence check only runs once per cache window, instead of on every
+-- Authors/Series/Tags tab visit.  Call M.invalidateCache() to force a
+-- rescan on the next call.
+local _cache = {
+    authors = { data = nil, time = 0 },
+    series  = { data = nil, time = 0 },
+    tags    = { data = nil, time = 0 },
+}
+local CACHE_TTL = 300  -- seconds, matches db_library.lua's book-count cache window
+
+function M.invalidateCache()
+    for _key, entry in pairs(_cache) do
+        entry.data = nil
+        entry.time = 0
+    end
+end
+
 -- Returns the authors string as-is (no splitting) so multi-author books
 -- are grouped under their combined author string.
 local function splitAuthors(authors_str)
@@ -23,6 +41,11 @@ end
 -- Only includes books within home_dir that still exist on disk.
 -- Each book appears under every author it has (multi-author support).
 function M.getGroupedByAuthor()
+    local now = os.time()
+    if _cache.authors.data and (now - _cache.authors.time) < CACHE_TTL then
+        logger.dbg("zen-ui db_bookinfo: returning cached author groups")
+        return _cache.authors.data
+    end
     if not bimOk then
         logger.warn("zen-ui getGroupedByAuthor: BookInfoManager not available")
         return {}
@@ -99,6 +122,8 @@ function M.getGroupedByAuthor()
     end)
 
     logger.dbg("zen-ui db_bookinfo: getGroupedByAuthor result:", #groups, "authors")
+    _cache.authors.data = groups
+    _cache.authors.time = now
     return groups
 end
 
@@ -107,6 +132,11 @@ end
 -- Items within each series are sorted by series_index (then filename as tiebreak).
 -- Only includes books within home_dir that still exist on disk.
 function M.getGroupedBySeries()
+    local now = os.time()
+    if _cache.series.data and (now - _cache.series.time) < CACHE_TTL then
+        logger.dbg("zen-ui db_bookinfo: returning cached series groups")
+        return _cache.series.data
+    end
     if not bimOk then
         logger.warn("zen-ui automatic_series_grouping: BookInfoManager not available")
         return {}
@@ -189,6 +219,8 @@ function M.getGroupedBySeries()
     end)
 
     logger.dbg("zen-ui db_bookinfo: getGroupedBySeries result:", #groups, "series")
+    _cache.series.data = groups
+    _cache.series.time = now
     return groups
 end
 
@@ -281,6 +313,11 @@ end
 -- Books may appear under multiple tags. Tags are split by comma and trimmed.
 -- Only includes books within home_dir that still exist on disk.
 function M.getGroupedByTags()
+    local now = os.time()
+    if _cache.tags.data and (now - _cache.tags.time) < CACHE_TTL then
+        logger.dbg("zen-ui db_bookinfo: returning cached tag groups")
+        return _cache.tags.data
+    end
     if not bimOk then
         logger.warn("zen-ui automatic_series_grouping: BookInfoManager not available")
         return {}
@@ -354,6 +391,8 @@ function M.getGroupedByTags()
     end)
 
     logger.dbg("zen-ui db_bookinfo: getGroupedByTags result:", #groups, "tags")
+    _cache.tags.data = groups
+    _cache.tags.time = now
     return groups
 end
 

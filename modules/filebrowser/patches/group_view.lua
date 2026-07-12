@@ -1150,16 +1150,25 @@ local function showGroupSortDialog(tab_id, menu)
         on_select       = function(reverse)
             set_group_reverse(tab_id, reverse)
             if menu then
-                local ok, db = pcall(require, "common/db_bookinfo")
-                if ok then
-                    local groups
-                    if tab_id == "authors" then
-                        groups = db.getGroupedByAuthor()
-                    elseif tab_id == "tags" then
-                        groups = db.getGroupedByTags()
-                    else
-                        groups = db.getGroupedBySeries()
+                -- build_group_item_table() applies the reverse flag itself by
+                -- flipping display order, so the already-fetched (always
+                -- ascending) groups can be reused as-is -- no need to re-run
+                -- the full grouping SQL query + per-file existence check just
+                -- to change sort direction.
+                local groups = menu._zen_raw_groups
+                if not groups then
+                    local ok, db = pcall(require, "common/db_bookinfo")
+                    if ok then
+                        if tab_id == "authors" then
+                            groups = db.getGroupedByAuthor()
+                        elseif tab_id == "tags" then
+                            groups = db.getGroupedByTags()
+                        else
+                            groups = db.getGroupedBySeries()
+                        end
                     end
+                end
+                if groups then
                     menu.item_table = build_group_item_table(groups, tab_id)
                     menu:updateItems()
                 end
@@ -1679,6 +1688,9 @@ showGroupView = function(tab_id, injectNavbar, groups)
         end,
         updateItems = function() end,
     }
+    -- Stash the raw (always-ascending) groups so a later reverse-order toggle
+    -- can just flip display order instead of re-running the full DB scan.
+    menu._zen_raw_groups = groups
     StandalonePage.prepare_shell(menu)
 
     -- Install display mode (mosaic/list) and set _zen_group_view sentinel
