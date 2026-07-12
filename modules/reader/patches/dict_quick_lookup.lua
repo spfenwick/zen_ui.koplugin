@@ -152,8 +152,8 @@ local function apply()
             -- Flatten all rows and index by id.
             local by_id = {}
             local unknown = {}
-            for _, row in ipairs(buttons) do
-                for _, btn in ipairs(row) do
+            for _i, row in ipairs(buttons) do
+                for _j, btn in ipairs(row) do
                     if btn.id and KNOWN_IDS[btn.id] then
                         by_id[btn.id] = btn
                     elseif btn.id then
@@ -185,7 +185,7 @@ local function apply()
             -- Look for vocabulary in flattened buttons or in unknown.
             local vocab_btn = by_id["vocabulary"]
             if not vocab_btn then
-                for _, btn in ipairs(unknown) do
+                for _i, btn in ipairs(unknown) do
                     local t = type(btn.text) == "string" and btn.text
                         or (type(btn.text_func) == "function" and btn.text_func())
                     if type(t) == "string" and t:lower():find("vocabulary") then
@@ -267,12 +267,12 @@ local function apply()
 
             -- Preserve unknown buttons as text rows when enabled.
             if allow_unknown() then
-                for _, btn in ipairs(unknown) do
+                for _i, btn in ipairs(unknown) do
                     if btn.id ~= "vocabulary" then
                         -- Put each unknown in its own row.
                         local found = false
-                        for _, row in ipairs(result) do
-                            for _, rb in ipairs(row) do
+                        for _j, row in ipairs(result) do
+                            for _k, rb in ipairs(row) do
                                 if rb.id == btn.id then found = true; break end
                             end
                             if found then break end
@@ -307,8 +307,8 @@ local function apply()
 
         local by_id = {}
         local unknown = {}
-        for _, row in ipairs(buttons) do
-            for _, btn in ipairs(row) do
+        for _i, row in ipairs(buttons) do
+            for _j, btn in ipairs(row) do
                 if btn.id then
                     if KNOWN_IDS[btn.id] then
                         by_id[btn.id] = btn
@@ -399,7 +399,7 @@ local function apply()
                     for ri = #buttons, 1, -1 do
                         local row = buttons[ri]
                         if row ~= icon_row then
-                            for _, btn in ipairs(row) do
+                            for _i, btn in ipairs(row) do
                                 local t = type(btn.text) == "string" and btn.text
                                     or (type(btn.text_func) == "function" and btn.text_func())
                                 if type(t) == "string" and t:lower():find("vocabulary") then

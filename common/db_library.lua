@@ -57,7 +57,7 @@ function LibraryDB.getBookCounts()
         local home_dir = paths.getHomeDir()
 
         local hist = ReadHistory.hist or {}
-        for _, entry in ipairs(hist) do
+        for _i, entry in ipairs(hist) do
             local file = entry.file
             -- Skip books outside home_dir (SD card, other folders, etc.)
             if file and home_dir and not paths.isInHomeDir(file) then

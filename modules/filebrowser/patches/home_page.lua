@@ -37,11 +37,13 @@ local function free_cached_book(book)
     end
 end
 
-local function clone_cached_book(book)
+local function clone_cached_book(book, include_internal)
     if type(book) ~= "table" then return nil end
     local out = {}
     for k, v in pairs(book) do
-        if k ~= "cover_bb" then out[k] = v end
+        if k ~= "cover_bb" and (include_internal or k:sub(1, 5) ~= "_zen_") then
+            out[k] = v
+        end
     end
     if book.cover_bb and book.cover_bb.copy then
         out.cover_bb = book.cover_bb:copy()
@@ -86,7 +88,12 @@ end
 local function cache_home_book(key, book)
     local old = _home_book_cache[key]
     if old then free_cached_book(old) end
-    _home_book_cache[key] = clone_cached_book(book)
+    for i = #_home_book_cache_order, 1, -1 do
+        if _home_book_cache_order[i] == key then
+            table.remove(_home_book_cache_order, i)
+        end
+    end
+    _home_book_cache[key] = clone_cached_book(book, true)
     _home_book_cache_order[#_home_book_cache_order + 1] = key
     while #_home_book_cache_order > HOME_BOOK_CACHE_MAX do
         local evict = table.remove(_home_book_cache_order, 1)
@@ -812,14 +819,42 @@ local function build_data_provider(cfg, dcfg)
         return library_paths_cached
     end
 
+    local function populate_time_left(book)
+        if not book or book._zen_time_left_loaded then return end
+        book._zen_time_left_loaded = true
+        if not book._zen_has_sidecar then return end
+
+        local ok_stats, StatsDB = pcall(require, "common/db_stats")
+        if not (ok_stats and StatsDB and type(StatsDB.queryBookAveragePageTime) == "function") then
+            return
+        end
+        local avg_time, db_pages = StatsDB.queryBookAveragePageTime(
+            book.path, book._zen_partial_md5_checksum)
+        local total_pages = tonumber(book.pages)
+        if not total_pages and db_pages and db_pages > 0 then
+            total_pages = db_pages
+            book.pages = db_pages
+            book.stable_pages = book.stable_pages or db_pages
+            if book.percent_finished then
+                book.current_page = math.floor(total_pages * book.percent_finished + 0.5)
+                if book.percent_finished > 0 and book.current_page < 1 then book.current_page = 1 end
+                if book.current_page > total_pages then book.current_page = total_pages end
+            end
+        end
+        if avg_time and avg_time > 0 and total_pages and book.current_page
+                and book.current_page < total_pages then
+            book.time_left_secs = math.floor((total_pages - book.current_page) * avg_time)
+        end
+    end
+
     local function get_book(path, need_time_left)
         if not path then return nil end
         local started_at = os.clock()
         local cache_key = get_home_book_cache_key(path)
-            .. (need_time_left and "|time_left" or "")
         local cached = _home_book_cache[cache_key]
         if cached then
             book_cache_hits = book_cache_hits + 1
+            if need_time_left then populate_time_left(cached) end
             book_lookup_ms = book_lookup_ms + (os.clock() - started_at) * 1000
             return clone_cached_book(cached)
         end
@@ -860,12 +895,12 @@ local function build_data_provider(cfg, dcfg)
         local pct = nil
         local status = nil
         local current_page = nil
-        local time_left_secs = nil
         local stable_pages = nil
         local stable_current_page = nil
         local stable_current_label = nil
         local stable_last_label = nil
         local doc_settings = nil
+        local partial_md5_checksum = nil
         local ok_ds, DocSettings = pcall(require, "docsettings")
         if ok_ds and DocSettings and DocSettings:hasSidecarFile(path) then
             local ok_doc, doc = pcall(DocSettings.open, DocSettings, path)
@@ -884,27 +919,7 @@ local function build_data_provider(cfg, dcfg)
                     if pct > 0 and current_page < 1 then current_page = 1 end
                     if current_page > total_pages then current_page = total_pages end
                 end
-                local avg_time
-                if need_time_left then
-                    local ok_stats, StatsDB = pcall(require, "common/db_stats")
-                    if ok_stats and StatsDB and type(StatsDB.queryBookAveragePageTime) == "function" then
-                        local db_avg_time, db_pages = StatsDB.queryBookAveragePageTime(
-                            path, doc:readSetting("partial_md5_checksum"))
-                        avg_time = db_avg_time
-                        if not total_pages and db_pages and db_pages > 0 then
-                            pages = db_pages
-                            total_pages = db_pages
-                            if pct then
-                                current_page = math.floor(total_pages * pct + 0.5)
-                                if pct > 0 and current_page < 1 then current_page = 1 end
-                                if current_page > total_pages then current_page = total_pages end
-                            end
-                        end
-                    end
-                end
-                if avg_time and avg_time > 0 and total_pages and current_page and current_page < total_pages then
-                    time_left_secs = math.floor((total_pages - current_page) * avg_time)
-                end
+                partial_md5_checksum = doc:readSetting("partial_md5_checksum")
                 if doc:readSetting("pagemap_use_page_labels") == true then
                     stable_current_label = doc:readSetting("pagemap_current_page_label")
                     stable_last_label = doc:readSetting("pagemap_last_page_label")
@@ -939,13 +954,16 @@ local function build_data_provider(cfg, dcfg)
             status = computed_status,
             pages = pages,
             current_page = current_page,
-            time_left_secs = time_left_secs,
+            time_left_secs = nil,
             stable_pages = stable_pages or pages,
             stable_current_page = stable_current_page,
             stable_current_label = stable_current_label,
             stable_last_label = stable_last_label,
             description = description,
+            _zen_has_sidecar = doc_settings ~= nil,
+            _zen_partial_md5_checksum = partial_md5_checksum,
         }
+        if need_time_left then populate_time_left(book) end
         cache_home_book(cache_key, book)
         book_lookup_ms = book_lookup_ms + (os.clock() - started_at) * 1000
         return book
