@@ -80,6 +80,28 @@ local function apply_browser_folder_cover()
     local cached_list = {}
     local _item_table_cache = nil
 
+    -- Folder-cover thumbnails (mosaic/gallery/stack tiles) call
+    -- genItemTableFromPath() on each *subfolder* they render a cover for, to
+    -- pick which few books' covers to show. That subfolder is not the
+    -- currently-open path, so it never benefits from _item_table_cache above,
+    -- and previously did a full lfs.dir walk + item build on every tile
+    -- render (every scroll/page turn). Cache the raw pre-history-sort table
+    -- per (path, mtime, collate) so unchanged folders skip the rescan.
+    local FOLDER_COVER_ENTRIES_CACHE_MAX = 64
+    local _folder_cover_entries_cache = {}
+    local _folder_cover_entries_order = {}
+
+    local function _cache_folder_cover_entries(key, result)
+        if not _folder_cover_entries_cache[key] then
+            _folder_cover_entries_order[#_folder_cover_entries_order + 1] = key
+        end
+        _folder_cover_entries_cache[key] = result
+        while #_folder_cover_entries_order > FOLDER_COVER_ENTRIES_CACHE_MAX do
+            local evicted = table.remove(_folder_cover_entries_order, 1)
+            _folder_cover_entries_cache[evicted] = nil
+        end
+    end
+
     local function _automatic_series_grouping_enabled()
         local plugin = _plugin or rawget(_G, "__ZEN_UI_PLUGIN")
         local features = plugin and plugin.config and plugin.config.features
@@ -285,6 +307,8 @@ local function apply_browser_folder_cover()
     function FileChooser:_zen_clear_item_table_cache()
         _item_table_cache = nil
         cached_list = {}
+        _folder_cover_entries_cache = {}
+        _folder_cover_entries_order = {}
     end
 
     local orig_FileChooser_genItemTableFromPath = FileChooser.genItemTableFromPath
@@ -298,7 +322,14 @@ local function apply_browser_folder_cover()
             local collate = (self.collates and self.collates[collate_mode]) or self:getCollate()
             local reverse_collate = type(override) == "table"
                 and override.reverse or G_reader_settings:isTrue("reverse_collate")
-            local result = orig_FileChooser_genItemTableFromPath(self, path)
+
+            local mtime = lfs.attributes(path, "modification") or 0
+            local cache_key = string.format("%s|%d|%s", path, mtime, tostring(collate_mode))
+            local result = _folder_cover_entries_cache[cache_key]
+            if not result then
+                result = orig_FileChooser_genItemTableFromPath(self, path)
+                _cache_folder_cover_entries(cache_key, result)
+            end
             if collate_mode == "access" then
                 result = _apply_history_order(self, result, collate, reverse_collate)
             end
