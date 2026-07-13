@@ -98,7 +98,7 @@ return {
     { text = "Have you ever been in love? Horrible isn't it? It makes you so vulnerable.", author = "Neil Gaiman" },
     { text = "I love you without knowing how, or when, or from where.", author = "Pablo Neruda" },
     { text = "I love you as certain dark things are to be loved, in secret, between the shadow and the soul.", author = "Pablo Neruda" },
-    { text = "Your parents do love you, but they haven’t tried to understand you, and yeah, that sucks. You’re allowed to be sad about it. You’re allowed to be angry about it. If it helps, break something!", author = "Sangu Mandanna" }
+    { text = "Your parents do love you, but they haven’t tried to understand you, and yeah, that sucks. You’re allowed to be sad about it. You’re allowed to be angry about it. If it helps, break something!", author = "Sangu Mandanna" },
     { text = "Hate is loud, but I think you’ll learn it’s because it’s only a few people shouting, desperate to be heard. You might not ever be able to change their minds, but so long as you remember you’re not alone, you will overcome.", author = "TJ Klune" },
     -- life
     { text = "There are only two ways to live your life. One is as though nothing is a miracle. The other is as though everything is a miracle.", author = "Albert Einstein" },
