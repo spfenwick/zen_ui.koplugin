@@ -44,7 +44,7 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Resolve beta tag
+      - name: Resolve custom tag
         id: version_check
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -54,7 +54,7 @@ jobs:
 
           # Get the latest release tag (including pre-releases)
           LATEST=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 1 --json tagName \
-            --jq '.[0].tagName' 2>/custom/null | sed 's/^v//' | sed 's/-beta[0-9]*$//')
+            --jq '.[0].tagName' 2>/custom/null | sed 's/^v//' | sed 's/-custom[0-9]*$//')
 
           if [[ -n "$LATEST" ]]; then
             LOWER=$(printf '%s\n%s' "$META_VERSION" "$LATEST" | sort -V | head -1)
@@ -66,20 +66,20 @@ jobs:
           fi
 
           N=1
-          while gh release view "${BASE}-beta${N}" --repo "$GITHUB_REPOSITORY" > /custom/null 2>&1; do
+          while gh release view "${BASE}-custom${N}" --repo "$GITHUB_REPOSITORY" > /custom/null 2>&1; do
             N=$((N + 1))
           done
-          BETA_TAG="${BASE}-beta${N}"
-          BETA_VERSION="${META_VERSION}-beta${N}"
-          echo "tag=$BETA_TAG" >> "$GITHUB_OUTPUT"
-          echo "version=$BETA_VERSION" >> "$GITHUB_OUTPUT"
+          CUSTOM_TAG="${BASE}-custom${N}"
+          CUSTOM_VERSION="${META_VERSION}-custom${N}"
+          echo "tag=$CUSTOM_TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$CUSTOM_VERSION" >> "$GITHUB_OUTPUT"
           echo "skip=false" >> "$GITHUB_OUTPUT"
 
-      - name: Stamp beta version in _meta.lua
+      - name: Stamp custom version in _meta.lua
         if: steps.version_check.outputs.skip == 'false'
         run: |
-          BETA_VERSION="${{ steps.version_check.outputs.version }}"
-          sed -i "s/version = \"[^\"]*\"/version = \"${BETA_VERSION}\"/" _meta.lua
+          CUSTOM_VERSION="${{ steps.version_check.outputs.version }}"
+          sed -i "s/version = \"[^\"]*\"/version = \"${CUSTOM_VERSION}\"/" _meta.lua
 
       - name: Install fonttools
         if: steps.version_check.outputs.skip == 'false'
