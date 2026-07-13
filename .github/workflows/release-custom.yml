@@ -1,0 +1,110 @@
+name: Release Custom
+
+on:
+  push:
+    branches:
+      - custom
+  workflow_dispatch:
+
+jobs:
+  luacheck:
+    name: LuaCheck
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.head_commit.message, 'ci-skip') }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run LuaCheck gate
+        uses: ./.github/actions/luacheck-gate
+        with:
+          lua-version: "5.1"
+          targets: "_meta.lua main.lua common config modules"
+
+  release:
+    name: Build & Release
+    needs: luacheck
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read version from _meta.lua
+        id: meta
+        run: |
+          VERSION=$(grep -oP '(?<=version = ")[^"]+' _meta.lua)
+          if [[ -z "$VERSION" ]]; then
+            echo "Error: could not extract version from _meta.lua" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve custom tag
+        id: version_check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          META_VERSION="${{ steps.meta.outputs.version }}"
+          BASE="v${META_VERSION}"
+
+          # Get the latest release tag (including pre-releases)
+          LATEST=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 1 --json tagName \
+            --jq '.[0].tagName' 2>/dev/null | sed 's/^v//' | sed 's/-custom[0-9]*$//')
+
+          if [[ -n "$LATEST" ]]; then
+            LOWER=$(printf '%s\n%s' "$META_VERSION" "$LATEST" | sort -V | head -1)
+            if [[ "$LOWER" == "$META_VERSION" && "$META_VERSION" != "$LATEST" ]]; then
+              echo "Version $META_VERSION is lower than current release $LATEST. Skipping."
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          N=1
+          while gh release view "${BASE}-custom${N}" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; do
+            N=$((N + 1))
+          done
+          CUSTOM_TAG="${BASE}-custom${N}"
+          CUSTOM_VERSION="${META_VERSION}-custom${N}"
+          echo "tag=$CUSTOM_TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$CUSTOM_VERSION" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Stamp custom version in _meta.lua
+        if: steps.version_check.outputs.skip == 'false'
+        run: |
+          CUSTOM_VERSION="${{ steps.version_check.outputs.version }}"
+          sed -i "s/version = \"[^\"]*\"/version = \"${CUSTOM_VERSION}\"/" _meta.lua
+
+      - name: Install fonttools
+        if: steps.version_check.outputs.skip == 'false'
+        run: pip install fonttools
+
+      - name: Build plugin zip
+        if: steps.version_check.outputs.skip == 'false'
+        run: bash build.sh
+
+      - name: Build release notes
+        if: steps.version_check.outputs.skip == 'false'
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          python3 .github/scripts/build_release_notes.py "$VERSION" > release_notes.md
+
+      - name: Create release
+        if: steps.version_check.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.version_check.outputs.tag }}"
+          gh release create "$TAG" \
+            dist/zen_ui.koplugin.zip \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Zen UI $TAG" \
+            --notes-file release_notes.md \
+            --prerelease \
+            --target "${{ github.sha }}"

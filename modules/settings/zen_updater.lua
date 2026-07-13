@@ -10,7 +10,8 @@ local ConfigManager = require("config/manager")
 local icons = require("common/inline_icon_map")
 local IconItem = require("common/ui/icon_menu_item")
 
-local GITHUB_OWNER = "AnthonyGress"
+local GITHUB_OWNER = "spfenwick"
+--local GITHUB_OWNER = "AnthonyGress"
 local GITHUB_REPO = "zen_ui.koplugin"
 local RELEASE_ASSET_NAME = "zen_ui.koplugin.zip"
 local GITHUB_RELEASES_URL = string.format(
