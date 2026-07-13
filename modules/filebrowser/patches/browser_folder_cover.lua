@@ -309,6 +309,16 @@ local function apply_browser_folder_cover()
         cached_list = {}
         _folder_cover_entries_cache = {}
         _folder_cover_entries_order = {}
+        -- This is called whenever the library tree may have changed (settings
+        -- toggles, mtime-snapshot mismatch on returning to the library root,
+        -- post file-operation refresh, series-grouping toggle), so it also
+        -- doubles as the invalidation signal for the Authors/Series/Tags
+        -- grouping cache -- otherwise that cache would only expire on its
+        -- 5-minute TTL and could show stale/missing/dead entries in between.
+        local ok_db, db = pcall(require, "common/db_bookinfo")
+        if ok_db and type(db.invalidateCache) == "function" then
+            db.invalidateCache()
+        end
     end
 
     local orig_FileChooser_genItemTableFromPath = FileChooser.genItemTableFromPath
