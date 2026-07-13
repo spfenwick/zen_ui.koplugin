@@ -177,6 +177,12 @@ return {
     },
     ["2.4.1"] = {
         "Fix reverse page scrolling applying to non Rakuyomi books"
+    },
+    ["2.4.2"] = {
+        "Fix flat library layout",
+        "Fix No Books Found using fallback if history is empty",
+        "Improved logging",
+        "Bug fixes"
     }
 
 }

@@ -20,6 +20,7 @@ local PATCH_MODULES = {
     coverbrowser_check = "modules/filebrowser/patches/coverbrowser_check",
     coverbrowser_subprocess_compat = "modules/filebrowser/patches/coverbrowser_subprocess_compat",
     context_menu = "modules/filebrowser/patches/context_menu",
+    browser_flat_view_compat = "modules/filebrowser/patches/browser_flat_view_compat",
     browser_folder_sort = "modules/filebrowser/patches/browser_folder_sort",
     disable_modal_drag = "modules/filebrowser/patches/disable_modal_drag",
     menu_single_page_scroll_guard = "modules/filebrowser/patches/menu_single_page_scroll_guard",
@@ -64,7 +65,7 @@ local function run_feature(logger, plugin, feature, fn)
     local ok, err = pcall(fn)
     _G.__ZEN_UI_PLUGIN = prev_plugin
     if not ok and logger then
-        logger.warn("zen-ui: grouped filebrowser feature failed", feature, err)
+        logger.warn("grouped filebrowser feature failed", feature, err)
     end
     return ok
 end
@@ -110,6 +111,11 @@ function M.init(logger, plugin)
     local disable_modal_drag_fn = load_patch("disable_modal_drag")
     if disable_modal_drag_fn then
         run_feature(logger, plugin, "disable_modal_drag", disable_modal_drag_fn)
+    end
+
+    local browser_flat_view_compat_fn = load_patch("browser_flat_view_compat")
+    if browser_flat_view_compat_fn then
+        run_feature(logger, plugin, "browser_flat_view_compat", browser_flat_view_compat_fn)
     end
 
     local menu_single_page_scroll_guard_fn = load_patch("menu_single_page_scroll_guard")
@@ -245,7 +251,7 @@ function M.init(logger, plugin)
                     runtime_patches[feature] = true
                 end
             elseif logger then
-                logger.warn("zen-ui: grouped filebrowser patch load failed", feature, err)
+                logger.warn("grouped filebrowser patch load failed", feature, err)
             end
         end
     end
