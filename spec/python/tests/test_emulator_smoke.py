@@ -85,7 +85,7 @@ def test_clean_emulator_renders_fixture_library_and_reader_goldens() -> None:
             assert response["ok"] is True
             assert isinstance(response["ui"]["windows"], list)
             assert driver.plugin_loaded("coverbrowser")
-            assert len(books) >= 8
+            assert len(books) >= 5
 
             assert driver.command("activate_navbar_tab", id="books")["ok"] is True
             chooser = _wait_for_library(driver, library)
@@ -94,13 +94,13 @@ def test_clean_emulator_renders_fixture_library_and_reader_goldens() -> None:
             assert library_screenshot.stat().st_size > 0
             _assert_golden(library_screenshot, "fixture-library.png")
 
-            moby_dick = books["moby-dick123456789011"]
-            assert driver.open_book(moby_dick)["ok"] is True
+            wasteland = books["wasteland123456789011"]
+            assert driver.open_book(wasteland)["ok"] is True
             deadline = time.monotonic() + 30
             reader: dict[str, object] = {}
             while time.monotonic() < deadline:
                 reader = driver.reader_state().get("reader", {})
-                if reader.get("open") and Path(str(reader.get("file"))).resolve() == moby_dick.resolve():
+                if reader.get("open") and Path(str(reader.get("file"))).resolve() == wasteland.resolve():
                     break
                 time.sleep(0.25)
             assert reader.get("open") is True

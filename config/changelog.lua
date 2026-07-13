@@ -183,6 +183,10 @@ return {
         "Fix No Books Found using fallback if history is empty",
         "Improved logging",
         "Bug fixes"
+    },
+    ["2.5.0"] = {
+        "Add testing framework",
+        "Updated ZenUpdater"
     }
 
 }

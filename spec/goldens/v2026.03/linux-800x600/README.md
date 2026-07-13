@@ -16,6 +16,6 @@ images plus RGB diffs under `spec/.artifacts/goldens/`. Do not generate or
 review goldens from a host display with a different resolution or font stack.
 
 `fixture-library.png` is the file browser populated from
-`spec/fixtures/library`; `fixture-reader.png` opens the committed Moby-Dick
+`spec/fixtures/library`; `fixture-reader.png` opens the committed Wasteland
 EPUB from that same corpus. The test normalizes staged file timestamps so sort
 order cannot vary by checkout time.

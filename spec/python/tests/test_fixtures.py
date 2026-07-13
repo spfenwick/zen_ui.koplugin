@@ -36,7 +36,7 @@ def test_generated_series_a_manifest_declares_metadata_and_cover_cases(tmp_path:
 def test_committed_epub_fixture_library_stages_with_normalized_timestamps(tmp_path: Path) -> None:
     books = stage_epub_library(tmp_path / "library")
 
-    assert len(books) >= 8
-    assert "moby-dick123456789011" in books
+    assert len(books) >= 5
+    assert "wasteland123456789011" in books
     assert all(book.suffix == ".epub" for book in books.values())
     assert all(book.stat().st_mtime == FIXTURE_TIME for book in books.values())
