@@ -1,0 +1,46 @@
+name: Generate Linux Goldens
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    env:
+      ZEN_UI_KOREADER_CACHE: ${{ github.workspace }}/spec/.cache/koreader
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install KOReader emulator dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential git lua5.1 luarocks meson ninja-build pkg-config xvfb \
+            libsdl2-dev libfreetype6-dev libfontconfig1-dev libharfbuzz-dev \
+            libfribidi-dev libpng-dev libjpeg-dev libsqlite3-dev
+          python -m pip install fonttools
+          luarocks install luacheck
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            spec/.cache/koreader
+            spec/.venv
+          key: koreader-stable-${{ runner.os }}-${{ hashFiles('spec/koreader-lock.json', 'spec/python/requirements.txt') }}
+
+      - name: Provision pinned stable KOReader
+        run: echo "KOREADER_DIR=$(./spec/provision-koreader.sh stable)" >> "$GITHUB_ENV"
+
+      - name: Generate candidate goldens
+        run: ZEN_UI_RUN_EMULATOR=1 xvfb-run -s '-screen 0 800x600x24' ./spec/run update-goldens
+
+      - name: Upload candidate goldens
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-goldens
+          path: spec/goldens/v2026.03/linux-800x600
+          if-no-files-found: error
