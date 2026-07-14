@@ -1337,8 +1337,14 @@ local function apply_opds()
                 end,
                 ok_text      = "\u{F012C}  " .. _("Done"),
                 ok_callback  = function() end,
-                dismissable  = false,
+                dismissable  = true,
             }
+            -- Tapping outside (or Back) should just dismiss the dialog,
+            -- not trigger the "Read now" cancel_callback.
+            function dlg:onClose()
+                UIManager:close(self)
+                return true
+            end
             UIManager:nextTick(function() UIManager:show(dlg) end)
         end
 
