@@ -60,6 +60,12 @@ jobs:
           KOREADER_DIR="$(./spec/provision-koreader.sh stable)"
           echo "KOREADER_DIR=$KOREADER_DIR" >> "$GITHUB_ENV"
 
+      - name: Save stable KOReader build
+        uses: actions/cache/save@v4
+        with:
+          path: spec/.cache/koreader
+          key: ${{ steps.stable-koreader-cache.outputs.cache-primary-key }}
+
       - name: Run pull request suite
         run: |
           if [[ "$REQUESTED_SUITE" == "full" || "$BASE_REF" == "main" ]]; then
@@ -75,13 +81,6 @@ jobs:
           name: stable-test-artifacts
           path: spec/.artifacts
           if-no-files-found: ignore
-
-      - name: Save stable KOReader build
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: spec/.cache/koreader
-          key: ${{ steps.stable-koreader-cache.outputs.cache-primary-key }}
 
   master:
     name: Pinned master smoke
@@ -118,6 +117,12 @@ jobs:
           KOREADER_DIR="$(./spec/provision-koreader.sh master)"
           echo "KOREADER_DIR=$KOREADER_DIR" >> "$GITHUB_ENV"
 
+      - name: Save master KOReader build
+        uses: actions/cache/save@v4
+        with:
+          path: spec/.cache/koreader
+          key: ${{ steps.master-koreader-cache.outputs.cache-primary-key }}
+
       - name: Run master compatibility smoke
         run: ZEN_UI_RUN_EMULATOR=1 xvfb-run -s '-screen 0 800x600x24' ./spec/run master-smoke
 
@@ -128,10 +133,3 @@ jobs:
           name: master-test-artifacts
           path: spec/.artifacts
           if-no-files-found: ignore
-
-      - name: Save master KOReader build
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: spec/.cache/koreader
-          key: ${{ steps.master-koreader-cache.outputs.cache-primary-key }}

@@ -42,6 +42,12 @@ jobs:
           KOREADER_DIR="$(./spec/provision-koreader.sh stable)"
           echo "KOREADER_DIR=$KOREADER_DIR" >> "$GITHUB_ENV"
 
+      - name: Save stable KOReader build
+        uses: actions/cache/save@v4
+        with:
+          path: spec/.cache/koreader
+          key: ${{ steps.stable-koreader-cache.outputs.cache-primary-key }}
+
       - name: Generate candidate goldens
         run: ZEN_UI_RUN_EMULATOR=1 xvfb-run -s '-screen 0 800x600x24' ./spec/run update-goldens
 
@@ -51,10 +57,3 @@ jobs:
           name: linux-goldens
           path: spec/goldens/v2026.03/linux-800x600
           if-no-files-found: error
-
-      - name: Save stable KOReader build
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: spec/.cache/koreader
-          key: ${{ steps.stable-koreader-cache.outputs.cache-primary-key }}
