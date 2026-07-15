@@ -37,7 +37,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            build-essential git lua5.1 luarocks meson ninja-build pkg-config xvfb \
+            build-essential git lua5.1 luarocks meson nasm ninja-build pkg-config xvfb \
             libsdl2-dev libfreetype6-dev libfontconfig1-dev libharfbuzz-dev \
             libfribidi-dev libpng-dev libjpeg-dev libsqlite3-dev
           python -m pip install fonttools
@@ -87,7 +87,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            build-essential git lua5.1 luarocks meson ninja-build pkg-config xvfb \
+            build-essential git lua5.1 luarocks meson nasm ninja-build pkg-config xvfb \
             libsdl2-dev libfreetype6-dev libfontconfig1-dev libharfbuzz-dev \
             libfribidi-dev libpng-dev libjpeg-dev libsqlite3-dev
           luarocks --tree="$GITHUB_WORKSPACE/.luarocks" install luacheck
