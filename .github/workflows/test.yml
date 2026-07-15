@@ -41,7 +41,7 @@ jobs:
             libsdl2-dev libfreetype6-dev libfontconfig1-dev libharfbuzz-dev \
             libfribidi-dev libpng-dev libjpeg-dev libsqlite3-dev
           python -m pip install fonttools
-          luarocks install luacheck
+          luarocks --tree="$GITHUB_WORKSPACE/.luarocks" install luacheck
 
       - uses: actions/cache@v4
         with:
@@ -90,7 +90,7 @@ jobs:
             build-essential git lua5.1 luarocks meson ninja-build pkg-config xvfb \
             libsdl2-dev libfreetype6-dev libfontconfig1-dev libharfbuzz-dev \
             libfribidi-dev libpng-dev libjpeg-dev libsqlite3-dev
-          luarocks install luacheck
+          luarocks --tree="$GITHUB_WORKSPACE/.luarocks" install luacheck
 
       - uses: actions/cache@v4
         with:
