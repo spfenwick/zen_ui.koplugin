@@ -705,6 +705,14 @@ function M.build(ctx)
                     sub_item_table_func = function()
                         return build_entry_items(entry, parent)
                     end,
+                    dim = entry.enabled == false,
+                    checked_func = function()
+                        return entry.enabled ~= false
+                    end,
+                    callback = function()
+                        entry.enabled = entry.enabled == false and true or false
+                        save_app_launcher()
+                    end,
                 }
             end
             sort_items = items

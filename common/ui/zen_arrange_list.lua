@@ -175,7 +175,7 @@ local function rebuild_icon_row(row)
         item_checkable = true
         item_checked = item.checked_func()
     end
-    local toggle_h = math.max(16, math.floor(row.height * 0.45))
+    local toggle_h = math.max(16, math.floor(row.height * 0.55))
     local check_w = toggle_h * 2
     if item_checkable then
         row.checkmark_widget = ZenToggle:new{
@@ -229,6 +229,19 @@ local function rebuild_icon_row(row)
         },
     }
     row[1].invert = row.invert
+end
+
+local function is_toggle_tap(row, pos)
+    local toggle = row and row.checkmark_widget
+    local dimen = toggle and toggle.dimen
+    if not (dimen and pos) then return false end
+    local padding = Size.padding.default
+    return pos:intersectWith(Geom:new{
+        x = dimen.x - padding,
+        y = dimen.y - padding,
+        w = dimen.w + 2 * padding,
+        h = dimen.h + 2 * padding,
+    })
 end
 
 local function apply_icon_rows(sort_widget)
@@ -698,8 +711,7 @@ install_submenu_tap_handlers = function(sort_widget)
         if item and item._zen_arrange_submenu_on_tap and not child._zen_arrange_submenu_tap_patched then
             child._zen_arrange_submenu_tap_patched = true
             child.onTap = function(row, _arg, ges)
-                if item.checked_func and row.checkmark_widget and ges and ges.pos
-                        and ges.pos:intersectWith(row.checkmark_widget.dimen) then
+                if item.checked_func and ges and is_toggle_tap(row, ges.pos) then
                     if item.callback then
                         item:callback()
                     end
@@ -727,8 +739,7 @@ install_root_tap_handlers = function(sort_widget)
         if item and item._zen_arrange_submenu_on_tap and not child._zen_arrange_root_tap_patched then
             child._zen_arrange_root_tap_patched = true
             child.onTap = function(row, _arg, ges)
-                if item.checked_func and row.checkmark_widget and ges and ges.pos
-                        and ges.pos:intersectWith(row.checkmark_widget.dimen) then
+                if item.checked_func and ges and is_toggle_tap(row, ges.pos) then
                     if item.callback then
                         item:callback()
                     end

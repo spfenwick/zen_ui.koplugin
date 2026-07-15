@@ -192,8 +192,12 @@ return {
     },
     ["2.5.0"] = {
         "Add testing framework",
-        "Updated stats page + widgets",
+        "Add Control buttons to Launcher/Navbar",
+        "Auto suggest icons for Controls/Launcher/Navbar",
+        "Standardize buttons menu for Controls/Launcher/Navbar",
         "Better sizing/spacing on home widgets",
+        "Update menu icons",
+        "Updated stats page + widgets",
         "Updated ZenUpdater"
     }
 }

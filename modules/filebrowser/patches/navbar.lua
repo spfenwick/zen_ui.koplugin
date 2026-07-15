@@ -109,7 +109,7 @@ local function apply_navbar()
             page_right = false,
             menu = false,
         },
-        tab_order = { "page_left", "books", "manga", "news", "continue", "authors", "series", "tags", "to_be_read", "home", "history", "favorites", "collections", "stats", "search", "calibre_search", "exit", "page_right", "menu" },
+        tab_order = { "books", "manga", "news", "continue", "home" },
         show_icons = true,
         show_labels = true,
         icon_size = navbar_icon_size_default,
@@ -126,10 +126,12 @@ local function apply_navbar()
         active_tab_underline = true,
         underline_above = false,
         show_top_border = false,
+        layout_version = 2,
     }
 
     local function loadConfig()
         local config = zen_plugin.config.navbar or {}
+        local legacy_layout = config.layout_version ~= 2
         for k, v in pairs(config_default) do
             if config[k] == nil then
                 config[k] = utils.deepcopy(v)
@@ -144,17 +146,33 @@ local function apply_navbar()
         else
             config.show_tabs = config_default.show_tabs
         end
-        -- Ensure tab_order contains all known tabs
-        if type(config.tab_order) ~= "table" then
+        if legacy_layout then
+            local selected = {}
+            local seen = {}
+            local custom_ids = {}
+            for _i, tab in ipairs(config.custom_tabs or {}) do
+                if type(tab.id) == "string" then custom_ids[tab.id] = true end
+            end
+            for _i, id in ipairs(config.tab_order or {}) do
+                if (config.show_tabs[id] == true or custom_ids[id]) and not seen[id] then
+                    selected[#selected + 1] = id
+                    seen[id] = true
+                end
+            end
+            config.tab_order = selected
+            config.layout_version = 2
+        elseif type(config.tab_order) ~= "table" then
             config.tab_order = config_default.tab_order
         else
             local order_set = {}
-            for _i, v in ipairs(config.tab_order) do order_set[v] = true end
-            for _i, v in ipairs(config_default.tab_order) do
-                if not order_set[v] then
-                    table.insert(config.tab_order, v)
+            local deduped = {}
+            for _i, id in ipairs(config.tab_order) do
+                if not order_set[id] then
+                    order_set[id] = true
+                    deduped[#deduped + 1] = id
                 end
             end
+            config.tab_order = deduped
         end
         config.icon_size = clampNavbarSize(
             config.icon_size,
@@ -166,19 +184,12 @@ local function apply_navbar()
             navbar_label_size_min,
             navbar_label_size_max,
             navbar_label_size_default)
-        -- Add custom tab IDs to tab_order if not already present
-        if type(config.custom_tabs) == "table" then
-            local ct_order_set = {}
-            for _i, v in ipairs(config.tab_order) do ct_order_set[v] = true end
-            for _i, ct in ipairs(config.custom_tabs) do
-                if type(ct.id) == "string" and not ct_order_set[ct.id] then
-                    table.insert(config.tab_order, ct.id)
-                end
-            end
-        end
         -- migrate old hard-coded English default
         if config.books_label == "Library" then config.books_label = "" end
         zen_plugin.config.navbar = config
+        if legacy_layout and type(zen_plugin.saveConfig) == "function" then
+            zen_plugin:saveConfig()
+        end
         return config
     end
 

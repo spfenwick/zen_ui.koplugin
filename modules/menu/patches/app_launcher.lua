@@ -300,6 +300,7 @@
 
     local function activate_entry(touch_menu, entry)
         if not entry then return end
+        if entry.enabled == false then return end
         local cfg = Model.ensure(zen_plugin.config)
         if entry_hidden_in_context(entry, touch_menu, cfg) then return end
         if entry._app_back then
@@ -366,6 +367,7 @@
     end
 
     local function entry_disabled(entry)
+        if entry.enabled == false then return true end
         if entry.type ~= "quick_setting" then return false end
         local controls = rawget(_G, "__ZEN_UI_QUICK_SETTINGS")
         return controls and controls.isDisabled and controls.isDisabled(entry.quick_setting_id)
@@ -532,7 +534,7 @@
                     show_label = show_labels,
                     icon = entry.icon or (entry.type == "folder" and DEFAULT_FOLDER_ICON or DEFAULT_ENTRY_ICON),
                     dim = dim,
-                    active = entry_active(entry),
+                    active = not dim and entry_active(entry),
                     callback = not dim and function()
                         activate_entry(touch_menu, entry)
                     end or nil,

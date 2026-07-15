@@ -233,8 +233,8 @@ function M.build(ctx)
 
     local function countEnabledTabs()
         local count = 0
-        for id, v in pairs(config.navbar.show_tabs) do
-            if v == true and is_known_tab(id) then
+        for _i, id in ipairs(config.navbar.tab_order) do
+            if config.navbar.show_tabs[id] == true and is_known_tab(id) then
                 count = count + 1
             end
         end
@@ -268,7 +268,7 @@ function M.build(ctx)
         if config.navbar.show_tabs[id] == true then
             return countEnabledTabs() <= 1
         end
-        return countEnabledTabs() >= navbar_max_tabs
+        return true
     end
 
     local function getCustomTabById(id)
@@ -285,6 +285,7 @@ function M.build(ctx)
 
     local ok_disp, Dispatcher = pcall(require, "dispatcher")
     local build_ct_sub_items
+    local build_builtin_tab_items
 
     local function is_draft_tab(ct)
         return type(ct) == "table" and type(ct._zen_draft_commit) == "function"
@@ -367,6 +368,36 @@ function M.build(ctx)
         if not inserted then
             table.insert(config.navbar.tab_order, id)
         end
+    end
+
+    local function addBuiltinTab(touch_menu)
+        local selected = {}
+        for _i, id in ipairs(config.navbar.tab_order) do
+            selected[id] = true
+        end
+        local picker_items = {}
+        for _i, tab in ipairs(navbar_tab_items) do
+            if not selected[tab.id] then
+                picker_items[#picker_items + 1] = {
+                    id = tab.id,
+                    text = get_tab_item_text(tab),
+                }
+            end
+        end
+        table.sort(picker_items, function(a, b) return a.text < b.text end)
+        if #picker_items == 0 then return end
+        require("common/ui/zen_menu_picker"){
+            title = _("Choose tab"),
+            items = picker_items,
+            on_select = function(item)
+                ensureTabOrder(item.id)
+                config.navbar.show_tabs[item.id] = countEnabledTabs() < navbar_max_tabs
+                save_and_defer_navbar_refresh()
+                if touch_menu and touch_menu.backToUpperMenu then
+                    touch_menu:backToUpperMenu()
+                end
+            end,
+        }
     end
 
     local function commitCustomTab(ct)
@@ -1006,6 +1037,43 @@ function M.build(ctx)
         }
     end
 
+    build_builtin_tab_items = function(id)
+        local items = {}
+        if id == "home" then
+            items = build_home_tab_items()
+        elseif id == "books" then
+            items = build_books_tab_items()
+        elseif id == "manga" then
+            items = build_manga_tab_items()
+        elseif id == "news" then
+            items = build_news_tab_items()
+        end
+        items[#items + 1] = IconItem.decorate({
+            text = _("Delete"),
+            separator = true,
+            callback = function(touch_menu)
+                local ConfirmBox = require("ui/widget/confirmbox")
+                UIManager:show(ConfirmBox:new{
+                    text = _("Delete this tab?"),
+                    ok_text = _("Delete"),
+                    ok_callback = function()
+                        local new_order = {}
+                        for _i, saved_id in ipairs(config.navbar.tab_order) do
+                            if saved_id ~= id then
+                                new_order[#new_order + 1] = saved_id
+                            end
+                        end
+                        config.navbar.tab_order = new_order
+                        config.navbar.show_tabs[id] = false
+                        save_and_defer_navbar_refresh()
+                        if touch_menu then touch_menu:backToUpperMenu() end
+                    end,
+                })
+            end,
+        }, icons.delete)
+        return items
+    end
+
     local function showTabsArrange()
         local ZenArrangeList = require("common/ui/zen_arrange_list")
         local sort_items
@@ -1041,18 +1109,11 @@ function M.build(ctx)
                 item.sub_item_table_func = function()
                     return build_ct_sub_items(ct)
                 end
-            elseif id == "home" then
-                item.sub_title = _("Home")
-                item.sub_item_table_func = build_home_tab_items
-            elseif id == "books" then
-                item.sub_title = _("Library")
-                item.sub_item_table_func = build_books_tab_items
-            elseif id == "manga" then
-                item.sub_title = _("Manga")
-                item.sub_item_table_func = build_manga_tab_items
-            elseif id == "news" then
-                item.sub_title = _("News")
-                item.sub_item_table_func = build_news_tab_items
+            else
+                item.sub_title = get_tab_item_text(tab)
+                item.sub_item_table_func = function()
+                    return build_builtin_tab_items(id)
+                end
             end
             table.insert(sort_items, item)
             return true
@@ -1066,18 +1127,6 @@ function M.build(ctx)
                     in_sort[id] = true
                 end
             end
-            for _i, tab in ipairs(navbar_tab_items) do
-                if not in_sort[tab.id] and addTabItem(tab.id) then
-                    in_sort[tab.id] = true
-                end
-            end
-            if type(config.navbar.custom_tabs) == "table" then
-                for _i, ct in ipairs(config.navbar.custom_tabs) do
-                    if not in_sort[ct.id] and addTabItem(ct.id) then
-                        in_sort[ct.id] = true
-                    end
-                end
-            end
             return sort_items
         end
         sort_items = build_sort_items()
@@ -1088,6 +1137,11 @@ function M.build(ctx)
             add_title = _("Add"),
             hide_footer_cancel = true,
             add_item_table = {
+                IconItem.decorate({
+                    text = _("Tab"),
+                    keep_menu_open = true,
+                    callback = addBuiltinTab,
+                }, icons.settings_navbar),
                 IconItem.decorate({
                     text = _("Action"),
                     keep_menu_open = true,

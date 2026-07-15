@@ -13,16 +13,16 @@ local M = {}
 local function label_for(id)
     local labels = {
         today = _("Today"),
-        this_week = _("This Week"),
-        this_month = _("This Month"),
-        this_year = _("This Year"),
-        all_time = _("All Time"),
-        personal_records = _("Personal Records"),
+        this_week = _("This week"),
+        this_month = _("This month"),
+        this_year = _("This year"),
+        all_time = _("All time"),
+        personal_records = _("Personal records"),
         library = _("Library"),
-        current_book = _("Current Book"),
-        trend_graph = _("Reading Trend"),
+        current_book = _("Current book"),
+        trend_graph = _("Reading trend"),
         goal_progress = _("Reading goals"),
-        calendar = _("Reading Calendar"),
+        calendar = _("Reading calendar"),
     }
     return labels[id] or tostring(id)
 end

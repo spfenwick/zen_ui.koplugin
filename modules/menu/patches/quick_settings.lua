@@ -84,7 +84,7 @@ local function apply_quick_settings()
     -- ============================================================
 
     local config_default = {
-        button_order = { "wifi", "night", "frontlight", "gyro", "rotate", "zen", "lockdown", "incognito", "usb", "search", "quickrss", "cloud", "zlibrary", "calibre", "calibre_search", "notion", "streak", "opds", "localsend", "filebrowser", "puzzle", "crossword", "connections", "chess", "casualchess", "stats_progress", "stats_calendar", "battery_stats", "kosync", "restart", "exit", "sleep", "screenshot" },
+        button_order = { "wifi", "night", "rotate", "zen", "restart", "sleep" },
         show_buttons = {
             wifi = true,
             night = true,
@@ -127,6 +127,7 @@ local function apply_quick_settings()
         screenshot_timer_seconds = 3,
         custom_buttons = {},  -- array of { id, label, icon, action }
         next_custom_id = 0,
+        layout_version = 2,
     }
 
     local filebrowser_slots = { "filebrowser", "FilebrowserPlus", "filebrowserplus" }
@@ -136,6 +137,7 @@ local function apply_quick_settings()
 
     local function loadConfig()
         config = zen_plugin.config.quick_settings or {}
+        local legacy_layout = config.layout_version ~= 2
         for k, v in pairs(config_default) do
             if config[k] == nil then
                 config[k] = utils.deepcopy(v)
@@ -182,10 +184,24 @@ local function apply_quick_settings()
                 end
             end
         end
-        if type(config.button_order) ~= "table" then
+        if legacy_layout then
+            local selected = {}
+            local seen = {}
+            local custom_ids = {}
+            for _i, button in ipairs(config.custom_buttons or {}) do
+                if type(button.id) == "string" then custom_ids[button.id] = true end
+            end
+            for _i, id in ipairs(config.button_order or {}) do
+                if (config.show_buttons[id] == true or custom_ids[id]) and not seen[id] then
+                    selected[#selected + 1] = id
+                    seen[id] = true
+                end
+            end
+            config.button_order = selected
+            config.layout_version = 2
+        elseif type(config.button_order) ~= "table" then
             config.button_order = utils.deepcopy(config_default.button_order)
         else
-            -- Deduplicate existing entries, then append any new buttons from the default order
             local seen = {}
             local deduped = {}
             for _i, id in ipairs(config.button_order) do
@@ -195,12 +211,6 @@ local function apply_quick_settings()
                 end
             end
             config.button_order = deduped
-            for _i, id in ipairs(config_default.button_order) do
-                if not seen[id] then
-                    seen[id] = true
-                    table.insert(config.button_order, id)
-                end
-            end
         end
         -- Sync custom button IDs into button_order and show_buttons
         if type(config.custom_buttons) ~= "table" then config.custom_buttons = {} end
@@ -222,14 +232,6 @@ local function apply_quick_settings()
             end
         end
         config.button_order = clean_order
-        -- Append new custom button IDs not yet in button_order
-        local in_order = {}
-        for _i, id in ipairs(config.button_order) do in_order[id] = true end
-        for _i, cb in ipairs(config.custom_buttons) do
-            if type(cb.id) == "string" and not in_order[cb.id] then
-                table.insert(config.button_order, cb.id)
-            end
-        end
         -- Remove stale cb_ entries from show_buttons
         for key in pairs(config.show_buttons) do
             if key:sub(1, 3) == "cb_" and not cb_ids[key] then
@@ -237,6 +239,9 @@ local function apply_quick_settings()
             end
         end
         zen_plugin.config.quick_settings = config
+        if legacy_layout and type(zen_plugin.saveConfig) == "function" then
+            zen_plugin:saveConfig()
+        end
     end
 
     loadConfig()
@@ -960,7 +965,8 @@ local function apply_quick_settings()
         local items = {}
         for _i, id in ipairs(config.button_order or {}) do
             local def = button_defs[id]
-            if def and (not def.visible_func or def.visible_func()) then
+            if config.show_buttons[id] == true
+                    and def and (not def.visible_func or def.visible_func()) then
                 local label = def.label
                 items[#items + 1] = { id = id, text = label, label = label, icon = def.icon }
             end

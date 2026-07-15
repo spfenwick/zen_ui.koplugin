@@ -88,7 +88,7 @@ local defaults = {
             page_right = false,
             menu = false,
         },
-        tab_order = { "page_left", "books", "manga", "news", "authors", "series", "home", "continue", "favorites", "history", "collections", "stats", "exit", "page_right", "menu" },
+        tab_order = { "books", "authors", "series", "home", "continue", "favorites" },
         show_icons = true,
         show_labels = true,
         icon_size = 34,
@@ -107,7 +107,7 @@ local defaults = {
         show_top_border = false,
     },
     quick_settings = {
-        button_order = { "wifi", "night", "frontlight", "gyro", "rotate", "zen", "lockdown", "incognito", "usb", "search", "quickrss", "cloud", "zlibrary", "calibre", "notion", "streak", "opds", "filebrowser", "restart", "exit", "sleep" },
+        button_order = { "wifi", "night", "rotate", "zen", "restart", "sleep" },
         show_buttons = {
             wifi = true,
             night = true,
