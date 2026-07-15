@@ -63,10 +63,19 @@ run_lua() {
     export ZEN_UI_ROOT="$ROOT"
     export LUA_PATH="$ROOT/?.lua;$ROOT/?/init.lua;$ROOT/spec/lua/support/?.lua;?.lua;common/?.lua;frontend/?.lua;spec/rocks/share/lua/5.1/?.lua;spec/rocks/share/lua/5.1/?/init.lua"
     export LUA_CPATH="?.so;common/?.so;spec/rocks/lib/lua/5.1/?.so"
+    local lua_status=0
     ./luajit -e 'require "busted.runner" { standalone = false }' /dev/null \
       --output=junit -Xoutput="$ARTIFACTS/lua/junit.xml" \
       --helper="$ROOT/spec/lua/support/helper.lua" \
-      --pattern="_spec" "$ROOT/spec/lua"
+      --pattern="_spec" "$ROOT/spec/lua" || lua_status=$?
+    if [[ ! -f "$ARTIFACTS/lua/junit.xml" ]]; then
+      echo "Lua test runner exited without a JUnit report" >&2
+      exit "$([[ "$lua_status" -eq 0 ]] && echo 1 || echo "$lua_status")"
+    fi
+    if [[ "$lua_status" -ne 0 ]]; then
+      cat "$ARTIFACTS/lua/junit.xml" >&2
+      exit "$lua_status"
+    fi
     if grep -Eq "<testsuites[^>]*(failures|errors)='[1-9]" "$ARTIFACTS/lua/junit.xml"; then
       echo "Lua test failures recorded in $ARTIFACTS/lua/junit.xml" >&2
       exit 1
