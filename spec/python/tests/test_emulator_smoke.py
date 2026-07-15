@@ -1,6 +1,7 @@
 import os
 import platform
 import signal
+import subprocess
 import tempfile
 import time
 from pathlib import Path
@@ -112,4 +113,8 @@ def test_clean_emulator_renders_fixture_library_and_reader_goldens() -> None:
             _assert_golden(reader_screenshot, "fixture-reader.png")
         finally:
             process.send_signal(signal.SIGTERM)
-            process.wait(timeout=15)
+            try:
+                process.wait(timeout=15)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()

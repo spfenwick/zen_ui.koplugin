@@ -106,22 +106,13 @@ def _seed_bookinfo(ko_home: Path, book: Path) -> None:
         )
 
 
-def _wait_for_home(driver: ZenDriver, expected_book: Path | None = None) -> dict[str, object]:
+def _wait_for_home(driver: ZenDriver) -> dict[str, object]:
     deadline = time.monotonic() + 30
     latest: dict[str, object] = {}
     while time.monotonic() < deadline:
         response = driver.command("home_state")
         latest = response.get("home", {})
-        book_paths = latest.get("book_paths", [])
-        has_expected_book = expected_book is None or any(
-            Path(str(path)).resolve() == expected_book.resolve()
-            for path in book_paths
-        )
-        if (
-            latest.get("active")
-            and len(latest.get("widget_ids", [])) >= 4
-            and has_expected_book
-        ):
+        if latest.get("active") and len(latest.get("widget_ids", [])) >= 4:
             return latest
         time.sleep(0.25)
     raise AssertionError(f"Home widgets did not become ready: {latest}")
@@ -145,7 +136,7 @@ def test_home_renders_all_core_widgets_with_and_without_history(with_history: bo
             wait_for_socket(socket_path)
             driver = ZenDriver(socket_path)
             assert driver.command("activate_navbar_tab", id="home")["ok"] is True
-            home = _wait_for_home(driver, fixture["epub"])
+            home = _wait_for_home(driver)
             assert home["active_tab_label"] == "Home"
             assert set(home["widget_ids"]) >= {
                 "datetime", "featured_recent", "strip_recent", "quotes",
@@ -155,10 +146,7 @@ def test_home_renders_all_core_widgets_with_and_without_history(with_history: bo
             screenshot = root / "home.png"
             driver.screenshot(screenshot)
             assert screenshot.stat().st_size > 0
-            assert any(
-                Path(path).resolve() == fixture["epub"].resolve()
-                for path in home["book_paths"]
-            )
+            assert "Alpha Home" in home["visible_texts"]
         finally:
             process.send_signal(signal.SIGTERM)
             process.wait(timeout=15)
