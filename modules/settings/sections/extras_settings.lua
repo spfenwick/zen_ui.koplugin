@@ -7,6 +7,8 @@ local Rakuyomi = require("common/rakuyomi")
 local SharedState = require("common/shared_state")
 local global_settings = require("modules/settings/sections/global_settings")
 local stats_settings = require("modules/settings/sections/stats_settings")
+local icons = require("common/inline_icon_map")
+local IconItem = require("common/ui/icon_menu_item")
 
 local M = {}
 
@@ -70,6 +72,7 @@ function M.build(ctx)
                 },
             },
         })
+        IconItem.decorate(items[#items], icons.settings_opds)
     end
 
     if Rakuyomi.is_available() then
@@ -134,6 +137,7 @@ function M.build(ctx)
                 },
             },
         })
+        IconItem.decorate(items[#items], icons.settings_rakuyomi)
     end
 
     local global_items = global_settings.build_extras_items(ctx)

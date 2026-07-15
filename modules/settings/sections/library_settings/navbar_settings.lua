@@ -1048,7 +1048,7 @@ function M.build(ctx)
     -- Navbar item
     -- -------------------------------------------------------------------------
 
-    return {
+    return IconItem.decorate({
         text = _("Navbar"),
         sub_item_table = {
             {
@@ -1229,7 +1229,7 @@ function M.build(ctx)
                 sub_item_table_func = build_default_tab_items,
             },
         },
-    }
+    }, icons.settings_navbar)
 end
 
 return M

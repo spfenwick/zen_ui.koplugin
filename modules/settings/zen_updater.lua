@@ -7,6 +7,8 @@ local Archiver = require("ffi/archiver")
 local json = require("json")
 local logger = require("common/zen_logger").new("zen_updater")
 local ConfigManager = require("config/manager")
+local icons = require("common/inline_icon_map")
+local IconItem = require("common/ui/icon_menu_item")
 
 local GITHUB_OWNER = "AnthonyGress"
 local GITHUB_REPO = "zen_ui.koplugin"
@@ -1583,14 +1585,14 @@ end
 --- is available, or nil when no update has been detected.
 function M.build_update_available_item(plugin)
     if not M._has_update then return nil end
-    return {
+    return IconItem.decorate({
         _zen_update_banner = true,  -- marker so root_items.callback can remove it
-        text          = "\u{F01B} " .. _("Update available"),
+        text          = _("Update available"),
         keep_menu_open = true,
         callback      = function()
             M.run_update(plugin)
         end,
-    }
+    }, icons.settings_updates)
 end
 
 --- Returns the "Check for updates" menu item for the About section.

@@ -5,6 +5,8 @@ local PresetStore = require("config/preset_store")
 local HomePresets = require("modules/filebrowser/patches/home/home_presets")
 local ReadingGoals = require("common/reading_goals")
 local SharedState = require("common/shared_state")
+local icons = require("common/inline_icon_map")
+local IconItem = require("common/ui/icon_menu_item")
 
 local M = {}
 
@@ -214,7 +216,7 @@ function M.build(ctx)
         return items
     end
 
-    return {
+    return IconItem.decorate({
         text = _("Stats"),
         sub_item_table = {
             {
@@ -227,7 +229,7 @@ function M.build(ctx)
                 sub_item_table_func = style_items,
             },
         },
-    }
+    }, icons.settings_stats)
 end
 
 return M

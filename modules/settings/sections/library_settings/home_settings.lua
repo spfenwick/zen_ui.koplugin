@@ -6,6 +6,8 @@ local PresetStore = require("config/preset_store")
 local Registry = require("modules/filebrowser/patches/home/components/registry")
 local library_font = require("modules/filebrowser/patches/library_font")
 local ReadingGoals = require("common/reading_goals")
+local icons = require("common/inline_icon_map")
+local IconItem = require("common/ui/icon_menu_item")
 
 local M = {}
 
@@ -1376,9 +1378,7 @@ function M.build(ctx)
         return items
     end
 
-    return {
-        text = _("Home"),
-        sub_item_table = {
+    local home_items = {
             {
                 text = _("Widgets") .. " \u{25B8}",
                 keep_menu_open = true,
@@ -1461,7 +1461,13 @@ function M.build(ctx)
                 },
             },
             ]]
-        },
+    }
+    IconItem.decorate(home_items[1], icons.settings_widgets)
+    IconItem.decorate(home_items[2], icons.settings_presets)
+
+    return {
+        text = _("Home"),
+        sub_item_table = home_items,
     }
 end
 

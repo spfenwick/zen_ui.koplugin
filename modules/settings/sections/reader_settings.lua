@@ -9,6 +9,8 @@ local dispatch_action = require("common/dispatch_action")
 local utils = require("modules/settings/zen_settings_utils")
 local constants = require("common/constants")
 local PresetStore = require("config/preset_store")
+local icons = require("common/inline_icon_map")
+local IconItem = require("common/ui/icon_menu_item")
 
 local M = {}
 
@@ -852,6 +854,11 @@ function M.build(ctx)
             return result
         end,
     })
+
+    IconItem.decorate(items[1], icons.settings_status)
+    IconItem.decorate(items[2], icons.settings_font)
+    IconItem.decorate(items[3], icons.settings_lookup)
+    IconItem.decorate(items[8], icons.settings_status)
 
     return items
 end

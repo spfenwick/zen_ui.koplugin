@@ -760,11 +760,11 @@ function M.build(ctx)
     return {
         text = _("Controls"),
         sub_item_table = {
-            {
+            IconItem.decorate({
                 text = _("Buttons") .. " \u{25B8}",
                 keep_menu_open = true,
                 callback = showButtonsArrange,
-            },
+            }, icons.settings_buttons),
             {
                 text = _("Show brightness slider"),
                 checked_func = function() return config.quick_settings.show_frontlight == true end,
@@ -789,7 +789,7 @@ function M.build(ctx)
                     save_and_apply_quick_settings()
                 end,
             },
-            {
+            IconItem.decorate({
                 text = _("Reset to defaults"),
                 separator = true,
                 keep_menu_open = true,
@@ -804,7 +804,7 @@ function M.build(ctx)
                         end,
                     })
                 end,
-            },
+            }, icons.settings_reset),
         },
     }
 end

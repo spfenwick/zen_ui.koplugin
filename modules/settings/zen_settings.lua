@@ -70,7 +70,7 @@ function M.build(plugin)
     local extras_items      = extras_section.build(ctx)
     local general_items     = about_section.build(ctx)
 
-    table.insert(general_items, {
+    table.insert(general_items, IconItem.decorate({
         text = _("Quit KOReader"),
         callback = function()
             UIManager:show(require("ui/widget/confirmbox"):new{
@@ -81,7 +81,7 @@ function M.build(plugin)
                 end,
             })
         end,
-    })
+    }, icons.settings_quit))
 
     -- -------------------------------------------------------------------------
     -- Item ordering
@@ -154,7 +154,7 @@ function M.build(plugin)
         home_item,
         IconItem.decorate({ text = _("Library"), sub_item_table = filebrowser_items }, icons.settings_library),
         IconItem.decorate({ text = _("Reader"), sub_item_table = reader_items }, icons.settings_reader),
-        IconItem.decorate({ text = _("Extras"), sub_item_table = extras_items }, icons.fav_add),
+        IconItem.decorate({ text = _("Extras"), sub_item_table = extras_items }, icons.fav_remove),
         IconItem.decorate({
             text = _("About"),
             sub_item_table = general_items,

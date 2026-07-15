@@ -6,6 +6,8 @@ local _ = require("gettext")
 local UIManager = require("ui/uimanager")
 local paths = require("common/paths")
 local SharedState = require("common/shared_state")
+local icons = require("common/inline_icon_map")
+local IconItem = require("common/ui/icon_menu_item")
 
 local status_bar_section  = require("modules/settings/sections/library_settings/status_bar_settings")
 local settings_apply      = require("modules/settings/zen_settings_apply")
@@ -1357,6 +1359,15 @@ function M.build(ctx)
             plugin:saveConfig()
         end,
     })
+
+    IconItem.decorate(items[1], icons.settings_status)
+    IconItem.decorate(items[2], icons.settings_layout)
+    IconItem.decorate(items[3], icons.settings_font)
+    IconItem.decorate(items[4], icons.settings_folders)
+    IconItem.decorate(items[5], icons.settings_covers)
+    IconItem.decorate(items[6], icons.settings_scroll)
+    IconItem.decorate(items[7], icons.settings_background)
+    IconItem.decorate(items[8], icons.settings_home_folder)
 
     return items
 end

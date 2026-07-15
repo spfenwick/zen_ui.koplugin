@@ -8,6 +8,8 @@ local utils = require("modules/settings/zen_settings_utils")
 local bugreporter = require("modules/settings/zen_bugreporter")
 local updater = require("modules/settings/zen_updater")
 local advanced_section = require("modules/settings/sections/advanced_settings")
+local icons = require("common/inline_icon_map")
+local IconItem = require("common/ui/icon_menu_item")
 
 local M = {}
 
@@ -96,6 +98,13 @@ function M.build(ctx)
             updater.build_auto_check_item(),
         },
     })
+
+    IconItem.decorate(items[1], icons.settings_about)
+    IconItem.decorate(items[2], icons.settings_device)
+    IconItem.decorate(items[3], icons.settings_setup)
+    IconItem.decorate(items[4], icons.settings_bug)
+    IconItem.decorate(items[5], icons.settings_advanced)
+    IconItem.decorate(items[6], icons.settings_updates)
 
     return items
 end

@@ -706,6 +706,7 @@ function M.build(ctx)
             end,
         },
     }
+    IconItem.decorate(root_items[2], icons.settings_buttons)
 
     return {
         text = _("Launcher"),
