@@ -75,6 +75,18 @@ run_lua() {
       fi
       exit "$lua_status"
     fi
+    python3 - "$ARTIFACTS/lua/junit.xml" <<'PY'
+import sys
+import xml.etree.ElementTree as ET
+
+results = ET.parse(sys.argv[1]).getroot().attrib
+tests = int(results.get("tests", 0))
+failures = int(results.get("failures", 0))
+errors = int(results.get("errors", 0))
+skipped = int(results.get("skip", results.get("skipped", 0)))
+passed = tests - failures - errors - skipped
+print(f"Lua/Busted: {passed} passed, {skipped} skipped, {failures} failed, {errors} errors")
+PY
     if [[ "$lua_status" -ne 0 ]]; then
       cat "$ARTIFACTS/lua/junit.xml" >&2
       exit "$lua_status"
