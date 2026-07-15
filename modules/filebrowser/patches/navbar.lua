@@ -1156,6 +1156,14 @@ local function apply_navbar()
                             local launch = PluginScan.resolve(plugin.key, plugin.method)
                             if launch then pcall(launch) end
                         end
+                    elseif ct.type == "quick_setting" then
+                        local quick_setting_id = ct.quick_setting_id
+                        tab_callbacks[ct.id] = function()
+                            local controls = rawget(_G, "__ZEN_UI_QUICK_SETTINGS")
+                            if controls and controls.activate then
+                                controls.activate(quick_setting_id)
+                            end
+                        end
                     elseif ok_disp_ct and ct.action and next(ct.action) then
                         local action = ct.action
                         tab_callbacks[ct.id] = function() Dispatcher_ct:execute(action) end

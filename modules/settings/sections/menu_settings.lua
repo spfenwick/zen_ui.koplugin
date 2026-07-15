@@ -10,8 +10,14 @@ local defaults = require("config/defaults")
 local icons = require("common/inline_icon_map")
 local IconItem = require("common/ui/icon_menu_item")
 local PluginScan = require("modules/menu/app_launcher/plugin_scan")
+local icon_utils = require("common/utils")
 
 local M = {}
+
+local function suggest_icon(label, strip_zen_prefix)
+    local ok_root, root = pcall(require, "common/plugin_root")
+    return icon_utils.suggestIcon(ok_root and root or nil, label, "lightning", strip_zen_prefix)
+end
 
 function M.build(ctx)
     local config = ctx.config
@@ -300,7 +306,7 @@ function M.build(ctx)
             type   = "action",
             label  = default_label,
             label_auto = true,
-            icon   = "zen_ui",
+            icon   = "lightning",
             action = {},
         }
         local committed = false
@@ -392,7 +398,7 @@ function M.build(ctx)
                 type         = "plugin",
                 label        = plugin.title,
                 plugin_title = plugin.title,
-                icon         = "lightning",
+                icon         = suggest_icon(plugin.title),
                 plugin       = { key = plugin.key, method = plugin.method },
             }
             table.insert(cbs, new_cb)
@@ -515,7 +521,6 @@ function M.build(ctx)
     local CUSTOM_BUTTON_ICONS
     local function getCustomButtonIcons()
         if CUSTOM_BUTTON_ICONS then return CUSTOM_BUTTON_ICONS end
-        local icon_utils = require("common/utils")
         local ok_root, root = pcall(require, "common/plugin_root")
         local excluded = { zen_ui_light = true, zen_ui_update = true }
         CUSTOM_BUTTON_ICONS = icon_utils.getIconPickerList(ok_root and root or nil, excluded)
@@ -554,6 +559,9 @@ function M.build(ctx)
                 label = nil,
             })
             cb.label_auto = true
+        end
+        if cb.icon == "lightning" then
+            cb.icon = suggest_icon(cb.label, true)
         end
     end
 
