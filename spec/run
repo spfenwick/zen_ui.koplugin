@@ -70,7 +70,10 @@ run_lua() {
       --pattern="_spec" "$ROOT/spec/lua" || lua_status=$?
     if [[ ! -f "$ARTIFACTS/lua/junit.xml" ]]; then
       echo "Lua test runner exited without a JUnit report" >&2
-      exit "$([[ "$lua_status" -eq 0 ]] && echo 1 || echo "$lua_status")"
+      if [[ "$lua_status" -eq 0 ]]; then
+        exit 1
+      fi
+      exit "$lua_status"
     fi
     if [[ "$lua_status" -ne 0 ]]; then
       cat "$ARTIFACTS/lua/junit.xml" >&2
