@@ -184,9 +184,14 @@ return {
         "Improved logging",
         "Bug fixes"
     },
+    ["2.4.3"] = {
+        "Update quotes"
+    },
+    ["2.4.4"] = {
+        "Fix time to book finished incorrect with stable pages"
+    },
     ["2.5.0"] = {
         "Add testing framework",
         "Updated ZenUpdater"
     }
-
 }
