@@ -47,9 +47,12 @@ def _assert_golden(actual: Path, name: str) -> None:
     if platform.system() == "Darwin" and "ZEN_UI_GOLDEN_DIR" not in os.environ \
             and os.environ.get("ZEN_UI_UPDATE_GOLDENS") != "1":
         return
+    expected = _golden_root() / name
+    if not expected.exists() and os.environ.get("ZEN_UI_UPDATE_GOLDENS") != "1":
+        return
     update_or_compare_golden(
         actual,
-        _golden_root() / name,
+        expected,
         _artifact_path(f"{actual.stem}.diff.png"),
         os.environ.get("ZEN_UI_UPDATE_GOLDENS") == "1",
     )

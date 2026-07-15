@@ -106,13 +106,22 @@ def _seed_bookinfo(ko_home: Path, book: Path) -> None:
         )
 
 
-def _wait_for_home(driver: ZenDriver) -> dict[str, object]:
+def _wait_for_home(driver: ZenDriver, expected_book: Path | None = None) -> dict[str, object]:
     deadline = time.monotonic() + 30
     latest: dict[str, object] = {}
     while time.monotonic() < deadline:
         response = driver.command("home_state")
         latest = response.get("home", {})
-        if latest.get("active") and len(latest.get("widget_ids", [])) >= 4:
+        book_paths = latest.get("book_paths", [])
+        has_expected_book = expected_book is None or any(
+            Path(str(path)).resolve() == expected_book.resolve()
+            for path in book_paths
+        )
+        if (
+            latest.get("active")
+            and len(latest.get("widget_ids", [])) >= 4
+            and has_expected_book
+        ):
             return latest
         time.sleep(0.25)
     raise AssertionError(f"Home widgets did not become ready: {latest}")
@@ -136,7 +145,7 @@ def test_home_renders_all_core_widgets_with_and_without_history(with_history: bo
             wait_for_socket(socket_path)
             driver = ZenDriver(socket_path)
             assert driver.command("activate_navbar_tab", id="home")["ok"] is True
-            home = _wait_for_home(driver)
+            home = _wait_for_home(driver, fixture["epub"])
             assert home["active_tab_label"] == "Home"
             assert set(home["widget_ids"]) >= {
                 "datetime", "featured_recent", "strip_recent", "quotes",

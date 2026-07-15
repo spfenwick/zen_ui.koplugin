@@ -145,4 +145,8 @@ def test_book_opens_in_reader_and_home_returns_to_library() -> None:
             assert after.get("active_tab_label") == before.get("active_tab_label")
         finally:
             process.send_signal(signal.SIGTERM)
-            process.wait(timeout=15)
+            try:
+                process.wait(timeout=15)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
