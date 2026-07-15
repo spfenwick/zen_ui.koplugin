@@ -4,7 +4,8 @@ local function apply_quick_settings()
     -- Reading Streak (advokatb/readingstreak.koplugin), OPDS Catalog (built-in KOReader).
 
     local Blitbuffer = require("ffi/blitbuffer")
-    local T = require("ffi/util").template
+    local ffiUtil = require("ffi/util")
+    local T = ffiUtil.template
     local CenterContainer = require("ui/widget/container/centercontainer")
     local Device = require("device")
     local Event = require("ui/event")
@@ -959,11 +960,14 @@ local function apply_quick_settings()
         local items = {}
         for _i, id in ipairs(config.button_order or {}) do
             local def = button_defs[id]
-            if def then
+            if def and (not def.visible_func or def.visible_func()) then
                 local label = def.label
                 items[#items + 1] = { id = id, text = label, label = label, icon = def.icon }
             end
         end
+        table.sort(items, function(a, b)
+            return ffiUtil.strcoll(a.label or "", b.label or "")
+        end)
         return items
     end
 
