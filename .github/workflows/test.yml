@@ -43,12 +43,17 @@ jobs:
           python -m pip install fonttools
           luarocks --tree="$GITHUB_WORKSPACE/.luarocks" install luacheck
 
+      - name: Restore stable KOReader build
+        id: stable-koreader-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: spec/.cache/koreader
+          key: koreader-stable-${{ runner.os }}-${{ hashFiles('spec/koreader-lock.json') }}
+
       - uses: actions/cache@v4
         with:
-          path: |
-            spec/.cache/koreader
-            spec/.venv
-          key: koreader-stable-${{ runner.os }}-${{ hashFiles('spec/koreader-lock.json', 'spec/python/requirements.txt') }}
+          path: spec/.venv
+          key: zen-ui-python-${{ runner.os }}-${{ hashFiles('spec/python/requirements.txt') }}
 
       - name: Provision pinned stable KOReader
         run: |
@@ -70,6 +75,13 @@ jobs:
           name: stable-test-artifacts
           path: spec/.artifacts
           if-no-files-found: ignore
+
+      - name: Save stable KOReader build
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: spec/.cache/koreader
+          key: ${{ steps.stable-koreader-cache.outputs.cache-primary-key }}
 
   master:
     name: Pinned master smoke
@@ -94,10 +106,12 @@ jobs:
             libfribidi-dev libpng-dev libjpeg-dev libsqlite3-dev
           luarocks --tree="$GITHUB_WORKSPACE/.luarocks" install luacheck
 
-      - uses: actions/cache@v4
+      - name: Restore master KOReader build
+        id: master-koreader-cache
+        uses: actions/cache/restore@v4
         with:
           path: spec/.cache/koreader
-          key: koreader-master-${{ runner.os }}-${{ hashFiles('spec/koreader-lock.json', 'spec/python/requirements.txt') }}
+          key: koreader-master-${{ runner.os }}-${{ hashFiles('spec/koreader-lock.json') }}
 
       - name: Provision pinned master KOReader
         run: |
@@ -114,3 +128,10 @@ jobs:
           name: master-test-artifacts
           path: spec/.artifacts
           if-no-files-found: ignore
+
+      - name: Save master KOReader build
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: spec/.cache/koreader
+          key: ${{ steps.master-koreader-cache.outputs.cache-primary-key }}

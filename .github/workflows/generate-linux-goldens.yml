@@ -25,12 +25,17 @@ jobs:
           python -m pip install fonttools
           luarocks --tree="$GITHUB_WORKSPACE/.luarocks" install luacheck
 
+      - name: Restore stable KOReader build
+        id: stable-koreader-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: spec/.cache/koreader
+          key: koreader-stable-${{ runner.os }}-${{ hashFiles('spec/koreader-lock.json') }}
+
       - uses: actions/cache@v4
         with:
-          path: |
-            spec/.cache/koreader
-            spec/.venv
-          key: koreader-stable-${{ runner.os }}-${{ hashFiles('spec/koreader-lock.json', 'spec/python/requirements.txt') }}
+          path: spec/.venv
+          key: zen-ui-python-${{ runner.os }}-${{ hashFiles('spec/python/requirements.txt') }}
 
       - name: Provision pinned stable KOReader
         run: |
@@ -46,3 +51,10 @@ jobs:
           name: linux-goldens
           path: spec/goldens/v2026.03/linux-800x600
           if-no-files-found: error
+
+      - name: Save stable KOReader build
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: spec/.cache/koreader
+          key: ${{ steps.stable-koreader-cache.outputs.cache-primary-key }}
