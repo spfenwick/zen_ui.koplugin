@@ -154,7 +154,7 @@ function M.build(plugin)
         home_item,
         IconItem.decorate({ text = _("Library"), sub_item_table = filebrowser_items }, icons.settings_library),
         IconItem.decorate({ text = _("Reader"), sub_item_table = reader_items }, icons.settings_reader),
-        IconItem.decorate({ text = _("Extras"), sub_item_table = extras_items }, icons.fav_remove),
+        IconItem.decorate({ text = _("Extras"), sub_item_table = extras_items }, icons.fav_add),
         IconItem.decorate({
             text = _("About"),
             sub_item_table = general_items,
