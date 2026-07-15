@@ -253,9 +253,6 @@ local defaults = {
         night_m     = 0,
         night_value = 5,
     },
-    stats_page = {
-        rows = { "today", "this_month", "this_year", "all_time", "library" },
-    },
     group_view = {
         include_new_in_tbr = false,
         display_mode = {
