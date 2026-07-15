@@ -37,13 +37,13 @@ describe("updater repository redirects", function()
                 request.sink([[
                     [{
                         "url":"https://api.github.com/repos/AnthonyGress/zen-ui/releases/12345",
-                        "tag_name":"v2.5.0",
+                        "tag_name":"v999.0.0",
                         "prerelease":false,
                         "body":"Renamed repository release",
                         "published_at":"2026-07-12T00:00:00Z",
                         "assets":[{
                             "name":"zen_ui.koplugin.zip",
-                            "browser_download_url":"https://github.com/AnthonyGress/zen-ui/releases/download/v2.5.0/zen_ui.koplugin.zip",
+                            "browser_download_url":"https://github.com/AnthonyGress/zen-ui/releases/download/v999.0.0/zen_ui.koplugin.zip",
                             "digest":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                         }]
                     }]
@@ -71,7 +71,7 @@ describe("updater repository redirects", function()
             "https://api.github.com/repositories/1194031944/releases?per_page=100",
             requests[2]
         )
-        assert.are.equal("2.5.0", updater.latest_version())
+        assert.are.equal("999.0.0", updater.latest_version())
         assert.is_true(updater.has_update())
     end)
 end)
