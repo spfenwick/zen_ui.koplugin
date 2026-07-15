@@ -6,6 +6,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: ro\n"
 
+msgid " days"
+msgstr "zile"
+
 msgid "%1 (%2)"
 msgstr "%1 (%2)"
 
@@ -15,8 +18,20 @@ msgstr "%1 min rămase în capitol"
 msgid "%d%% Read"
 msgstr "%d%% citit"
 
+msgid "%s goal"
+msgstr "%s gol"
+
+msgid "%s goal (%s)"
+msgstr "%s gol (%s)"
+
 msgid "%s left"
 msgstr "%s rămase"
+
+msgid "%s pages goal"
+msgstr "Scopul paginilor %s"
+
+msgid "%s time goal (min)"
+msgstr "%s timp obiectiv (min)"
 
 msgid "(auto)"
 msgstr "(auto)"
@@ -111,6 +126,9 @@ msgstr "Adaugă butoane"
 msgid "Add catalog"
 msgstr "Adaugă catalog"
 
+msgid "Add control"
+msgstr "Adăugați control"
+
 msgid "Add custom buttons for other plugins or actions."
 msgstr "Adaugă butoane personalizate pentru alte pluginuri sau acțiuni."
 
@@ -142,6 +160,9 @@ msgid "All settings are in one unified tab. This icon with the dot indicates an 
 msgstr "Toate setările sunt într-o singură filă unificată. Această pictogramă cu punct indică faptul că este disponibilă o actualizare.\n\nInstalează actualizările Zen UI direct de pe dispozitiv."
 
 msgid "All Time"
+msgstr "Tot timpul"
+
+msgid "All time"
 msgstr "Tot timpul"
 
 msgid "Allow custom icons"
@@ -240,6 +261,15 @@ msgstr "Statistici baterie"
 msgid "Beginning / End"
 msgstr "Început / Sfârșit"
 
+msgid "Best day"
+msgstr "Cea mai bună zi"
+
+msgid "Best month"
+msgstr "Cea mai bună lună"
+
+msgid "Best week"
+msgstr "Cea mai bună săptămână"
+
 msgid "Beta"
 msgstr "Beta"
 
@@ -282,11 +312,14 @@ msgstr "Titlul cărții"
 msgid "Book: "
 msgstr "Carte: "
 
+msgid "Books"
+msgstr "Cărți"
+
 msgid "books"
 msgstr "cărți"
 
-msgid "Books"
-msgstr "Cărți"
+msgid "Books read"
+msgstr "Cărți citite"
 
 msgid "Books shown"
 msgstr "Cărți afișate"
@@ -387,11 +420,17 @@ msgstr "Alegeți un alt dosar"
 msgid "Choose a preset for your reading progress bar."
 msgstr "Alegeți o presetare pentru bara de progres de lectură."
 
+msgid "Choose control"
+msgstr "Alege controlul"
+
 msgid "Choose item"
 msgstr "Alege elementul"
 
 msgid "Choose plugin menu"
 msgstr "Alege meniul pluginului"
+
+msgid "Choose tab"
+msgstr "Alegeți fila"
 
 msgid "Choose which tabs appear in your navigation bar.\nYou can rearrange or adjust these anytime in Settings."
 msgstr "Alegeți ce file apar în bara de navigare.\nPuteți rearanja sau ajusta oricând în Setări."
@@ -450,6 +489,15 @@ msgstr "Meniu contextual"
 msgid "Continue"
 msgstr "Continuă"
 
+msgid "Control"
+msgstr "Controla"
+
+msgid "Control settings"
+msgstr "Setări de control"
+
+msgid "Control: %1"
+msgstr "Control: %1"
+
 msgid "Controls"
 msgstr "Comenzi"
 
@@ -491,6 +539,12 @@ msgstr "Cuvinte încrucișate"
 
 msgid "Current / total pages"
 msgstr "Pagini curente / totale"
+
+msgid "Current Book"
+msgstr "Cartea curentă"
+
+msgid "Current book"
+msgstr "Cartea curentă"
 
 msgid "Current home folder:"
 msgstr "Dosarul principal curent:"
@@ -534,11 +588,20 @@ msgstr "Personalizat: "
 msgid "Customizable top status bar and bottom progress bar."
 msgstr "Bară de stare superioară și bară de progres inferioară personalizabile."
 
+msgid "Customize widget"
+msgstr "Personalizați widgetul"
+
 msgid "Cut"
 msgstr "Taie"
 
 msgid "Cycle"
 msgstr "Ciclu"
+
+msgid "Daily"
+msgstr "Zilnic"
+
+msgid "Date"
+msgstr "Data"
 
 msgid "Day brightness"
 msgstr "Luminozitate zi"
@@ -551,6 +614,9 @@ msgstr "Oră luminozitate zi: "
 
 msgid "Day brightness: "
 msgstr "Luminozitate zi: "
+
+msgid "Day streak"
+msgstr "Urma zilei"
 
 msgid "Day warmth"
 msgstr "Căldură zi"
@@ -570,11 +636,11 @@ msgstr "Jurnal de depanare"
 msgid "Debug logging must be enabled to submit bug reports."
 msgstr "Jurnalizarea de depanare trebuie activată pentru a trimite rapoarte."
 
-msgid "default"
-msgstr "implicit"
-
 msgid "Default"
 msgstr "Implicit"
+
+msgid "default"
+msgstr "implicit"
 
 msgid "Default (black)"
 msgstr "Implicit (negru)"
@@ -599,6 +665,9 @@ msgstr "Șterge setarea predefinită?"
 
 msgid "Delete this button?"
 msgstr "Ștergi acest buton?"
+
+msgid "Delete this control?"
+msgstr "Ștergeți acest control?"
 
 msgid "Delete this folder and its buttons?"
 msgstr "Ștergi acest dosar și butoanele sale?"
@@ -665,6 +734,9 @@ msgstr "Afișaj"
 
 msgid "Display mode"
 msgstr "Mod afișare"
+
+msgid "Divider"
+msgstr "Divizor"
 
 msgid "Dividing lines"
 msgstr "Linii despărțitoare"
@@ -858,6 +930,12 @@ msgstr "Mergi"
 msgid "Go to page"
 msgstr "Mergi la pagina"
 
+msgid "Graph metric"
+msgstr "Valoare grafică"
+
+msgid "Graph range"
+msgstr "Gama grafică"
+
 msgid "Gray"
 msgstr "Gri"
 
@@ -966,11 +1044,11 @@ msgstr "Se instalează"
 msgid "Interactive"
 msgstr "Interactiv"
 
-msgid "Items per page"
-msgstr "Elemente pe pagină"
-
 msgid "items per page"
 msgstr "elemente pe pagină"
+
+msgid "Items per page"
+msgstr "Elemente pe pagină"
 
 msgid "Keep existing settings"
 msgstr "Păstrați setările existente"
@@ -1101,8 +1179,26 @@ msgstr "Maximum 9 butoane permise"
 msgid "Menu"
 msgstr "Meniu"
 
+msgid "Metric"
+msgstr "Metric"
+
+msgid "min"
+msgstr "min"
+
 msgid "Minute"
 msgstr "Minut"
+
+msgid "minutes"
+msgstr "minute"
+
+msgid "Minutes"
+msgstr "Minute"
+
+msgid "Monthly"
+msgstr "Lunar"
+
+msgid "Months"
+msgstr "Luni"
 
 msgid "Mosaic"
 msgstr "Mozaic"
@@ -1242,6 +1338,9 @@ msgstr "Fără conexiune la rețea. Conectați-vă la Wi-Fi și încercați din 
 msgid "No reader engine for this file or invalid file."
 msgstr "Niciun motor de citire pentru acest fișier sau fișier invalid."
 
+msgid "No reading data"
+msgstr "Fără date de citire"
+
 msgid "No table of contents available."
 msgstr "Nu este disponibil niciun cuprins."
 
@@ -1287,6 +1386,9 @@ msgstr "OPDS"
 msgid "Open folder"
 msgstr "Deschide dosar"
 
+msgid "Open menu to Launcher"
+msgstr "Deschideți meniul la Lansator"
+
 msgid "Open next file"
 msgstr "Deschide fișierul următor"
 
@@ -1304,6 +1406,9 @@ msgstr "Se deschide"
 
 msgid "Order"
 msgstr "Ordine"
+
+msgid "Outline"
+msgstr "Contur"
 
 msgid "Outlined boxes"
 msgstr "Casete conturate"
@@ -1326,6 +1431,9 @@ msgstr "Flux de pagini"
 msgid "Page x / y"
 msgstr "Pagina x / y"
 
+msgid "Pages"
+msgstr "Pagini"
+
 msgid "pages"
 msgstr "pag."
 
@@ -1334,6 +1442,15 @@ msgstr "Pagini + Timp capitol + %"
 
 msgid "Pages and %"
 msgstr "Pagini și %"
+
+msgid "Pages read"
+msgstr "Pagini citite"
+
+msgid "Pages today"
+msgstr "Pagini de azi"
+
+msgid "Pages/day"
+msgstr "Pagini/zi"
 
 msgid "Partial pages refresh"
 msgstr "Reîmprospătare pagini parțiale"
@@ -1346,6 +1463,9 @@ msgstr "Procent"
 
 msgid "Personal Records"
 msgstr "Recorduri personale"
+
+msgid "Personal records"
+msgstr "Înregistrările personale"
 
 msgid "Please delete the Project: Title plugin from your plugins folder and restart KOReader."
 msgstr "Ștergeți pluginul Project: Title din folderul de pluginuri și reporniți KOReader."
@@ -1428,11 +1548,20 @@ msgstr "Pluginul Rakuyomi nu este instalat."
 msgid "RAM usage"
 msgstr "Utilizare RAM"
 
+msgid "Range"
+msgstr "Gamă"
+
 msgid "Read now"
 msgstr "Citește acum"
 
 msgid "Read status"
 msgstr "Stare citire"
+
+msgid "Read time"
+msgstr "Ora de citire"
+
+msgid "Read today"
+msgstr "Citiți astăzi"
 
 msgid "Reader"
 msgstr "Cititor"
@@ -1443,11 +1572,23 @@ msgstr "Progres de lectură"
 msgid "Reading"
 msgstr "Se citește"
 
+msgid "Reading calendar"
+msgstr "Calendar de lectură"
+
+msgid "Reading Calendar"
+msgstr "Calendar de lectură"
+
 msgid "Reading goals"
 msgstr "Obiective de lectură"
 
 msgid "Reading stats widget"
 msgstr "Widget statistici de lectură"
+
+msgid "Reading Trend"
+msgstr "Tendință de lectură"
+
+msgid "Reading trend"
+msgstr "Tendință de lectură"
 
 msgid "Rebooting"
 msgstr "Se repornește"
@@ -1635,6 +1776,9 @@ msgstr "serii"
 msgid "Series number"
 msgstr "Număr din serie"
 
+msgid "Session pages"
+msgstr "Pagini de sesiune"
+
 msgid "Set"
 msgstr "Setează"
 
@@ -1706,6 +1850,9 @@ msgstr "Afișează insigna de favorit"
 
 msgid "Show folder name"
 msgstr "Afișează numele dosarului"
+
+msgid "Show goal"
+msgstr "Arată scopul"
 
 msgid "Show hidden files"
 msgstr "Afișează fișierele ascunse"
@@ -1839,6 +1986,9 @@ msgstr "Slot statistică "
 msgid "Statistics"
 msgstr "Statistici"
 
+msgid "Statistics calendar is unavailable"
+msgstr "Calendarul cu statistici nu este disponibil"
+
 msgid "Stats"
 msgstr "Statistici"
 
@@ -1890,6 +2040,9 @@ msgstr "Sincronizare"
 msgid "Sync all catalogs"
 msgstr "Sincronizează toate cataloagele"
 
+msgid "Tab"
+msgstr "Tab"
+
 msgid "Tabs"
 msgstr "File"
 
@@ -1917,14 +2070,23 @@ msgstr "Locul pentru toate cărțile dvs. %1"
 msgid "This change requires a restart to take effect."
 msgstr "Această modificare necesită o repornire pentru a intra în vigoare."
 
+msgid "This month"
+msgstr "Luna aceasta"
+
 msgid "This Month"
 msgstr "Luna aceasta"
 
 msgid "This option is disabled when a home folder is the device storage root. Set home folders to narrower books folders first."
 msgstr "Această opțiune este dezactivată când un dosar principal este rădăcina spațiului de stocare al dispozitivului. Setați mai întâi dosare de cărți mai restrânse ca dosare principale."
 
+msgid "This week"
+msgstr "În această săptămână"
+
 msgid "This Week"
 msgstr "Săptămâna aceasta"
+
+msgid "This year"
+msgstr "Anul acesta"
 
 msgid "This Year"
 msgstr "Anul acesta"
@@ -1937,6 +2099,15 @@ msgstr "Format oră"
 
 msgid "Time to book end"
 msgstr "Timp până la finalul cărții"
+
+msgid "Time/book"
+msgstr "Timp/carte"
+
+msgid "Time/day"
+msgstr "Timp/zi"
+
+msgid "Time/page"
+msgstr "Timp/pagina"
 
 msgid "Timer: %1 s"
 msgstr "Temporizator: %1 s"
@@ -1968,8 +2139,17 @@ msgstr "Font bară de sus"
 msgid "Top status bar"
 msgstr "Bară de stare de sus"
 
+msgid "Total"
+msgstr "Total"
+
+msgid "Total books"
+msgstr "Total cărți"
+
 msgid "Total pages"
 msgstr "Pagini totale"
+
+msgid "Total time"
+msgstr "Timp total"
 
 msgid "Turn on Zen mode to strip KOReader down to its bare essentials.\n\nRemove visual clutter for a focused, distraction-free reading experience. Exit at anytime from Settings."
 msgstr "Activați modul Zen pentru a reduce KOReader la esențial.\n\nEliminați dezordinea vizuală pentru o experiență de lectură concentrată, fără distracții. Ieșiți oricând din Setări."
@@ -1989,11 +2169,11 @@ msgstr "Subliniere deasupra pictogramei"
 msgid "Uniform covers"
 msgstr "Coperte uniforme"
 
-msgid "Unknown"
-msgstr "Necunoscut"
-
 msgid "unknown"
 msgstr "necunoscut"
+
+msgid "Unknown"
+msgstr "Necunoscut"
 
 msgid "Unknown Author"
 msgstr "Autor necunoscut"
@@ -2118,6 +2298,9 @@ msgstr "Căldură"
 msgid "Warmth schedule"
 msgstr "Planificare căldură"
 
+msgid "Weekly"
+msgstr "Săptămânal"
+
 msgid "Welcome to Zen UI"
 msgstr "Bun venit în Zen UI"
 
@@ -2148,6 +2331,9 @@ msgstr "Wi-Fi"
 msgid "Widgets"
 msgstr "Widgeturi"
 
+msgid "Yearly"
+msgstr "Anual"
+
 msgid "You're All Set"
 msgstr "Ești gata"
 
@@ -2163,10 +2349,10 @@ msgstr "Zen"
 msgid "Zen highlight menu"
 msgstr "Meniu de evidențiere Zen"
 
-msgid "Zen Mode"
+msgid "Zen mode"
 msgstr "Mod Zen"
 
-msgid "Zen mode"
+msgid "Zen Mode"
 msgstr "Mod Zen"
 
 msgid "Zen OPDS"
@@ -2237,135 +2423,3 @@ msgstr "Zen UI: dosarul nu a fost găsit: "
 
 msgid "Zen UI: no folder set for this action."
 msgstr "Zen UI: niciun dosar setat pentru această acțiune."
-
-msgid " days"
-msgstr ""
-
-msgid "Best day"
-msgstr ""
-
-msgid "Best month"
-msgstr ""
-
-msgid "Best week"
-msgstr ""
-
-msgid "Books read"
-msgstr ""
-
-msgid "Current Book"
-msgstr ""
-
-msgid "Customize widget"
-msgstr ""
-
-msgid "Months"
-msgstr ""
-
-msgid "Day streak"
-msgstr ""
-
-msgid "Divider"
-msgstr ""
-
-msgid "Graph metric"
-msgstr ""
-
-msgid "Graph range"
-msgstr ""
-
-msgid "Metric"
-msgstr ""
-
-msgid "Minutes"
-msgstr ""
-
-msgid "No reading data"
-msgstr ""
-
-msgid "Outline"
-msgstr ""
-
-msgid "Pages"
-msgstr ""
-
-msgid "Pages read"
-msgstr ""
-
-msgid "Pages today"
-msgstr ""
-
-msgid "Pages/day"
-msgstr ""
-
-msgid "Range"
-msgstr ""
-
-msgid "Read time"
-msgstr ""
-
-msgid "Read today"
-msgstr ""
-
-msgid "Reading Calendar"
-msgstr ""
-
-msgid "Reading Trend"
-msgstr ""
-
-msgid "Session pages"
-msgstr ""
-
-msgid "Statistics calendar is unavailable"
-msgstr ""
-
-msgid "Time/book"
-msgstr ""
-
-msgid "Time/day"
-msgstr ""
-
-msgid "Time/page"
-msgstr ""
-
-msgid "Total"
-msgstr ""
-
-msgid "Total books"
-msgstr ""
-
-msgid "Total time"
-msgstr ""
-
-msgid "min"
-msgstr ""
-
-msgid "minutes"
-msgstr ""
-
-msgid "Daily"
-msgstr ""
-
-msgid "Monthly"
-msgstr ""
-
-msgid "Show goal"
-msgstr ""
-
-msgid "Weekly"
-msgstr ""
-
-msgid "Yearly"
-msgstr ""
-
-msgid "%s goal"
-msgstr ""
-
-msgid "%s pages goal"
-msgstr ""
-
-msgid "%s time goal (min)"
-msgstr ""
-
-msgid "%s goal (%s)"
-msgstr ""

@@ -6,6 +6,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: zh_TW\n"
 
+msgid " days"
+msgstr "天"
+
 msgid "%1 (%2)"
 msgstr "%1 (%2)"
 
@@ -15,8 +18,20 @@ msgstr "本章剩餘 %1 分鐘"
 msgid "%d%% Read"
 msgstr "已讀 %d%%"
 
+msgid "%s goal"
+msgstr "%s目標"
+
+msgid "%s goal (%s)"
+msgstr "%s目標（%s）"
+
 msgid "%s left"
 msgstr "剩餘 %s"
+
+msgid "%s pages goal"
+msgstr "%s 頁數目標"
+
+msgid "%s time goal (min)"
+msgstr "%s 時間目標（分鐘）"
 
 msgid "(auto)"
 msgstr "（自動）"
@@ -111,6 +126,9 @@ msgstr "新增按鈕"
 msgid "Add catalog"
 msgstr "新增目錄"
 
+msgid "Add control"
+msgstr "新增控件"
+
 msgid "Add custom buttons for other plugins or actions."
 msgstr "為其他外掛程式或操作新增自訂按鈕。"
 
@@ -143,6 +161,9 @@ msgstr "所有設定都在一個統一分頁中。此帶點圖示表示有可用
 
 msgid "All Time"
 msgstr "歷史總計"
+
+msgid "All time"
+msgstr "所有時間"
 
 msgid "Allow custom icons"
 msgstr "允許自訂圖示"
@@ -240,6 +261,15 @@ msgstr "電池統計"
 msgid "Beginning / End"
 msgstr "開頭 / 末尾"
 
+msgid "Best day"
+msgstr "最好的一天"
+
+msgid "Best month"
+msgstr "最佳月份"
+
+msgid "Best week"
+msgstr "最好的一周"
+
 msgid "Beta"
 msgstr "Beta"
 
@@ -282,11 +312,14 @@ msgstr "書籍標題"
 msgid "Book: "
 msgstr "書籍： "
 
+msgid "Books"
+msgstr "書庫"
+
 msgid "books"
 msgstr "本書"
 
-msgid "Books"
-msgstr "書庫"
+msgid "Books read"
+msgstr "讀過的書"
 
 msgid "Books shown"
 msgstr "顯示書籍數"
@@ -387,11 +420,17 @@ msgstr "選擇其他資料夾"
 msgid "Choose a preset for your reading progress bar."
 msgstr "為您的閱讀進度條選擇預設。"
 
+msgid "Choose control"
+msgstr "選擇控制"
+
 msgid "Choose item"
 msgstr "選擇項目"
 
 msgid "Choose plugin menu"
 msgstr "選擇外掛程式選單"
+
+msgid "Choose tab"
+msgstr "選擇選項卡"
 
 msgid "Choose which tabs appear in your navigation bar.\nYou can rearrange or adjust these anytime in Settings."
 msgstr "選擇導航列顯示的標籤頁。\n您可以隨時在設定中重新排列或調整。"
@@ -450,6 +489,15 @@ msgstr "內容選單"
 msgid "Continue"
 msgstr "繼續"
 
+msgid "Control"
+msgstr "控制"
+
+msgid "Control settings"
+msgstr "控制設定"
+
+msgid "Control: %1"
+msgstr "控制：%1"
+
 msgid "Controls"
 msgstr "控制項"
 
@@ -491,6 +539,12 @@ msgstr "填字遊戲"
 
 msgid "Current / total pages"
 msgstr "目前 / 總頁數"
+
+msgid "Current Book"
+msgstr "目前書籍"
+
+msgid "Current book"
+msgstr "目前書籍"
 
 msgid "Current home folder:"
 msgstr "目前主資料夾："
@@ -534,11 +588,20 @@ msgstr "自訂: "
 msgid "Customizable top status bar and bottom progress bar."
 msgstr "可自訂頂部狀態列和底部進度列。"
 
+msgid "Customize widget"
+msgstr "自訂小工具"
+
 msgid "Cut"
 msgstr "剪下"
 
 msgid "Cycle"
 msgstr "循環"
+
+msgid "Daily"
+msgstr "日常的"
+
+msgid "Date"
+msgstr "日期"
 
 msgid "Day brightness"
 msgstr "白天亮度"
@@ -551,6 +614,9 @@ msgstr "白天亮度時間: "
 
 msgid "Day brightness: "
 msgstr "白天亮度: "
+
+msgid "Day streak"
+msgstr "連續日數"
 
 msgid "Day warmth"
 msgstr "白天色溫"
@@ -570,10 +636,10 @@ msgstr "除錯記錄"
 msgid "Debug logging must be enabled to submit bug reports."
 msgstr "送出問題報告前，必須啟用除錯記錄。"
 
-msgid "default"
+msgid "Default"
 msgstr "預設"
 
-msgid "Default"
+msgid "default"
 msgstr "預設"
 
 msgid "Default (black)"
@@ -599,6 +665,9 @@ msgstr "刪除預設？"
 
 msgid "Delete this button?"
 msgstr "刪除此按鈕？"
+
+msgid "Delete this control?"
+msgstr "刪除這個控制項？"
 
 msgid "Delete this folder and its buttons?"
 msgstr "刪除此資料夾及其按鈕？"
@@ -665,6 +734,9 @@ msgstr "顯示"
 
 msgid "Display mode"
 msgstr "顯示模式"
+
+msgid "Divider"
+msgstr "分音器"
 
 msgid "Dividing lines"
 msgstr "分隔線"
@@ -858,6 +930,12 @@ msgstr "前往"
 msgid "Go to page"
 msgstr "前往頁面"
 
+msgid "Graph metric"
+msgstr "圖表指標"
+
+msgid "Graph range"
+msgstr "圖表範圍"
+
 msgid "Gray"
 msgstr "灰色"
 
@@ -966,10 +1044,10 @@ msgstr "正在安裝"
 msgid "Interactive"
 msgstr "互動式"
 
-msgid "Items per page"
+msgid "items per page"
 msgstr "每頁項目數"
 
-msgid "items per page"
+msgid "Items per page"
 msgstr "每頁項目數"
 
 msgid "Keep existing settings"
@@ -1101,8 +1179,26 @@ msgstr "最多允許 9 個按鈕"
 msgid "Menu"
 msgstr "選單"
 
+msgid "Metric"
+msgstr "公制"
+
+msgid "min"
+msgstr "分分鐘"
+
 msgid "Minute"
 msgstr "分"
+
+msgid "minutes"
+msgstr "分分鐘"
+
+msgid "Minutes"
+msgstr "分分鐘"
+
+msgid "Monthly"
+msgstr "每月"
+
+msgid "Months"
+msgstr "幾個月"
 
 msgid "Mosaic"
 msgstr "網格"
@@ -1242,6 +1338,9 @@ msgstr "無網路連線。請連接 Wi-Fi 後再試一次。"
 msgid "No reader engine for this file or invalid file."
 msgstr "此檔案沒有可用的閱讀引擎或檔案無效。"
 
+msgid "No reading data"
+msgstr "無讀取數據"
+
 msgid "No table of contents available."
 msgstr "沒有可用的目錄。"
 
@@ -1287,6 +1386,9 @@ msgstr "OPDS"
 msgid "Open folder"
 msgstr "開啟資料夾"
 
+msgid "Open menu to Launcher"
+msgstr "開啟啟動器選單"
+
 msgid "Open next file"
 msgstr "開啟下一個檔案"
 
@@ -1304,6 +1406,9 @@ msgstr "正在開啟"
 
 msgid "Order"
 msgstr "順序"
+
+msgid "Outline"
+msgstr "大綱"
 
 msgid "Outlined boxes"
 msgstr "外框方塊"
@@ -1326,6 +1431,9 @@ msgstr "頁面串流"
 msgid "Page x / y"
 msgstr "第 x / y 頁"
 
+msgid "Pages"
+msgstr "頁數"
+
 msgid "pages"
 msgstr "頁"
 
@@ -1334,6 +1442,15 @@ msgstr "頁數 + 章節時間 + %"
 
 msgid "Pages and %"
 msgstr "頁數和 %"
+
+msgid "Pages read"
+msgstr "已讀頁數"
+
+msgid "Pages today"
+msgstr "今天的頁面"
+
+msgid "Pages/day"
+msgstr "頁數/天"
 
 msgid "Partial pages refresh"
 msgstr "局部頁面重新整理"
@@ -1346,6 +1463,9 @@ msgstr "百分比"
 
 msgid "Personal Records"
 msgstr "個人紀錄"
+
+msgid "Personal records"
+msgstr "個人記錄"
 
 msgid "Please delete the Project: Title plugin from your plugins folder and restart KOReader."
 msgstr "請從外掛程式資料夾中刪除 Project: Title 外掛程式並重新啟動 KOReader。"
@@ -1428,11 +1548,20 @@ msgstr "Rakuyomi 外掛未安裝。"
 msgid "RAM usage"
 msgstr "記憶體使用量"
 
+msgid "Range"
+msgstr "範圍"
+
 msgid "Read now"
 msgstr "立即閱讀"
 
 msgid "Read status"
 msgstr "閱讀狀態"
+
+msgid "Read time"
+msgstr "閱讀時間"
+
+msgid "Read today"
+msgstr "今天閱讀"
 
 msgid "Reader"
 msgstr "閱讀器"
@@ -1443,11 +1572,23 @@ msgstr "閱讀進度"
 msgid "Reading"
 msgstr "閱讀中"
 
+msgid "Reading calendar"
+msgstr "讀日曆"
+
+msgid "Reading Calendar"
+msgstr "閱讀日曆"
+
 msgid "Reading goals"
 msgstr "閱讀目標"
 
 msgid "Reading stats widget"
 msgstr "閱讀統計小工具"
+
+msgid "Reading Trend"
+msgstr "閱讀趨勢"
+
+msgid "Reading trend"
+msgstr "閱讀趨勢"
 
 msgid "Rebooting"
 msgstr "正在重新啟動"
@@ -1635,6 +1776,9 @@ msgstr "個系列"
 msgid "Series number"
 msgstr "系列編號"
 
+msgid "Session pages"
+msgstr "會話頁面"
+
 msgid "Set"
 msgstr "設定"
 
@@ -1706,6 +1850,9 @@ msgstr "顯示收藏徽章"
 
 msgid "Show folder name"
 msgstr "顯示資料夾名稱"
+
+msgid "Show goal"
+msgstr "顯示目標"
 
 msgid "Show hidden files"
 msgstr "顯示隱藏檔案"
@@ -1839,6 +1986,9 @@ msgstr "統計欄位 "
 msgid "Statistics"
 msgstr "統計"
 
+msgid "Statistics calendar is unavailable"
+msgstr "統計日曆不可用"
+
 msgid "Stats"
 msgstr "統計"
 
@@ -1890,6 +2040,9 @@ msgstr "同步"
 msgid "Sync all catalogs"
 msgstr "同步所有目錄"
 
+msgid "Tab"
+msgstr "選項卡"
+
 msgid "Tabs"
 msgstr "標籤"
 
@@ -1917,14 +2070,23 @@ msgstr "您所有書籍的存放位置 %1"
 msgid "This change requires a restart to take effect."
 msgstr "此更改需要重新啟動才能生效。"
 
+msgid "This month"
+msgstr "本月"
+
 msgid "This Month"
 msgstr "本月"
 
 msgid "This option is disabled when a home folder is the device storage root. Set home folders to narrower books folders first."
 msgstr "當主資料夾是裝置儲存空間的根目錄時，此選項會停用。請先將範圍較小的書籍資料夾設為主資料夾。"
 
+msgid "This week"
+msgstr "本星期"
+
 msgid "This Week"
 msgstr "本週"
+
+msgid "This year"
+msgstr "今年"
 
 msgid "This Year"
 msgstr "今年"
@@ -1937,6 +2099,15 @@ msgstr "時間格式"
 
 msgid "Time to book end"
 msgstr "到讀完本書的時間"
+
+msgid "Time/book"
+msgstr "時間/書籍"
+
+msgid "Time/day"
+msgstr "時間/天"
+
+msgid "Time/page"
+msgstr "時間/頁數"
 
 msgid "Timer: %1 s"
 msgstr "計時器：%1 s"
@@ -1968,8 +2139,17 @@ msgstr "頂部列字型"
 msgid "Top status bar"
 msgstr "頂部狀態列"
 
+msgid "Total"
+msgstr "全部的"
+
+msgid "Total books"
+msgstr "書籍總數"
+
 msgid "Total pages"
 msgstr "總頁數"
+
+msgid "Total time"
+msgstr "總時間"
 
 msgid "Turn on Zen mode to strip KOReader down to its bare essentials.\n\nRemove visual clutter for a focused, distraction-free reading experience. Exit at anytime from Settings."
 msgstr "開啟禪模式，將 KOReader 精簡至最基本功能。\n\n消除視覺干擾，享受專注無打擾的閱讀體驗。隨時可從設定退出。"
@@ -1989,10 +2169,10 @@ msgstr "圖示上方底線"
 msgid "Uniform covers"
 msgstr "統一封面"
 
-msgid "Unknown"
+msgid "unknown"
 msgstr "未知"
 
-msgid "unknown"
+msgid "Unknown"
 msgstr "未知"
 
 msgid "Unknown Author"
@@ -2118,6 +2298,9 @@ msgstr "色溫"
 msgid "Warmth schedule"
 msgstr "色溫排程"
 
+msgid "Weekly"
+msgstr "每週"
+
 msgid "Welcome to Zen UI"
 msgstr "歡迎使用 禪 UI"
 
@@ -2148,6 +2331,9 @@ msgstr "Wi-Fi"
 msgid "Widgets"
 msgstr "小工具"
 
+msgid "Yearly"
+msgstr "每年"
+
 msgid "You're All Set"
 msgstr "一切就緒"
 
@@ -2163,11 +2349,11 @@ msgstr "禪"
 msgid "Zen highlight menu"
 msgstr "禪 醒目標示選單"
 
-msgid "Zen Mode"
-msgstr "禪模式"
-
 msgid "Zen mode"
 msgstr "禪 模式"
+
+msgid "Zen Mode"
+msgstr "禪模式"
 
 msgid "Zen OPDS"
 msgstr "禪 OPDS"
@@ -2237,135 +2423,3 @@ msgstr "Zen UI: 找不到資料夾: "
 
 msgid "Zen UI: no folder set for this action."
 msgstr "Zen UI: 未為此操作設定資料夾。"
-
-msgid " days"
-msgstr ""
-
-msgid "Best day"
-msgstr ""
-
-msgid "Best month"
-msgstr ""
-
-msgid "Best week"
-msgstr ""
-
-msgid "Books read"
-msgstr ""
-
-msgid "Current Book"
-msgstr ""
-
-msgid "Customize widget"
-msgstr ""
-
-msgid "Months"
-msgstr ""
-
-msgid "Day streak"
-msgstr ""
-
-msgid "Divider"
-msgstr ""
-
-msgid "Graph metric"
-msgstr ""
-
-msgid "Graph range"
-msgstr ""
-
-msgid "Metric"
-msgstr ""
-
-msgid "Minutes"
-msgstr ""
-
-msgid "No reading data"
-msgstr ""
-
-msgid "Outline"
-msgstr ""
-
-msgid "Pages"
-msgstr ""
-
-msgid "Pages read"
-msgstr ""
-
-msgid "Pages today"
-msgstr ""
-
-msgid "Pages/day"
-msgstr ""
-
-msgid "Range"
-msgstr ""
-
-msgid "Read time"
-msgstr ""
-
-msgid "Read today"
-msgstr ""
-
-msgid "Reading Calendar"
-msgstr ""
-
-msgid "Reading Trend"
-msgstr ""
-
-msgid "Session pages"
-msgstr ""
-
-msgid "Statistics calendar is unavailable"
-msgstr ""
-
-msgid "Time/book"
-msgstr ""
-
-msgid "Time/day"
-msgstr ""
-
-msgid "Time/page"
-msgstr ""
-
-msgid "Total"
-msgstr ""
-
-msgid "Total books"
-msgstr ""
-
-msgid "Total time"
-msgstr ""
-
-msgid "min"
-msgstr ""
-
-msgid "minutes"
-msgstr ""
-
-msgid "Daily"
-msgstr ""
-
-msgid "Monthly"
-msgstr ""
-
-msgid "Show goal"
-msgstr ""
-
-msgid "Weekly"
-msgstr ""
-
-msgid "Yearly"
-msgstr ""
-
-msgid "%s goal"
-msgstr ""
-
-msgid "%s pages goal"
-msgstr ""
-
-msgid "%s time goal (min)"
-msgstr ""
-
-msgid "%s goal (%s)"
-msgstr ""

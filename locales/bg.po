@@ -15,6 +15,9 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 3.9\n"
 
+msgid " days"
+msgstr "дни"
+
 msgid "%1 (%2)"
 msgstr "%1 (%2)"
 
@@ -24,8 +27,20 @@ msgstr "%1 мин. до края на главата"
 msgid "%d%% Read"
 msgstr "%d%% Прочетено"
 
+msgid "%s goal"
+msgstr "%s гол"
+
+msgid "%s goal (%s)"
+msgstr "%s гол (%s)"
+
 msgid "%s left"
 msgstr "остават %s"
+
+msgid "%s pages goal"
+msgstr "%s стр. цел"
+
+msgid "%s time goal (min)"
+msgstr "%s целево време (мин.)"
 
 msgid "(auto)"
 msgstr "(авто)"
@@ -120,6 +135,9 @@ msgstr "Добавяне на бутони"
 msgid "Add catalog"
 msgstr "Добавяне на каталог"
 
+msgid "Add control"
+msgstr "Добавете контрол"
+
 msgid "Add custom buttons for other plugins or actions."
 msgstr "Добавете персонализирани бутони за други плъгини или действия."
 
@@ -152,6 +170,9 @@ msgstr "Всички настройки са в един обединен раз
 
 msgid "All Time"
 msgstr "За всички времена"
+
+msgid "All time"
+msgstr "През цялото време"
 
 msgid "Allow custom icons"
 msgstr "Разрешаване на потребителски икони"
@@ -249,6 +270,15 @@ msgstr "Статистика на батерията"
 msgid "Beginning / End"
 msgstr "Начало / Край"
 
+msgid "Best day"
+msgstr "Най-добър ден"
+
+msgid "Best month"
+msgstr "Най-добър месец"
+
+msgid "Best week"
+msgstr "Най-добрата седмица"
+
 msgid "Beta"
 msgstr "Бета"
 
@@ -291,11 +321,14 @@ msgstr "Заглавие на книга"
 msgid "Book: "
 msgstr "Книга: "
 
+msgid "Books"
+msgstr "Книги"
+
 msgid "books"
 msgstr "книги"
 
-msgid "Books"
-msgstr "Книги"
+msgid "Books read"
+msgstr "Прочетени книги"
 
 msgid "Books shown"
 msgstr "Показани книги"
@@ -396,11 +429,17 @@ msgstr "Избор на друга папка"
 msgid "Choose a preset for your reading progress bar."
 msgstr "Изберете шаблон за лентата за прогрес в четенето."
 
+msgid "Choose control"
+msgstr "Изберете контрол"
+
 msgid "Choose item"
 msgstr "Избор на елемент"
 
 msgid "Choose plugin menu"
 msgstr "Избор на меню на плъгин"
+
+msgid "Choose tab"
+msgstr "Изберете раздел"
 
 msgid "Choose which tabs appear in your navigation bar.\nYou can rearrange or adjust these anytime in Settings."
 msgstr "Изберете кои раздели да се показват в лентата за навигация.\nМожете да ги пренаредите или коригирате по всяко време в Настройки."
@@ -459,6 +498,15 @@ msgstr "Контекстно меню"
 msgid "Continue"
 msgstr "Продължи"
 
+msgid "Control"
+msgstr "контрол"
+
+msgid "Control settings"
+msgstr "Контролни настройки"
+
+msgid "Control: %1"
+msgstr "Контрол: %1"
+
 msgid "Controls"
 msgstr "Управление"
 
@@ -500,6 +548,12 @@ msgstr "Кръстословица"
 
 msgid "Current / total pages"
 msgstr "Текущи / общо страници"
+
+msgid "Current Book"
+msgstr "Актуална книга"
+
+msgid "Current book"
+msgstr "Актуална книга"
 
 msgid "Current home folder:"
 msgstr "Текуща начална папка:"
@@ -543,11 +597,20 @@ msgstr "По избор: "
 msgid "Customizable top status bar and bottom progress bar."
 msgstr "Персонализируема горна статус лента и долна лента на прогреса."
 
+msgid "Customize widget"
+msgstr "Персонализиране на джаджа"
+
 msgid "Cut"
 msgstr "Изрязване"
 
 msgid "Cycle"
 msgstr "Циклично"
+
+msgid "Daily"
+msgstr "Ежедневно"
+
+msgid "Date"
+msgstr "Дата"
 
 msgid "Day brightness"
 msgstr "Дневна яркост"
@@ -560,6 +623,9 @@ msgstr "Време за дневна яркост: "
 
 msgid "Day brightness: "
 msgstr "Дневна яркост: "
+
+msgid "Day streak"
+msgstr "Дневна ивица"
 
 msgid "Day warmth"
 msgstr "Дневна топлина"
@@ -579,11 +645,11 @@ msgstr "Журнал за отстраняване на грешки"
 msgid "Debug logging must be enabled to submit bug reports."
 msgstr "Регистрирането на грешки трябва да бъде активирано, за да се изпращат доклади за грешки."
 
-msgid "default"
-msgstr "по подразбиране"
-
 msgid "Default"
 msgstr "По подразбиране"
+
+msgid "default"
+msgstr "по подразбиране"
 
 msgid "Default (black)"
 msgstr "По подразбиране (черно)"
@@ -608,6 +674,9 @@ msgstr "Изтриване на шаблон?"
 
 msgid "Delete this button?"
 msgstr "Да се изтрие ли този бутон?"
+
+msgid "Delete this control?"
+msgstr "Изтриване на тази контрола?"
 
 msgid "Delete this folder and its buttons?"
 msgstr "Да се изтрие ли тази папка и бутоните ѝ?"
@@ -674,6 +743,9 @@ msgstr "Изглед"
 
 msgid "Display mode"
 msgstr "Изглед"
+
+msgid "Divider"
+msgstr "Разделител"
 
 msgid "Dividing lines"
 msgstr "Разделителни линии"
@@ -867,6 +939,12 @@ msgstr "Към"
 msgid "Go to page"
 msgstr "Отиди на страница"
 
+msgid "Graph metric"
+msgstr "Графичен показател"
+
+msgid "Graph range"
+msgstr "Диапазон на графиката"
+
 msgid "Gray"
 msgstr "Сиво"
 
@@ -975,11 +1053,11 @@ msgstr "Инсталиране"
 msgid "Interactive"
 msgstr "Интерактивно"
 
-msgid "Items per page"
-msgstr "Елементи на страница"
-
 msgid "items per page"
 msgstr "елемента на страница"
+
+msgid "Items per page"
+msgstr "Елементи на страница"
 
 msgid "Keep existing settings"
 msgstr "Запазване на текущите настройки"
@@ -1110,8 +1188,26 @@ msgstr "Разрешени са най-много 9 бутона"
 msgid "Menu"
 msgstr "Меню"
 
+msgid "Metric"
+msgstr "Метрика"
+
+msgid "min"
+msgstr "мин"
+
 msgid "Minute"
 msgstr "Минута"
+
+msgid "minutes"
+msgstr "минути"
+
+msgid "Minutes"
+msgstr "минути"
+
+msgid "Monthly"
+msgstr "Месечно"
+
+msgid "Months"
+msgstr "месеци"
 
 msgid "Mosaic"
 msgstr "Мозайка"
@@ -1251,6 +1347,9 @@ msgstr "Няма мрежова връзка. Моля, свържете се с
 msgid "No reader engine for this file or invalid file."
 msgstr "Няма четец за този файл или файлът е невалиден."
 
+msgid "No reading data"
+msgstr "Няма данни за четене"
+
 msgid "No table of contents available."
 msgstr "Няма налично съдържание."
 
@@ -1296,6 +1395,9 @@ msgstr "OPDS"
 msgid "Open folder"
 msgstr "Отваряне на папка"
 
+msgid "Open menu to Launcher"
+msgstr "Отворете менюто за стартиране"
+
 msgid "Open next file"
 msgstr "Отваряне на следващия файл"
 
@@ -1313,6 +1415,9 @@ msgstr "Отваряне"
 
 msgid "Order"
 msgstr "Ред"
+
+msgid "Outline"
+msgstr "Контур"
 
 msgid "Outlined boxes"
 msgstr "Оградени полета"
@@ -1335,6 +1440,9 @@ msgstr "Поток на страниците"
 msgid "Page x / y"
 msgstr "Страница x / y"
 
+msgid "Pages"
+msgstr "Страници"
+
 msgid "pages"
 msgstr "страници"
 
@@ -1343,6 +1451,15 @@ msgstr "Страници + Време за главата + %"
 
 msgid "Pages and %"
 msgstr "Страници и %"
+
+msgid "Pages read"
+msgstr "Прочетени страници"
+
+msgid "Pages today"
+msgstr "Страници днес"
+
+msgid "Pages/day"
+msgstr "Страници/ден"
 
 msgid "Partial pages refresh"
 msgstr "Частично опресняване на страниците"
@@ -1355,6 +1472,9 @@ msgstr "Процент"
 
 msgid "Personal Records"
 msgstr "Лични рекорди"
+
+msgid "Personal records"
+msgstr "Лични записи"
 
 msgid "Please delete the Project: Title plugin from your plugins folder and restart KOReader."
 msgstr "Моля, изтрийте плъгина Project: Title от вашата папка с плъгини и рестартирайте KOReader."
@@ -1437,11 +1557,20 @@ msgstr "Плъгинът Rakuyomi не е инсталиран."
 msgid "RAM usage"
 msgstr "Използвана RAM"
 
+msgid "Range"
+msgstr "Обхват"
+
 msgid "Read now"
 msgstr "Четене сега"
 
 msgid "Read status"
 msgstr "Статус на четене"
+
+msgid "Read time"
+msgstr "Време за четене"
+
+msgid "Read today"
+msgstr "Прочетете днес"
 
 msgid "Reader"
 msgstr "Четец"
@@ -1452,11 +1581,23 @@ msgstr "Прогрес в четеца"
 msgid "Reading"
 msgstr "Четене"
 
+msgid "Reading calendar"
+msgstr "Календар за четене"
+
+msgid "Reading Calendar"
+msgstr "Календар за четене"
+
 msgid "Reading goals"
 msgstr "Цели за четене"
 
 msgid "Reading stats widget"
 msgstr "Уиджет за статистика на четенето"
+
+msgid "Reading Trend"
+msgstr "Тенденция на четене"
+
+msgid "Reading trend"
+msgstr "Тенденция на четене"
 
 msgid "Rebooting"
 msgstr "Рестартиране"
@@ -1644,6 +1785,9 @@ msgstr "поредици"
 msgid "Series number"
 msgstr "Номер в поредицата"
 
+msgid "Session pages"
+msgstr "Страници на сесии"
+
 msgid "Set"
 msgstr "Задаване"
 
@@ -1715,6 +1859,9 @@ msgstr "Показване на значка за любими"
 
 msgid "Show folder name"
 msgstr "Показване на името на папката"
+
+msgid "Show goal"
+msgstr "Покажи гол"
 
 msgid "Show hidden files"
 msgstr "Показване на скрити файлове"
@@ -1848,6 +1995,9 @@ msgstr "Слот за статистика "
 msgid "Statistics"
 msgstr "Статистика"
 
+msgid "Statistics calendar is unavailable"
+msgstr "Статистическият календар не е наличен"
+
 msgid "Stats"
 msgstr "Статистика"
 
@@ -1899,6 +2049,9 @@ msgstr "Синхронизация"
 msgid "Sync all catalogs"
 msgstr "Синхронизиране на всички каталози"
 
+msgid "Tab"
+msgstr "Таб"
+
 msgid "Tabs"
 msgstr "Раздели"
 
@@ -1926,14 +2079,23 @@ msgstr "Мястото за всички ваши книги %1"
 msgid "This change requires a restart to take effect."
 msgstr "Тази промяна изисква рестартиране, за да влезе в сила."
 
+msgid "This month"
+msgstr "Този месец"
+
 msgid "This Month"
 msgstr "Този месец"
 
 msgid "This option is disabled when a home folder is the device storage root. Set home folders to narrower books folders first."
 msgstr "Тази настройка е изключена, когато началната папка е коренът на паметта на устройството. Първо задайте по-тесни папки с книги като начални папки."
 
+msgid "This week"
+msgstr "Тази седмица"
+
 msgid "This Week"
 msgstr "Тази седмица"
+
+msgid "This year"
+msgstr "Тази година"
 
 msgid "This Year"
 msgstr "Тази година"
@@ -1946,6 +2108,15 @@ msgstr "Формат на часа"
 
 msgid "Time to book end"
 msgstr "Време до края на книгата"
+
+msgid "Time/book"
+msgstr "Време/книга"
+
+msgid "Time/day"
+msgstr "Час/ден"
+
+msgid "Time/page"
+msgstr "Време/страница"
 
 msgid "Timer: %1 s"
 msgstr "Таймер: %1 s"
@@ -1977,8 +2148,17 @@ msgstr "Шрифт на горната лента"
 msgid "Top status bar"
 msgstr "Горна лента за състояние"
 
+msgid "Total"
+msgstr "Общо"
+
+msgid "Total books"
+msgstr "Общо книги"
+
 msgid "Total pages"
 msgstr "Общо страници"
+
+msgid "Total time"
+msgstr "Общо време"
 
 msgid "Turn on Zen mode to strip KOReader down to its bare essentials.\n\nRemove visual clutter for a focused, distraction-free reading experience. Exit at anytime from Settings."
 msgstr "Включете режим Zen, за да сведете KOReader до най-важното.\n\nПремахнете визуалното претрупване за фокусирано четене без разсейване. Излезте по всяко време от Настройки."
@@ -1998,11 +2178,11 @@ msgstr "Подчертаване над иконата"
 msgid "Uniform covers"
 msgstr "Уеднаквяване на кориците"
 
-msgid "Unknown"
-msgstr "Неизвестно"
-
 msgid "unknown"
 msgstr "неизвестно"
+
+msgid "Unknown"
+msgstr "Неизвестно"
 
 msgid "Unknown Author"
 msgstr "Неизвестен автор"
@@ -2127,6 +2307,9 @@ msgstr "Топлина"
 msgid "Warmth schedule"
 msgstr "График на топлината"
 
+msgid "Weekly"
+msgstr "Ежеседмично"
+
 msgid "Welcome to Zen UI"
 msgstr "Добре дошли в Zen UI"
 
@@ -2157,6 +2340,9 @@ msgstr "Wi-Fi"
 msgid "Widgets"
 msgstr "Уиджети"
 
+msgid "Yearly"
+msgstr "Годишно"
+
 msgid "You're All Set"
 msgstr "Всичко е готово"
 
@@ -2172,10 +2358,10 @@ msgstr "Zen"
 msgid "Zen highlight menu"
 msgstr "Меню за подчертаване Zen"
 
-msgid "Zen Mode"
+msgid "Zen mode"
 msgstr "Режим Zen"
 
-msgid "Zen mode"
+msgid "Zen Mode"
 msgstr "Режим Zen"
 
 msgid "Zen OPDS"
@@ -2246,135 +2432,3 @@ msgstr "Zen UI: папката не е намерена: "
 
 msgid "Zen UI: no folder set for this action."
 msgstr "Zen UI: няма зададена папка за това действие."
-
-msgid " days"
-msgstr ""
-
-msgid "Best day"
-msgstr ""
-
-msgid "Best month"
-msgstr ""
-
-msgid "Best week"
-msgstr ""
-
-msgid "Books read"
-msgstr ""
-
-msgid "Current Book"
-msgstr ""
-
-msgid "Customize widget"
-msgstr ""
-
-msgid "Months"
-msgstr ""
-
-msgid "Day streak"
-msgstr ""
-
-msgid "Divider"
-msgstr ""
-
-msgid "Graph metric"
-msgstr ""
-
-msgid "Graph range"
-msgstr ""
-
-msgid "Metric"
-msgstr ""
-
-msgid "Minutes"
-msgstr ""
-
-msgid "No reading data"
-msgstr ""
-
-msgid "Outline"
-msgstr ""
-
-msgid "Pages"
-msgstr ""
-
-msgid "Pages read"
-msgstr ""
-
-msgid "Pages today"
-msgstr ""
-
-msgid "Pages/day"
-msgstr ""
-
-msgid "Range"
-msgstr ""
-
-msgid "Read time"
-msgstr ""
-
-msgid "Read today"
-msgstr ""
-
-msgid "Reading Calendar"
-msgstr ""
-
-msgid "Reading Trend"
-msgstr ""
-
-msgid "Session pages"
-msgstr ""
-
-msgid "Statistics calendar is unavailable"
-msgstr ""
-
-msgid "Time/book"
-msgstr ""
-
-msgid "Time/day"
-msgstr ""
-
-msgid "Time/page"
-msgstr ""
-
-msgid "Total"
-msgstr ""
-
-msgid "Total books"
-msgstr ""
-
-msgid "Total time"
-msgstr ""
-
-msgid "min"
-msgstr ""
-
-msgid "minutes"
-msgstr ""
-
-msgid "Daily"
-msgstr ""
-
-msgid "Monthly"
-msgstr ""
-
-msgid "Show goal"
-msgstr ""
-
-msgid "Weekly"
-msgstr ""
-
-msgid "Yearly"
-msgstr ""
-
-msgid "%s goal"
-msgstr ""
-
-msgid "%s pages goal"
-msgstr ""
-
-msgid "%s time goal (min)"
-msgstr ""
-
-msgid "%s goal (%s)"
-msgstr ""

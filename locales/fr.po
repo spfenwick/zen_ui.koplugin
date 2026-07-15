@@ -6,6 +6,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: fr\n"
 
+msgid " days"
+msgstr "jours"
+
 msgid "%1 (%2)"
 msgstr "%1 (%2)"
 
@@ -15,8 +18,20 @@ msgstr "%1 min restants dans le chapitre"
 msgid "%d%% Read"
 msgstr "%d%% lu"
 
+msgid "%s goal"
+msgstr "Objectif %s"
+
+msgid "%s goal (%s)"
+msgstr "Objectif %s (%s)"
+
 msgid "%s left"
 msgstr "%s restantes"
+
+msgid "%s pages goal"
+msgstr "Objectif pages %s"
+
+msgid "%s time goal (min)"
+msgstr "%s objectif de temps (min)"
 
 msgid "(auto)"
 msgstr "(auto)"
@@ -111,6 +126,9 @@ msgstr "Ajouter des boutons"
 msgid "Add catalog"
 msgstr "Ajouter un catalogue"
 
+msgid "Add control"
+msgstr "Ajouter un contrôle"
+
 msgid "Add custom buttons for other plugins or actions."
 msgstr "Ajoutez des boutons personnalisés pour d'autres plugins ou actions."
 
@@ -142,6 +160,9 @@ msgid "All settings are in one unified tab. This icon with the dot indicates an 
 msgstr "Tous les réglages se trouvent dans un seul onglet unifié. Cette icône avec le point indique qu'une mise à jour est disponible.\n\nInstallez les mises à jour de Zen UI directement depuis votre appareil."
 
 msgid "All Time"
+msgstr "Tout le temps"
+
+msgid "All time"
 msgstr "Tout le temps"
 
 msgid "Allow custom icons"
@@ -240,6 +261,15 @@ msgstr "Statistiques de batterie"
 msgid "Beginning / End"
 msgstr "Début / Fin"
 
+msgid "Best day"
+msgstr "Meilleur jour"
+
+msgid "Best month"
+msgstr "Meilleur mois"
+
+msgid "Best week"
+msgstr "Meilleure semaine"
+
 msgid "Beta"
 msgstr "Beta"
 
@@ -282,11 +312,14 @@ msgstr "Titre du livre"
 msgid "Book: "
 msgstr "Livre : "
 
+msgid "Books"
+msgstr "Livres"
+
 msgid "books"
 msgstr "livres"
 
-msgid "Books"
-msgstr "Livres"
+msgid "Books read"
+msgstr "Livres lus"
 
 msgid "Books shown"
 msgstr "Livres affichés"
@@ -387,11 +420,17 @@ msgstr "Choisir un autre dossier"
 msgid "Choose a preset for your reading progress bar."
 msgstr "Choisissez un préréglage pour votre barre de progression de lecture."
 
+msgid "Choose control"
+msgstr "Choisissez le contrôle"
+
 msgid "Choose item"
 msgstr "Choisir un élément"
 
 msgid "Choose plugin menu"
 msgstr "Choisir un menu de plugin"
+
+msgid "Choose tab"
+msgstr "Choisir l'onglet"
 
 msgid "Choose which tabs appear in your navigation bar.\nYou can rearrange or adjust these anytime in Settings."
 msgstr "Choisissez les onglets qui apparaissent dans votre barre de navigation.\nVous pouvez les réorganiser ou les ajuster à tout moment dans les Paramètres."
@@ -450,6 +489,15 @@ msgstr "Menu contextuel"
 msgid "Continue"
 msgstr "Continuer"
 
+msgid "Control"
+msgstr "Contrôle"
+
+msgid "Control settings"
+msgstr "Paramètres de contrôle"
+
+msgid "Control: %1"
+msgstr "Contrôle : %1"
+
 msgid "Controls"
 msgstr "Commandes"
 
@@ -491,6 +539,12 @@ msgstr "Mots croisés"
 
 msgid "Current / total pages"
 msgstr "Pages actuelles / totales"
+
+msgid "Current Book"
+msgstr "Livre actuel"
+
+msgid "Current book"
+msgstr "Livre actuel"
 
 msgid "Current home folder:"
 msgstr "Dossier racine actuel :"
@@ -534,11 +588,20 @@ msgstr "Personnalisé : "
 msgid "Customizable top status bar and bottom progress bar."
 msgstr "Barre d'état supérieure et barre de progression inférieure personnalisables."
 
+msgid "Customize widget"
+msgstr "Personnaliser le widget"
+
 msgid "Cut"
 msgstr "Couper"
 
 msgid "Cycle"
 msgstr "Parcourir"
+
+msgid "Daily"
+msgstr "Tous les jours"
+
+msgid "Date"
+msgstr "Date"
 
 msgid "Day brightness"
 msgstr "Luminosité diurne"
@@ -551,6 +614,9 @@ msgstr "Heure de luminosité diurne : "
 
 msgid "Day brightness: "
 msgstr "Luminosité diurne : "
+
+msgid "Day streak"
+msgstr "Séquence d'une journée"
 
 msgid "Day warmth"
 msgstr "Chaleur diurne"
@@ -570,11 +636,11 @@ msgstr "Journal de débogage"
 msgid "Debug logging must be enabled to submit bug reports."
 msgstr "La journalisation de débogage doit être activée pour soumettre des rapports."
 
-msgid "default"
-msgstr "par défaut"
-
 msgid "Default"
 msgstr "Par défaut"
+
+msgid "default"
+msgstr "par défaut"
 
 msgid "Default (black)"
 msgstr "Par défaut (noir)"
@@ -599,6 +665,9 @@ msgstr "Supprimer le préréglage ?"
 
 msgid "Delete this button?"
 msgstr "Supprimer ce bouton ?"
+
+msgid "Delete this control?"
+msgstr "Supprimer ce contrôle ?"
 
 msgid "Delete this folder and its buttons?"
 msgstr "Supprimer ce dossier et ses boutons ?"
@@ -665,6 +734,9 @@ msgstr "Affichage"
 
 msgid "Display mode"
 msgstr "Mode d'affichage"
+
+msgid "Divider"
+msgstr "Diviseur"
 
 msgid "Dividing lines"
 msgstr "Lignes de séparation"
@@ -858,6 +930,12 @@ msgstr "Aller"
 msgid "Go to page"
 msgstr "Aller à la page"
 
+msgid "Graph metric"
+msgstr "Métrique graphique"
+
+msgid "Graph range"
+msgstr "Plage de graphique"
+
 msgid "Gray"
 msgstr "Gris"
 
@@ -966,11 +1044,11 @@ msgstr "Installation"
 msgid "Interactive"
 msgstr "Interactif"
 
-msgid "Items per page"
-msgstr "Éléments par page"
-
 msgid "items per page"
 msgstr "éléments par page"
+
+msgid "Items per page"
+msgstr "Éléments par page"
 
 msgid "Keep existing settings"
 msgstr "Conserver les réglages actuels"
@@ -1101,8 +1179,26 @@ msgstr "Maximum 9 boutons autorisés"
 msgid "Menu"
 msgstr "Menu"
 
+msgid "Metric"
+msgstr "Métrique"
+
+msgid "min"
+msgstr "min"
+
 msgid "Minute"
 msgstr "Minute"
+
+msgid "minutes"
+msgstr "minutes"
+
+msgid "Minutes"
+msgstr "Minutes"
+
+msgid "Monthly"
+msgstr "Mensuel"
+
+msgid "Months"
+msgstr "Mois"
 
 msgid "Mosaic"
 msgstr "Mosaïque"
@@ -1242,6 +1338,9 @@ msgstr "Pas de connexion réseau. Connectez-vous au Wi-Fi et réessayez."
 msgid "No reader engine for this file or invalid file."
 msgstr "Aucun moteur de lecture pour ce fichier ou fichier invalide."
 
+msgid "No reading data"
+msgstr "Aucune donnée de lecture"
+
 msgid "No table of contents available."
 msgstr "Aucune table des matières disponible."
 
@@ -1287,6 +1386,9 @@ msgstr "OPDS"
 msgid "Open folder"
 msgstr "Ouvrir le dossier"
 
+msgid "Open menu to Launcher"
+msgstr "Ouvrir le menu du lanceur"
+
 msgid "Open next file"
 msgstr "Ouvrir le fichier suivant"
 
@@ -1304,6 +1406,9 @@ msgstr "Ouverture"
 
 msgid "Order"
 msgstr "Ordre"
+
+msgid "Outline"
+msgstr "Contour"
 
 msgid "Outlined boxes"
 msgstr "Boîtes encadrées"
@@ -1326,6 +1431,9 @@ msgstr "Flux de pages"
 msgid "Page x / y"
 msgstr "Page x / y"
 
+msgid "Pages"
+msgstr "Pages"
+
 msgid "pages"
 msgstr "pages"
 
@@ -1334,6 +1442,15 @@ msgstr "Pages + Temps de chapitre + %"
 
 msgid "Pages and %"
 msgstr "Pages et %"
+
+msgid "Pages read"
+msgstr "Pages lues"
+
+msgid "Pages today"
+msgstr "Pages aujourd'hui"
+
+msgid "Pages/day"
+msgstr "Pages/jour"
 
 msgid "Partial pages refresh"
 msgstr "Actualisation des pages partielles"
@@ -1346,6 +1463,9 @@ msgstr "Pourcentage"
 
 msgid "Personal Records"
 msgstr "Records personnels"
+
+msgid "Personal records"
+msgstr "Dossiers personnels"
 
 msgid "Please delete the Project: Title plugin from your plugins folder and restart KOReader."
 msgstr "Veuillez supprimer le plugin Project: Title de votre dossier de plugins et redémarrer KOReader."
@@ -1428,11 +1548,20 @@ msgstr "Le plugin Rakuyomi n'est pas installé."
 msgid "RAM usage"
 msgstr "Utilisation RAM"
 
+msgid "Range"
+msgstr "Gamme"
+
 msgid "Read now"
 msgstr "Lire maintenant"
 
 msgid "Read status"
 msgstr "Statut de lecture"
+
+msgid "Read time"
+msgstr "Lire l'heure"
+
+msgid "Read today"
+msgstr "Lire aujourd'hui"
 
 msgid "Reader"
 msgstr "Lecteur"
@@ -1443,11 +1572,23 @@ msgstr "Progression de lecture"
 msgid "Reading"
 msgstr "En lecture"
 
+msgid "Reading calendar"
+msgstr "Calendrier de lecture"
+
+msgid "Reading Calendar"
+msgstr "Calendrier de lecture"
+
 msgid "Reading goals"
 msgstr "Objectifs de lecture"
 
 msgid "Reading stats widget"
 msgstr "Widget statistiques de lecture"
+
+msgid "Reading Trend"
+msgstr "Tendance de lecture"
+
+msgid "Reading trend"
+msgstr "Tendance de lecture"
 
 msgid "Rebooting"
 msgstr "Redémarrage"
@@ -1635,6 +1776,9 @@ msgstr "séries"
 msgid "Series number"
 msgstr "Numéro de série"
 
+msgid "Session pages"
+msgstr "Pages de séances"
+
 msgid "Set"
 msgstr "Définir"
 
@@ -1706,6 +1850,9 @@ msgstr "Afficher l'insigne de favori"
 
 msgid "Show folder name"
 msgstr "Afficher le nom du dossier"
+
+msgid "Show goal"
+msgstr "Afficher l'objectif"
 
 msgid "Show hidden files"
 msgstr "Afficher les fichiers cachés"
@@ -1839,6 +1986,9 @@ msgstr "Emplacement de statistique "
 msgid "Statistics"
 msgstr "Statistiques"
 
+msgid "Statistics calendar is unavailable"
+msgstr "Le calendrier des statistiques n'est pas disponible"
+
 msgid "Stats"
 msgstr "Stats"
 
@@ -1890,6 +2040,9 @@ msgstr "Synchroniser"
 msgid "Sync all catalogs"
 msgstr "Synchroniser tous les catalogues"
 
+msgid "Tab"
+msgstr "Languette"
+
 msgid "Tabs"
 msgstr "Onglets"
 
@@ -1917,14 +2070,23 @@ msgstr "Le dossier pour tous vos livres %1"
 msgid "This change requires a restart to take effect."
 msgstr "Ce changement nécessite un redémarrage pour prendre effet."
 
+msgid "This month"
+msgstr "Ce mois-ci"
+
 msgid "This Month"
 msgstr "Ce mois"
 
 msgid "This option is disabled when a home folder is the device storage root. Set home folders to narrower books folders first."
 msgstr "Cette option est désactivée lorsqu’un dossier d’accueil est la racine du stockage de l’appareil. Définissez d’abord des dossiers de livres plus précis comme dossiers d’accueil."
 
+msgid "This week"
+msgstr "Cette semaine"
+
 msgid "This Week"
 msgstr "Cette semaine"
+
+msgid "This year"
+msgstr "Cette année"
 
 msgid "This Year"
 msgstr "Cette année"
@@ -1937,6 +2099,15 @@ msgstr "Format d'heure"
 
 msgid "Time to book end"
 msgstr "Temps jusqu’à la fin du livre"
+
+msgid "Time/book"
+msgstr "Temps/livre"
+
+msgid "Time/day"
+msgstr "Heure/jour"
+
+msgid "Time/page"
+msgstr "Heure/page"
 
 msgid "Timer: %1 s"
 msgstr "Minuteur : %1 s"
@@ -1968,8 +2139,17 @@ msgstr "Police de la barre supérieure"
 msgid "Top status bar"
 msgstr "Barre d'état supérieure"
 
+msgid "Total"
+msgstr "Total"
+
+msgid "Total books"
+msgstr "Total des livres"
+
 msgid "Total pages"
 msgstr "Pages totales"
+
+msgid "Total time"
+msgstr "Durée totale"
 
 msgid "Turn on Zen mode to strip KOReader down to its bare essentials.\n\nRemove visual clutter for a focused, distraction-free reading experience. Exit at anytime from Settings."
 msgstr "Activez le mode Zen pour réduire KOReader à l'essentiel.\n\nSupprimez l'encombrement visuel pour une expérience de lecture concentrée, sans distraction. Quittez à tout moment depuis les Paramètres."
@@ -1989,11 +2169,11 @@ msgstr "Soulignement au-dessus de l'icône"
 msgid "Uniform covers"
 msgstr "Couvertures uniformes"
 
-msgid "Unknown"
-msgstr "Inconnu"
-
 msgid "unknown"
 msgstr "inconnu"
+
+msgid "Unknown"
+msgstr "Inconnu"
 
 msgid "Unknown Author"
 msgstr "Auteur inconnu"
@@ -2118,6 +2298,9 @@ msgstr "Chaleur"
 msgid "Warmth schedule"
 msgstr "Planification de la chaleur"
 
+msgid "Weekly"
+msgstr "Hebdomadaire"
+
 msgid "Welcome to Zen UI"
 msgstr "Bienvenue dans Zen UI"
 
@@ -2148,6 +2331,9 @@ msgstr "Wi-Fi"
 msgid "Widgets"
 msgstr "Widgets"
 
+msgid "Yearly"
+msgstr "Annuel"
+
 msgid "You're All Set"
 msgstr "Tout est prêt"
 
@@ -2163,10 +2349,10 @@ msgstr "Zen"
 msgid "Zen highlight menu"
 msgstr "Menu de surlignage Zen"
 
-msgid "Zen Mode"
+msgid "Zen mode"
 msgstr "Mode Zen"
 
-msgid "Zen mode"
+msgid "Zen Mode"
 msgstr "Mode Zen"
 
 msgid "Zen OPDS"
@@ -2237,135 +2423,3 @@ msgstr "Zen UI : dossier introuvable : "
 
 msgid "Zen UI: no folder set for this action."
 msgstr "Zen UI : aucun dossier défini pour cette action."
-
-msgid " days"
-msgstr ""
-
-msgid "Best day"
-msgstr ""
-
-msgid "Best month"
-msgstr ""
-
-msgid "Best week"
-msgstr ""
-
-msgid "Books read"
-msgstr ""
-
-msgid "Current Book"
-msgstr ""
-
-msgid "Customize widget"
-msgstr ""
-
-msgid "Months"
-msgstr ""
-
-msgid "Day streak"
-msgstr ""
-
-msgid "Divider"
-msgstr ""
-
-msgid "Graph metric"
-msgstr ""
-
-msgid "Graph range"
-msgstr ""
-
-msgid "Metric"
-msgstr ""
-
-msgid "Minutes"
-msgstr ""
-
-msgid "No reading data"
-msgstr ""
-
-msgid "Outline"
-msgstr ""
-
-msgid "Pages"
-msgstr ""
-
-msgid "Pages read"
-msgstr ""
-
-msgid "Pages today"
-msgstr ""
-
-msgid "Pages/day"
-msgstr ""
-
-msgid "Range"
-msgstr ""
-
-msgid "Read time"
-msgstr ""
-
-msgid "Read today"
-msgstr ""
-
-msgid "Reading Calendar"
-msgstr ""
-
-msgid "Reading Trend"
-msgstr ""
-
-msgid "Session pages"
-msgstr ""
-
-msgid "Statistics calendar is unavailable"
-msgstr ""
-
-msgid "Time/book"
-msgstr ""
-
-msgid "Time/day"
-msgstr ""
-
-msgid "Time/page"
-msgstr ""
-
-msgid "Total"
-msgstr ""
-
-msgid "Total books"
-msgstr ""
-
-msgid "Total time"
-msgstr ""
-
-msgid "min"
-msgstr ""
-
-msgid "minutes"
-msgstr ""
-
-msgid "Daily"
-msgstr ""
-
-msgid "Monthly"
-msgstr ""
-
-msgid "Show goal"
-msgstr ""
-
-msgid "Weekly"
-msgstr ""
-
-msgid "Yearly"
-msgstr ""
-
-msgid "%s goal"
-msgstr ""
-
-msgid "%s pages goal"
-msgstr ""
-
-msgid "%s time goal (min)"
-msgstr ""
-
-msgid "%s goal (%s)"
-msgstr ""

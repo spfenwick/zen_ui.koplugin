@@ -6,6 +6,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: de\n"
 
+msgid " days"
+msgstr "Tage"
+
 msgid "%1 (%2)"
 msgstr "%1 (%2)"
 
@@ -15,8 +18,20 @@ msgstr "%1 Min. im Kapitel verbleibend"
 msgid "%d%% Read"
 msgstr "%d%% gelesen"
 
+msgid "%s goal"
+msgstr "%s Ziel"
+
+msgid "%s goal (%s)"
+msgstr "%s Ziel (%s)"
+
 msgid "%s left"
 msgstr "%s verbleibend"
+
+msgid "%s pages goal"
+msgstr "%s Seitenziel"
+
+msgid "%s time goal (min)"
+msgstr "%s Zeitziel (Min.)"
 
 msgid "(auto)"
 msgstr "(automatisch)"
@@ -111,6 +126,9 @@ msgstr "Buttons hinzufügen"
 msgid "Add catalog"
 msgstr "Katalog hinzufügen"
 
+msgid "Add control"
+msgstr "Füge Kontrolle hinzu"
+
 msgid "Add custom buttons for other plugins or actions."
 msgstr "Benutzerdefinierte Buttons für andere Plugins oder Aktionen hinzufügen."
 
@@ -143,6 +161,9 @@ msgstr "Alle Einstellungen befinden sich in einem einheitlichen Tab. Dieses Icon
 
 msgid "All Time"
 msgstr "Gesamte Zeit"
+
+msgid "All time"
+msgstr "Alle Zeiten"
 
 msgid "Allow custom icons"
 msgstr "Benutzerdefinierte Icons erlauben"
@@ -240,6 +261,15 @@ msgstr "Akkustatistiken"
 msgid "Beginning / End"
 msgstr "Anfang / Ende"
 
+msgid "Best day"
+msgstr "Bester Tag"
+
+msgid "Best month"
+msgstr "Bester Monat"
+
+msgid "Best week"
+msgstr "Beste Woche"
+
 msgid "Beta"
 msgstr "Beta"
 
@@ -282,11 +312,14 @@ msgstr "Buchtitel"
 msgid "Book: "
 msgstr "Buch: "
 
+msgid "Books"
+msgstr "Bücher"
+
 msgid "books"
 msgstr "Bücher"
 
-msgid "Books"
-msgstr "Bücher"
+msgid "Books read"
+msgstr "Bücher gelesen"
 
 msgid "Books shown"
 msgstr "Angezeigte Bücher"
@@ -387,11 +420,17 @@ msgstr "Einen anderen Ordner wählen"
 msgid "Choose a preset for your reading progress bar."
 msgstr "Wählen Sie eine Voreinstellung für Ihren Lesefortschrittsbalken."
 
+msgid "Choose control"
+msgstr "Wählen Sie Kontrolle"
+
 msgid "Choose item"
 msgstr "Element auswählen"
 
 msgid "Choose plugin menu"
 msgstr "Plugin-Menü auswählen"
+
+msgid "Choose tab"
+msgstr "Wählen Sie eine Registerkarte"
 
 msgid "Choose which tabs appear in your navigation bar.\nYou can rearrange or adjust these anytime in Settings."
 msgstr "Wählen Sie, welche Tabs in Ihrer Navigationsleiste angezeigt werden.\nSie können diese jederzeit in den Einstellungen neu anordnen oder anpassen."
@@ -450,6 +489,15 @@ msgstr "Kontextmenü"
 msgid "Continue"
 msgstr "Weiter"
 
+msgid "Control"
+msgstr "Kontrolle"
+
+msgid "Control settings"
+msgstr "Kontrolleinstellungen"
+
+msgid "Control: %1"
+msgstr "Steuerung: %1"
+
 msgid "Controls"
 msgstr "Steuerung"
 
@@ -491,6 +539,12 @@ msgstr "Kreuzworträtsel"
 
 msgid "Current / total pages"
 msgstr "Aktuelle / Gesamtseiten"
+
+msgid "Current Book"
+msgstr "Aktuelles Buch"
+
+msgid "Current book"
+msgstr "Aktuelles Buch"
 
 msgid "Current home folder:"
 msgstr "Aktueller Startordner:"
@@ -534,11 +588,20 @@ msgstr "Benutzerdefiniert: "
 msgid "Customizable top status bar and bottom progress bar."
 msgstr "Anpassbare obere Statusleiste und unterer Fortschrittsbalken."
 
+msgid "Customize widget"
+msgstr "Widget anpassen"
+
 msgid "Cut"
 msgstr "Ausschneiden"
 
 msgid "Cycle"
 msgstr "Durchschalten"
+
+msgid "Daily"
+msgstr "Täglich"
+
+msgid "Date"
+msgstr "Datum"
 
 msgid "Day brightness"
 msgstr "Tageshelligkeit"
@@ -551,6 +614,9 @@ msgstr "Zeit für Tageshelligkeit: "
 
 msgid "Day brightness: "
 msgstr "Tageshelligkeit: "
+
+msgid "Day streak"
+msgstr "Tagessträhne"
 
 msgid "Day warmth"
 msgstr "Farbtemperatur (Tag)"
@@ -570,10 +636,10 @@ msgstr "Debug-Protokollierung"
 msgid "Debug logging must be enabled to submit bug reports."
 msgstr "Die Debug-Protokollierung muss aktiviert sein, um Fehlerberichte zu senden."
 
-msgid "default"
+msgid "Default"
 msgstr "Standard"
 
-msgid "Default"
+msgid "default"
 msgstr "Standard"
 
 msgid "Default (black)"
@@ -599,6 +665,9 @@ msgstr "Voreinstellung löschen?"
 
 msgid "Delete this button?"
 msgstr "Diesen Button löschen?"
+
+msgid "Delete this control?"
+msgstr "Dieses Steuerelement löschen?"
 
 msgid "Delete this folder and its buttons?"
 msgstr "Diesen Ordner und seine Buttons löschen?"
@@ -665,6 +734,9 @@ msgstr "Bildschirm"
 
 msgid "Display mode"
 msgstr "Anzeigemodus"
+
+msgid "Divider"
+msgstr "Teiler"
 
 msgid "Dividing lines"
 msgstr "Trennlinien"
@@ -858,6 +930,12 @@ msgstr "Los"
 msgid "Go to page"
 msgstr "Gehe zu Seite"
 
+msgid "Graph metric"
+msgstr "Diagrammmetrik"
+
+msgid "Graph range"
+msgstr "Diagrammbereich"
+
 msgid "Gray"
 msgstr "Grau"
 
@@ -966,10 +1044,10 @@ msgstr "Wird installiert"
 msgid "Interactive"
 msgstr "Interaktiv"
 
-msgid "Items per page"
+msgid "items per page"
 msgstr "Elemente pro Seite"
 
-msgid "items per page"
+msgid "Items per page"
 msgstr "Elemente pro Seite"
 
 msgid "Keep existing settings"
@@ -1101,8 +1179,26 @@ msgstr "Maximal 9 Buttons erlaubt"
 msgid "Menu"
 msgstr "Menü"
 
+msgid "Metric"
+msgstr "Metrisch"
+
+msgid "min"
+msgstr "min"
+
 msgid "Minute"
 msgstr "Minute"
+
+msgid "minutes"
+msgstr "Minuten"
+
+msgid "Minutes"
+msgstr "Minuten"
+
+msgid "Monthly"
+msgstr "Monatlich"
+
+msgid "Months"
+msgstr "Monate"
 
 msgid "Mosaic"
 msgstr "Mosaik"
@@ -1242,6 +1338,9 @@ msgstr "Keine Netzwerkverbindung. Bitte mit dem WLAN verbinden und erneut versuc
 msgid "No reader engine for this file or invalid file."
 msgstr "Keine Lese-Engine für diese Datei oder ungültige Datei."
 
+msgid "No reading data"
+msgstr "Keine Lesedaten"
+
 msgid "No table of contents available."
 msgstr "Kein Inhaltsverzeichnis verfügbar."
 
@@ -1287,6 +1386,9 @@ msgstr "OPDS"
 msgid "Open folder"
 msgstr "Ordner öffnen"
 
+msgid "Open menu to Launcher"
+msgstr "Öffnen Sie das Menü zum Launcher"
+
 msgid "Open next file"
 msgstr "Nächste Datei öffnen"
 
@@ -1304,6 +1406,9 @@ msgstr "Wird geöffnet"
 
 msgid "Order"
 msgstr "Reihenfolge"
+
+msgid "Outline"
+msgstr "Gliederung"
 
 msgid "Outlined boxes"
 msgstr "Umrandete Kästen"
@@ -1326,6 +1431,9 @@ msgstr "Seiten-Stream"
 msgid "Page x / y"
 msgstr "Seite x / y"
 
+msgid "Pages"
+msgstr "Seiten"
+
 msgid "pages"
 msgstr "Seiten"
 
@@ -1334,6 +1442,15 @@ msgstr "Seiten + Kapitelzeit + %"
 
 msgid "Pages and %"
 msgstr "Seiten und %"
+
+msgid "Pages read"
+msgstr "Seiten gelesen"
+
+msgid "Pages today"
+msgstr "Seiten heute"
+
+msgid "Pages/day"
+msgstr "Seiten/Tag"
 
 msgid "Partial pages refresh"
 msgstr "Partielle Seitenaktualisierung"
@@ -1346,6 +1463,9 @@ msgstr "Prozent"
 
 msgid "Personal Records"
 msgstr "Persönliche Rekorde"
+
+msgid "Personal records"
+msgstr "Persönliche Aufzeichnungen"
 
 msgid "Please delete the Project: Title plugin from your plugins folder and restart KOReader."
 msgstr "Bitte löschen Sie das „Project: Title“-Plugin aus Ihrem Plugins-Ordner und starten Sie KOReader neu."
@@ -1428,11 +1548,20 @@ msgstr "Rakuyomi-Plugin ist nicht installiert."
 msgid "RAM usage"
 msgstr "RAM-Auslastung"
 
+msgid "Range"
+msgstr "Reichweite"
+
 msgid "Read now"
 msgstr "Jetzt lesen"
 
 msgid "Read status"
 msgstr "Lesestatus"
+
+msgid "Read time"
+msgstr "Zeit lesen"
+
+msgid "Read today"
+msgstr "Lesen Sie noch heute"
 
 msgid "Reader"
 msgstr "Lesemodus"
@@ -1443,11 +1572,23 @@ msgstr "Lesefortschritt"
 msgid "Reading"
 msgstr "Liest gerade"
 
+msgid "Reading calendar"
+msgstr "Lesekalender"
+
+msgid "Reading Calendar"
+msgstr "Lesekalender"
+
 msgid "Reading goals"
 msgstr "Leseziele"
 
 msgid "Reading stats widget"
 msgstr "Lesestatistik-Widget"
+
+msgid "Reading Trend"
+msgstr "Lesetrend"
+
+msgid "Reading trend"
+msgstr "Lesetrend"
 
 msgid "Rebooting"
 msgstr "Neustart läuft"
@@ -1635,6 +1776,9 @@ msgstr "Serien"
 msgid "Series number"
 msgstr "Seriennummer"
 
+msgid "Session pages"
+msgstr "Sitzungsseiten"
+
 msgid "Set"
 msgstr "Festlegen"
 
@@ -1706,6 +1850,9 @@ msgstr "Favoriten-Plakette anzeigen"
 
 msgid "Show folder name"
 msgstr "Ordnernamen anzeigen"
+
+msgid "Show goal"
+msgstr "Ziel anzeigen"
 
 msgid "Show hidden files"
 msgstr "Versteckte Dateien anzeigen"
@@ -1839,6 +1986,9 @@ msgstr "Statistikfeld "
 msgid "Statistics"
 msgstr "Statistiken"
 
+msgid "Statistics calendar is unavailable"
+msgstr "Der Statistikkalender ist nicht verfügbar"
+
 msgid "Stats"
 msgstr "Statistiken"
 
@@ -1890,6 +2040,9 @@ msgstr "Synchronisieren"
 msgid "Sync all catalogs"
 msgstr "Alle Kataloge synchronisieren"
 
+msgid "Tab"
+msgstr "Tab"
+
 msgid "Tabs"
 msgstr "Tabs"
 
@@ -1917,14 +2070,23 @@ msgstr "Der Ort für alle Ihre Bücher %1"
 msgid "This change requires a restart to take effect."
 msgstr "Diese Änderung erfordert einen Neustart, um wirksam zu werden."
 
+msgid "This month"
+msgstr "Diesen Monat"
+
 msgid "This Month"
 msgstr "Diesen Monat"
 
 msgid "This option is disabled when a home folder is the device storage root. Set home folders to narrower books folders first."
 msgstr "Diese Option ist deaktiviert, wenn der Stammordner des Gerätes als Startordner festgelegt ist. Legen Sie zuerst spezifischere Bücherordner als Startordner fest."
 
+msgid "This week"
+msgstr "Diese Woche"
+
 msgid "This Week"
 msgstr "Diese Woche"
+
+msgid "This year"
+msgstr "Dieses Jahr"
 
 msgid "This Year"
 msgstr "Dieses Jahr"
@@ -1937,6 +2099,15 @@ msgstr "Zeitformat"
 
 msgid "Time to book end"
 msgstr "Zeit bis Buchende"
+
+msgid "Time/book"
+msgstr "Zeit/Buch"
+
+msgid "Time/day"
+msgstr "Uhrzeit/Tag"
+
+msgid "Time/page"
+msgstr "Zeit/Seite"
 
 msgid "Timer: %1 s"
 msgstr "Timer: %1 s"
@@ -1968,8 +2139,17 @@ msgstr "Schriftart der oberen Leiste"
 msgid "Top status bar"
 msgstr "Obere Statusleiste"
 
+msgid "Total"
+msgstr "Gesamt"
+
+msgid "Total books"
+msgstr "Gesamtzahl der Bücher"
+
 msgid "Total pages"
 msgstr "Seiten insgesamt"
+
+msgid "Total time"
+msgstr "Gesamtzeit"
 
 msgid "Turn on Zen mode to strip KOReader down to its bare essentials.\n\nRemove visual clutter for a focused, distraction-free reading experience. Exit at anytime from Settings."
 msgstr "Schalten Sie den Zen-Modus ein, um KOReader auf das Wesentliche zu reduzieren.\n\nEntfernen Sie visuellen Ballast für ein fokussiertes, ablenkungsfreies Leseerlebnis. Sie können ihn jederzeit über die Einstellungen wieder verlassen."
@@ -1989,11 +2169,11 @@ msgstr "Unterstreichung über dem Icon"
 msgid "Uniform covers"
 msgstr "Einheitliche Cover"
 
-msgid "Unknown"
-msgstr "Unbekannt"
-
 msgid "unknown"
 msgstr "unbekannt"
+
+msgid "Unknown"
+msgstr "Unbekannt"
 
 msgid "Unknown Author"
 msgstr "Unbekannter Autor"
@@ -2118,6 +2298,9 @@ msgstr "Farbtemperatur"
 msgid "Warmth schedule"
 msgstr "Farbtemperatur-Zeitplan"
 
+msgid "Weekly"
+msgstr "Wöchentlich"
+
 msgid "Welcome to Zen UI"
 msgstr "Willkommen bei Zen UI"
 
@@ -2148,6 +2331,9 @@ msgstr "WLAN"
 msgid "Widgets"
 msgstr "Widgets"
 
+msgid "Yearly"
+msgstr "Jährlich"
+
 msgid "You're All Set"
 msgstr "Alles bereit"
 
@@ -2163,10 +2349,10 @@ msgstr "Zen"
 msgid "Zen highlight menu"
 msgstr "Zen-Auswahlmenü"
 
-msgid "Zen Mode"
+msgid "Zen mode"
 msgstr "Zen-Modus"
 
-msgid "Zen mode"
+msgid "Zen Mode"
 msgstr "Zen-Modus"
 
 msgid "Zen OPDS"
@@ -2237,135 +2423,3 @@ msgstr "Zen UI: Ordner nicht gefunden: "
 
 msgid "Zen UI: no folder set for this action."
 msgstr "Zen UI: Kein Ordner für diese Aktion festgelegt."
-
-msgid " days"
-msgstr ""
-
-msgid "Best day"
-msgstr ""
-
-msgid "Best month"
-msgstr ""
-
-msgid "Best week"
-msgstr ""
-
-msgid "Books read"
-msgstr ""
-
-msgid "Current Book"
-msgstr ""
-
-msgid "Customize widget"
-msgstr ""
-
-msgid "Months"
-msgstr ""
-
-msgid "Day streak"
-msgstr ""
-
-msgid "Divider"
-msgstr ""
-
-msgid "Graph metric"
-msgstr ""
-
-msgid "Graph range"
-msgstr ""
-
-msgid "Metric"
-msgstr ""
-
-msgid "Minutes"
-msgstr ""
-
-msgid "No reading data"
-msgstr ""
-
-msgid "Outline"
-msgstr ""
-
-msgid "Pages"
-msgstr ""
-
-msgid "Pages read"
-msgstr ""
-
-msgid "Pages today"
-msgstr ""
-
-msgid "Pages/day"
-msgstr ""
-
-msgid "Range"
-msgstr ""
-
-msgid "Read time"
-msgstr ""
-
-msgid "Read today"
-msgstr ""
-
-msgid "Reading Calendar"
-msgstr ""
-
-msgid "Reading Trend"
-msgstr ""
-
-msgid "Session pages"
-msgstr ""
-
-msgid "Statistics calendar is unavailable"
-msgstr ""
-
-msgid "Time/book"
-msgstr ""
-
-msgid "Time/day"
-msgstr ""
-
-msgid "Time/page"
-msgstr ""
-
-msgid "Total"
-msgstr ""
-
-msgid "Total books"
-msgstr ""
-
-msgid "Total time"
-msgstr ""
-
-msgid "min"
-msgstr ""
-
-msgid "minutes"
-msgstr ""
-
-msgid "Daily"
-msgstr ""
-
-msgid "Monthly"
-msgstr ""
-
-msgid "Show goal"
-msgstr ""
-
-msgid "Weekly"
-msgstr ""
-
-msgid "Yearly"
-msgstr ""
-
-msgid "%s goal"
-msgstr ""
-
-msgid "%s pages goal"
-msgstr ""
-
-msgid "%s time goal (min)"
-msgstr ""
-
-msgid "%s goal (%s)"
-msgstr ""
