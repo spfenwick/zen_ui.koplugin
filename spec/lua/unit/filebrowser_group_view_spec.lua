@@ -215,15 +215,24 @@ describe("file browser group views", function()
         assert.are.equal(1, tags.update_count)
     end)
 
-    it("uses a visible empty-state item for group pages without books", function()
+    it("names the missing metadata in an empty group page", function()
         install_group_view({})
 
         api.showAuthorsView()
+        api.showSeriesView()
+        api.showTagsView()
 
-        local item = assert(find_menu("authors")).item_table[1]
-        assert.are.equal("No books found", item.text)
-        assert.is_true(item.dim)
-        assert.is_function(item.callback)
+        local empty_messages = {
+            authors = "No books with author metadata found",
+            series = "No books with series metadata found",
+            tags = "No books with tags metadata found",
+        }
+        for tab_id, message in pairs(empty_messages) do
+            local item = assert(find_menu(tab_id)).item_table[1]
+            assert.are.equal(message, item.text)
+            assert.is_true(item.dim)
+            assert.is_function(item.callback)
+        end
     end)
 
     it("persists reverse group sorting and rebuilds the open page", function()

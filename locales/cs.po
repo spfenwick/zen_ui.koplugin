@@ -279,20 +279,20 @@ msgstr "Černá"
 msgid "Blue"
 msgstr "Modrá"
 
-msgid "Bold"
-msgstr "Tučně"
-
 msgid "bold"
 msgstr "tučně"
+
+msgid "Bold"
+msgstr "Tučně"
 
 msgid "Bold text"
 msgstr "Tučný text"
 
-msgid "book"
-msgstr "kniha"
-
 msgid "Book"
 msgstr "Kniha"
+
+msgid "book"
+msgstr "kniha"
 
 msgid "Book added to download list"
 msgstr "Kniha přidána do seznamu pro stažení"
@@ -312,11 +312,11 @@ msgstr "Název knihy"
 msgid "Book: "
 msgstr "Kniha: "
 
-msgid "Books"
-msgstr "Knihy"
-
 msgid "books"
 msgstr "knihy"
+
+msgid "Books"
+msgstr "Knihy"
 
 msgid "Books read"
 msgstr "Přečtené knihy"
@@ -882,17 +882,17 @@ msgstr "Předvolby složek"
 msgid "Folders"
 msgstr "Složky"
 
-msgid "font"
-msgstr "písmo"
-
 msgid "Font"
 msgstr "Písmo"
 
-msgid "Font size"
-msgstr "Velikost písma"
+msgid "font"
+msgstr "písmo"
 
 msgid "font size"
 msgstr "velikost písma"
+
+msgid "Font size"
+msgstr "Velikost písma"
 
 msgid "Font size:"
 msgstr "Velikost písma:"
@@ -1044,11 +1044,11 @@ msgstr "Instalace"
 msgid "Interactive"
 msgstr "Interaktivní"
 
-msgid "items per page"
-msgstr "položek na stránku"
-
 msgid "Items per page"
 msgstr "Položek na stránku"
+
+msgid "items per page"
+msgstr "položek na stránku"
 
 msgid "Keep existing settings"
 msgstr "Zachovat stávající nastavení"
@@ -1319,6 +1319,15 @@ msgstr "Není vybrán žádný obrázek na pozadí."
 
 msgid "No books found"
 msgstr "Nenalezeny žádné knihy"
+
+msgid "No books with author metadata found"
+msgstr "Nebyly nalezeny žádné knihy s metadaty autora"
+
+msgid "No books with series metadata found"
+msgstr "Nebyly nalezeny žádné knihy s metadaty seriálu"
+
+msgid "No books with tags metadata found"
+msgstr "Nebyly nalezeny žádné knihy s metadaty značek"
 
 msgid "No changelog entries found.\n\nNo releases are available for this channel."
 msgstr "Nebyly nalezeny žádné položky seznamu změn.\n\nPro tento kanál nejsou dostupná žádná vydání."
@@ -2085,11 +2094,11 @@ msgstr "Tento týden"
 msgid "This Week"
 msgstr "Tento týden"
 
-msgid "This year"
-msgstr "Letos"
-
 msgid "This Year"
 msgstr "Tento rok"
+
+msgid "This year"
+msgstr "Letos"
 
 msgid "Time"
 msgstr "Čas"
@@ -2169,11 +2178,11 @@ msgstr "Podtržení nad ikonou"
 msgid "Uniform covers"
 msgstr "Jednotné obálky"
 
-msgid "unknown"
-msgstr "neznámý"
-
 msgid "Unknown"
 msgstr "Neznámý"
+
+msgid "unknown"
+msgstr "neznámý"
 
 msgid "Unknown Author"
 msgstr "Neznámý autor"
@@ -2349,10 +2358,10 @@ msgstr "Zen"
 msgid "Zen highlight menu"
 msgstr "Nabídka zvýraznění Zen"
 
-msgid "Zen mode"
+msgid "Zen Mode"
 msgstr "Režim Zen"
 
-msgid "Zen Mode"
+msgid "Zen mode"
 msgstr "Režim Zen"
 
 msgid "Zen OPDS"

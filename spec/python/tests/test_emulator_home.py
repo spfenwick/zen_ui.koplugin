@@ -126,6 +126,9 @@ def test_home_renders_all_core_widgets_with_and_without_history(with_history: bo
         ko_home = root / "home"
         ko_home.mkdir()
         fixture = build_library(root / "library")
+        book = root / "library" / "Alpha Home.epub"
+        fixture["epub"].replace(book)
+        fixture["epub"] = book
         _seed_home_settings(ko_home)
         _seed_bookinfo(ko_home, fixture["epub"])
         if with_history:

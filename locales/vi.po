@@ -279,20 +279,20 @@ msgstr "Đen"
 msgid "Blue"
 msgstr "Xanh dương"
 
-msgid "Bold"
-msgstr "In đậm"
-
 msgid "bold"
 msgstr "đậm"
+
+msgid "Bold"
+msgstr "In đậm"
 
 msgid "Bold text"
 msgstr "Văn bản in đậm"
 
-msgid "book"
-msgstr "sách"
-
 msgid "Book"
 msgstr "Sách"
+
+msgid "book"
+msgstr "sách"
 
 msgid "Book added to download list"
 msgstr "Sách đã được thêm vào danh sách tải xuống"
@@ -312,11 +312,11 @@ msgstr "Tên sách"
 msgid "Book: "
 msgstr "Sách: "
 
-msgid "Books"
-msgstr "Sách"
-
 msgid "books"
 msgstr "sách"
+
+msgid "Books"
+msgstr "Sách"
 
 msgid "Books read"
 msgstr "Sách đã đọc"
@@ -882,17 +882,17 @@ msgstr "Cài đặt trước thư mục"
 msgid "Folders"
 msgstr "Thư mục"
 
-msgid "font"
-msgstr "phông chữ"
-
 msgid "Font"
 msgstr "Phông chữ"
 
-msgid "Font size"
-msgstr "Cỡ chữ"
+msgid "font"
+msgstr "phông chữ"
 
 msgid "font size"
 msgstr "cỡ chữ"
+
+msgid "Font size"
+msgstr "Cỡ chữ"
 
 msgid "Font size:"
 msgstr "Kích cỡ chữ:"
@@ -1044,11 +1044,11 @@ msgstr "Đang cài đặt"
 msgid "Interactive"
 msgstr "Tương tác"
 
-msgid "items per page"
-msgstr "mục mỗi trang"
-
 msgid "Items per page"
 msgstr "Mục mỗi trang"
+
+msgid "items per page"
+msgstr "mục mỗi trang"
 
 msgid "Keep existing settings"
 msgstr "Giữ cài đặt hiện có"
@@ -1319,6 +1319,15 @@ msgstr "Chưa chọn ảnh nền."
 
 msgid "No books found"
 msgstr "Không tìm thấy sách"
+
+msgid "No books with author metadata found"
+msgstr "Không tìm thấy sách có siêu dữ liệu tác giả"
+
+msgid "No books with series metadata found"
+msgstr "Không tìm thấy sách nào có siêu dữ liệu bộ sách"
+
+msgid "No books with tags metadata found"
+msgstr "Không tìm thấy sách có thẻ siêu dữ liệu"
 
 msgid "No changelog entries found.\n\nNo releases are available for this channel."
 msgstr "Không tìm thấy mục nào trong nhật ký thay đổi.\n\nKhông có bản phát hành nào cho kênh này."
@@ -2085,10 +2094,10 @@ msgstr "Tuần này"
 msgid "This Week"
 msgstr "Tuần này"
 
-msgid "This year"
+msgid "This Year"
 msgstr "Năm nay"
 
-msgid "This Year"
+msgid "This year"
 msgstr "Năm nay"
 
 msgid "Time"
@@ -2169,11 +2178,11 @@ msgstr "Gạch chân trên biểu tượng"
 msgid "Uniform covers"
 msgstr "Bao bì đồng nhất"
 
-msgid "unknown"
-msgstr "không rõ"
-
 msgid "Unknown"
 msgstr "Không rõ"
+
+msgid "unknown"
+msgstr "không rõ"
 
 msgid "Unknown Author"
 msgstr "Tác giả không rõ"
@@ -2349,11 +2358,11 @@ msgstr "Zen"
 msgid "Zen highlight menu"
 msgstr "Trình đơn đánh dấu Zen"
 
-msgid "Zen mode"
-msgstr "chế độ Zen"
-
 msgid "Zen Mode"
 msgstr "Chế độ Zen"
+
+msgid "Zen mode"
+msgstr "chế độ Zen"
 
 msgid "Zen OPDS"
 msgstr "Zen OPDS"

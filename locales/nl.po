@@ -279,20 +279,20 @@ msgstr "Zwart"
 msgid "Blue"
 msgstr "Blauw"
 
-msgid "Bold"
-msgstr "Vet"
-
 msgid "bold"
 msgstr "vet"
+
+msgid "Bold"
+msgstr "Vet"
 
 msgid "Bold text"
 msgstr "Vette tekst"
 
-msgid "book"
-msgstr "boek"
-
 msgid "Book"
 msgstr "Boek"
+
+msgid "book"
+msgstr "boek"
 
 msgid "Book added to download list"
 msgstr "Boek toegevoegd aan downloadlijst"
@@ -312,11 +312,11 @@ msgstr "Boektitel"
 msgid "Book: "
 msgstr "Boek: "
 
-msgid "Books"
-msgstr "Boeken"
-
 msgid "books"
 msgstr "boeken"
+
+msgid "Books"
+msgstr "Boeken"
 
 msgid "Books read"
 msgstr "Boeken gelezen"
@@ -882,17 +882,17 @@ msgstr "Mapvoorinstellingen"
 msgid "Folders"
 msgstr "Mappen"
 
-msgid "font"
-msgstr "lettertype"
-
 msgid "Font"
 msgstr "Lettertype"
 
-msgid "Font size"
-msgstr "Lettergrootte"
+msgid "font"
+msgstr "lettertype"
 
 msgid "font size"
 msgstr "lettergrootte"
+
+msgid "Font size"
+msgstr "Lettergrootte"
 
 msgid "Font size:"
 msgstr "Lettergrootte:"
@@ -1044,11 +1044,11 @@ msgstr "Installeren"
 msgid "Interactive"
 msgstr "Interactief"
 
-msgid "items per page"
-msgstr "items per pagina"
-
 msgid "Items per page"
 msgstr "Items per pagina"
+
+msgid "items per page"
+msgstr "items per pagina"
 
 msgid "Keep existing settings"
 msgstr "Huidige instellingen behouden"
@@ -1319,6 +1319,15 @@ msgstr "Geen achtergrondafbeelding geselecteerd."
 
 msgid "No books found"
 msgstr "Geen boeken gevonden"
+
+msgid "No books with author metadata found"
+msgstr "Geen boeken met metagegevens van de auteur gevonden"
+
+msgid "No books with series metadata found"
+msgstr "Er zijn geen boeken met metagegevens van de serie gevonden"
+
+msgid "No books with tags metadata found"
+msgstr "Geen boeken met tags metadata gevonden"
 
 msgid "No changelog entries found.\n\nNo releases are available for this channel."
 msgstr "Geen vermeldingen in het wijzigingslogboek gevonden.\n\nEr zijn geen releases beschikbaar voor dit kanaal."
@@ -2085,10 +2094,10 @@ msgstr "Deze week"
 msgid "This Week"
 msgstr "Deze week"
 
-msgid "This year"
+msgid "This Year"
 msgstr "Dit jaar"
 
-msgid "This Year"
+msgid "This year"
 msgstr "Dit jaar"
 
 msgid "Time"
@@ -2169,11 +2178,11 @@ msgstr "Onderstreping boven pictogram"
 msgid "Uniform covers"
 msgstr "Uniforme omslagen"
 
-msgid "unknown"
-msgstr "onbekend"
-
 msgid "Unknown"
 msgstr "Onbekend"
+
+msgid "unknown"
+msgstr "onbekend"
 
 msgid "Unknown Author"
 msgstr "Onbekende auteur"
@@ -2349,10 +2358,10 @@ msgstr "Zen"
 msgid "Zen highlight menu"
 msgstr "Zen markeermenu"
 
-msgid "Zen mode"
+msgid "Zen Mode"
 msgstr "Zen-modus"
 
-msgid "Zen Mode"
+msgid "Zen mode"
 msgstr "Zen-modus"
 
 msgid "Zen OPDS"

@@ -279,20 +279,20 @@ msgstr "黑色"
 msgid "Blue"
 msgstr "藍色"
 
-msgid "Bold"
+msgid "bold"
 msgstr "粗體"
 
-msgid "bold"
+msgid "Bold"
 msgstr "粗體"
 
 msgid "Bold text"
 msgstr "粗體文字"
 
-msgid "book"
-msgstr "本書"
-
 msgid "Book"
 msgstr "書籍"
+
+msgid "book"
+msgstr "本書"
 
 msgid "Book added to download list"
 msgstr "書籍已加入下載清單"
@@ -312,11 +312,11 @@ msgstr "書籍標題"
 msgid "Book: "
 msgstr "書籍： "
 
-msgid "Books"
-msgstr "書庫"
-
 msgid "books"
 msgstr "本書"
+
+msgid "Books"
+msgstr "書庫"
 
 msgid "Books read"
 msgstr "讀過的書"
@@ -882,16 +882,16 @@ msgstr "資料夾預設"
 msgid "Folders"
 msgstr "資料夾"
 
-msgid "font"
-msgstr "字型"
-
 msgid "Font"
 msgstr "字體"
 
-msgid "Font size"
-msgstr "字型大小"
+msgid "font"
+msgstr "字型"
 
 msgid "font size"
+msgstr "字型大小"
+
+msgid "Font size"
 msgstr "字型大小"
 
 msgid "Font size:"
@@ -1044,10 +1044,10 @@ msgstr "正在安裝"
 msgid "Interactive"
 msgstr "互動式"
 
-msgid "items per page"
+msgid "Items per page"
 msgstr "每頁項目數"
 
-msgid "Items per page"
+msgid "items per page"
 msgstr "每頁項目數"
 
 msgid "Keep existing settings"
@@ -1319,6 +1319,15 @@ msgstr "未選擇背景圖片。"
 
 msgid "No books found"
 msgstr "未找到書籍"
+
+msgid "No books with author metadata found"
+msgstr "未找到包含作者元資料的書籍"
+
+msgid "No books with series metadata found"
+msgstr "未找到包含系列元資料的書籍"
+
+msgid "No books with tags metadata found"
+msgstr "找不到帶有標籤元資料的書籍"
 
 msgid "No changelog entries found.\n\nNo releases are available for this channel."
 msgstr "找不到更新記錄項目。\n\n此頻道沒有可用發行版本。"
@@ -2085,10 +2094,10 @@ msgstr "本星期"
 msgid "This Week"
 msgstr "本週"
 
-msgid "This year"
+msgid "This Year"
 msgstr "今年"
 
-msgid "This Year"
+msgid "This year"
 msgstr "今年"
 
 msgid "Time"
@@ -2169,10 +2178,10 @@ msgstr "圖示上方底線"
 msgid "Uniform covers"
 msgstr "統一封面"
 
-msgid "unknown"
+msgid "Unknown"
 msgstr "未知"
 
-msgid "Unknown"
+msgid "unknown"
 msgstr "未知"
 
 msgid "Unknown Author"
@@ -2349,11 +2358,11 @@ msgstr "禪"
 msgid "Zen highlight menu"
 msgstr "禪 醒目標示選單"
 
-msgid "Zen mode"
-msgstr "禪 模式"
-
 msgid "Zen Mode"
 msgstr "禪模式"
+
+msgid "Zen mode"
+msgstr "禪 模式"
 
 msgid "Zen OPDS"
 msgstr "禪 OPDS"

@@ -2,15 +2,20 @@ describe("updater repository redirects", function()
     local original_https
     local original_ltn12
     local original_archiver
+    local original_icon_item
     local requests
 
     before_each(function()
         original_https = package.loaded["ssl.https"]
         original_ltn12 = package.loaded["ltn12"]
         original_archiver = package.loaded["ffi/archiver"]
+        original_icon_item = package.loaded["common/ui/icon_menu_item"]
         requests = {}
 
         ZenSpec.replace("ffi/archiver", {})
+        ZenSpec.replace("common/ui/icon_menu_item", {
+            decorate = function(item) return item end,
+        })
         ZenSpec.replace("config/manager", {
             load = function() return { updater = { update_channel = "stable" } } end,
             save = function() end,
@@ -58,6 +63,7 @@ describe("updater repository redirects", function()
         package.loaded["ssl.https"] = original_https
         package.loaded["ltn12"] = original_ltn12
         package.loaded["ffi/archiver"] = original_archiver
+        package.loaded["common/ui/icon_menu_item"] = original_icon_item
         ZenSpec.unload("modules/settings/zen_updater")
         ZenSpec.unload("config/manager")
     end)

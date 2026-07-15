@@ -910,6 +910,11 @@ end
 -------------------------------------------------------------------------------
 local function build_group_item_table(groups, data_type)
     local _ = require("gettext")
+    local empty_message = ({
+        authors = _("No books with author metadata found"),
+        series = _("No books with series metadata found"),
+        tags = _("No books with tags metadata found"),
+    })[data_type] or _("No books found")
     local items = {}
     for _i, group in ipairs(groups) do
         local files
@@ -934,7 +939,7 @@ local function build_group_item_table(groups, data_type)
     end
     if #items == 0 then
         table.insert(items, {
-            text     = _("No books found"),
+            text     = empty_message,
             dim      = true,
             callback = function() end,
         })
@@ -943,7 +948,7 @@ local function build_group_item_table(groups, data_type)
     -- Apply reverse sort if enabled (authors / series only; tags use per-group or global book sort)
     if (data_type == "authors" or data_type == "series") and get_group_reverse(data_type) and #items > 0 then
         -- Reverse the array (skip the placeholder)
-        if items[1].text ~= _("No books found") then
+        if items[1].text ~= empty_message then
             local reversed = {}
             for i = #items, 1, -1 do
                 table.insert(reversed, items[i])

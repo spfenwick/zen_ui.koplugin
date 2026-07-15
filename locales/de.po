@@ -279,19 +279,19 @@ msgstr "Schwarz"
 msgid "Blue"
 msgstr "Blau"
 
-msgid "Bold"
-msgstr "Fett"
-
 msgid "bold"
 msgstr "fett"
+
+msgid "Bold"
+msgstr "Fett"
 
 msgid "Bold text"
 msgstr "Fetter Text"
 
-msgid "book"
+msgid "Book"
 msgstr "Buch"
 
-msgid "Book"
+msgid "book"
 msgstr "Buch"
 
 msgid "Book added to download list"
@@ -312,10 +312,10 @@ msgstr "Buchtitel"
 msgid "Book: "
 msgstr "Buch: "
 
-msgid "Books"
+msgid "books"
 msgstr "Bücher"
 
-msgid "books"
+msgid "Books"
 msgstr "Bücher"
 
 msgid "Books read"
@@ -882,16 +882,16 @@ msgstr "Ordner-Voreinstellungen"
 msgid "Folders"
 msgstr "Ordner"
 
-msgid "font"
-msgstr "Schriftart"
-
 msgid "Font"
 msgstr "Schriftart"
 
-msgid "Font size"
-msgstr "Schriftgröße"
+msgid "font"
+msgstr "Schriftart"
 
 msgid "font size"
+msgstr "Schriftgröße"
+
+msgid "Font size"
 msgstr "Schriftgröße"
 
 msgid "Font size:"
@@ -1044,10 +1044,10 @@ msgstr "Wird installiert"
 msgid "Interactive"
 msgstr "Interaktiv"
 
-msgid "items per page"
+msgid "Items per page"
 msgstr "Elemente pro Seite"
 
-msgid "Items per page"
+msgid "items per page"
 msgstr "Elemente pro Seite"
 
 msgid "Keep existing settings"
@@ -1319,6 +1319,15 @@ msgstr "Kein Hintergrundbild ausgewählt."
 
 msgid "No books found"
 msgstr "Keine Bücher gefunden"
+
+msgid "No books with author metadata found"
+msgstr "Es wurden keine Bücher mit Autorenmetadaten gefunden"
+
+msgid "No books with series metadata found"
+msgstr "Es wurden keine Bücher mit Serienmetadaten gefunden"
+
+msgid "No books with tags metadata found"
+msgstr "Es wurden keine Bücher mit Tag-Metadaten gefunden"
 
 msgid "No changelog entries found.\n\nNo releases are available for this channel."
 msgstr "Keine Einträge im Änderungsprotokoll gefunden.\n\nFür diesen Kanal sind keine Releases verfügbar."
@@ -2085,10 +2094,10 @@ msgstr "Diese Woche"
 msgid "This Week"
 msgstr "Diese Woche"
 
-msgid "This year"
+msgid "This Year"
 msgstr "Dieses Jahr"
 
-msgid "This Year"
+msgid "This year"
 msgstr "Dieses Jahr"
 
 msgid "Time"
@@ -2169,11 +2178,11 @@ msgstr "Unterstreichung über dem Icon"
 msgid "Uniform covers"
 msgstr "Einheitliche Cover"
 
-msgid "unknown"
-msgstr "unbekannt"
-
 msgid "Unknown"
 msgstr "Unbekannt"
+
+msgid "unknown"
+msgstr "unbekannt"
 
 msgid "Unknown Author"
 msgstr "Unbekannter Autor"
@@ -2349,10 +2358,10 @@ msgstr "Zen"
 msgid "Zen highlight menu"
 msgstr "Zen-Auswahlmenü"
 
-msgid "Zen mode"
+msgid "Zen Mode"
 msgstr "Zen-Modus"
 
-msgid "Zen Mode"
+msgid "Zen mode"
 msgstr "Zen-Modus"
 
 msgid "Zen OPDS"

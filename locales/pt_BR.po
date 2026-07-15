@@ -279,20 +279,20 @@ msgstr "Preto"
 msgid "Blue"
 msgstr "Azul"
 
-msgid "Bold"
-msgstr "Negrito"
-
 msgid "bold"
 msgstr "negrito"
+
+msgid "Bold"
+msgstr "Negrito"
 
 msgid "Bold text"
 msgstr "Texto em negrito"
 
-msgid "book"
-msgstr "livro"
-
 msgid "Book"
 msgstr "Livro"
+
+msgid "book"
+msgstr "livro"
 
 msgid "Book added to download list"
 msgstr "Livro adicionado à lista de downloads"
@@ -312,11 +312,11 @@ msgstr "Título do livro"
 msgid "Book: "
 msgstr "Livro: "
 
-msgid "Books"
-msgstr "Livros"
-
 msgid "books"
 msgstr "livros"
+
+msgid "Books"
+msgstr "Livros"
 
 msgid "Books read"
 msgstr "Livros lidos"
@@ -882,17 +882,17 @@ msgstr "Predefinições de pasta"
 msgid "Folders"
 msgstr "Pastas"
 
-msgid "font"
-msgstr "fonte"
-
 msgid "Font"
 msgstr "Fonte"
 
-msgid "Font size"
-msgstr "Tamanho da fonte"
+msgid "font"
+msgstr "fonte"
 
 msgid "font size"
 msgstr "tamanho da fonte"
+
+msgid "Font size"
+msgstr "Tamanho da fonte"
 
 msgid "Font size:"
 msgstr "Tamanho da fonte:"
@@ -1044,11 +1044,11 @@ msgstr "Instalando"
 msgid "Interactive"
 msgstr "Interativo"
 
-msgid "items per page"
-msgstr "itens por página"
-
 msgid "Items per page"
 msgstr "Itens por página"
+
+msgid "items per page"
+msgstr "itens por página"
 
 msgid "Keep existing settings"
 msgstr "Manter configurações atuais"
@@ -1319,6 +1319,15 @@ msgstr "Nenhuma imagem de fundo selecionada."
 
 msgid "No books found"
 msgstr "Nenhum livro encontrado"
+
+msgid "No books with author metadata found"
+msgstr "Nenhum livro com metadados do autor encontrado"
+
+msgid "No books with series metadata found"
+msgstr "Nenhum livro com metadados de série encontrado"
+
+msgid "No books with tags metadata found"
+msgstr "Não foram encontrados livros com metadados de tags"
 
 msgid "No changelog entries found.\n\nNo releases are available for this channel."
 msgstr "Nenhuma entrada no registro de alterações encontrada.\n\nNão há lançamentos disponíveis para este canal."
@@ -2085,10 +2094,10 @@ msgstr "Essa semana"
 msgid "This Week"
 msgstr "Esta semana"
 
-msgid "This year"
+msgid "This Year"
 msgstr "Este ano"
 
-msgid "This Year"
+msgid "This year"
 msgstr "Este ano"
 
 msgid "Time"
@@ -2169,11 +2178,11 @@ msgstr "Sublinhado acima do ícone"
 msgid "Uniform covers"
 msgstr "Capas uniformes"
 
-msgid "unknown"
-msgstr "desconhecido"
-
 msgid "Unknown"
 msgstr "Desconhecido"
+
+msgid "unknown"
+msgstr "desconhecido"
 
 msgid "Unknown Author"
 msgstr "Autor desconhecido"
@@ -2349,10 +2358,10 @@ msgstr "Zen"
 msgid "Zen highlight menu"
 msgstr "Menu de destaque Zen"
 
-msgid "Zen mode"
+msgid "Zen Mode"
 msgstr "Modo Zen"
 
-msgid "Zen Mode"
+msgid "Zen mode"
 msgstr "Modo Zen"
 
 msgid "Zen OPDS"

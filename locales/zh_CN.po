@@ -279,20 +279,20 @@ msgstr "黑色"
 msgid "Blue"
 msgstr "蓝色"
 
-msgid "Bold"
+msgid "bold"
 msgstr "粗体"
 
-msgid "bold"
+msgid "Bold"
 msgstr "粗体"
 
 msgid "Bold text"
 msgstr "粗体文本"
 
-msgid "book"
-msgstr "本书"
-
 msgid "Book"
 msgstr "书籍"
+
+msgid "book"
+msgstr "本书"
 
 msgid "Book added to download list"
 msgstr "书籍已添加到下载列表"
@@ -312,11 +312,11 @@ msgstr "图书标题"
 msgid "Book: "
 msgstr "图书： "
 
-msgid "Books"
-msgstr "书库"
-
 msgid "books"
 msgstr "本书"
+
+msgid "Books"
+msgstr "书库"
 
 msgid "Books read"
 msgstr "读过的书"
@@ -882,17 +882,17 @@ msgstr "文件夹预设"
 msgid "Folders"
 msgstr "文件夹"
 
-msgid "font"
-msgstr "字体"
-
 msgid "Font"
 msgstr "字体"
 
-msgid "Font size"
-msgstr "字体大小"
+msgid "font"
+msgstr "字体"
 
 msgid "font size"
 msgstr "字号"
+
+msgid "Font size"
+msgstr "字体大小"
 
 msgid "Font size:"
 msgstr "字体大小："
@@ -1044,10 +1044,10 @@ msgstr "正在安装"
 msgid "Interactive"
 msgstr "交互式"
 
-msgid "items per page"
+msgid "Items per page"
 msgstr "每页项目数"
 
-msgid "Items per page"
+msgid "items per page"
 msgstr "每页项目数"
 
 msgid "Keep existing settings"
@@ -1319,6 +1319,15 @@ msgstr "未选择背景图像。"
 
 msgid "No books found"
 msgstr "未找到书籍"
+
+msgid "No books with author metadata found"
+msgstr "未找到包含作者元数据的书籍"
+
+msgid "No books with series metadata found"
+msgstr "未找到包含系列元数据的书籍"
+
+msgid "No books with tags metadata found"
+msgstr "找不到带有标签元数据的书籍"
 
 msgid "No changelog entries found.\n\nNo releases are available for this channel."
 msgstr "未找到更新日志条目。\n\n此频道没有可用发布版本。"
@@ -2085,10 +2094,10 @@ msgstr "本星期"
 msgid "This Week"
 msgstr "本周"
 
-msgid "This year"
+msgid "This Year"
 msgstr "今年"
 
-msgid "This Year"
+msgid "This year"
 msgstr "今年"
 
 msgid "Time"
@@ -2169,10 +2178,10 @@ msgstr "图标上方下划线"
 msgid "Uniform covers"
 msgstr "统一封面"
 
-msgid "unknown"
+msgid "Unknown"
 msgstr "未知"
 
-msgid "Unknown"
+msgid "unknown"
 msgstr "未知"
 
 msgid "Unknown Author"
@@ -2349,11 +2358,11 @@ msgstr "Zen"
 msgid "Zen highlight menu"
 msgstr "Zen 高亮菜单"
 
-msgid "Zen mode"
-msgstr "Zen 模式"
-
 msgid "Zen Mode"
 msgstr "Zen模式"
+
+msgid "Zen mode"
+msgstr "Zen 模式"
 
 msgid "Zen OPDS"
 msgstr "Zen OPDS"

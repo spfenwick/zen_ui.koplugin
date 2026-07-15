@@ -279,20 +279,20 @@ msgstr "Чёрный"
 msgid "Blue"
 msgstr "Синий"
 
-msgid "Bold"
-msgstr "Жирный"
-
 msgid "bold"
 msgstr "полужирный"
+
+msgid "Bold"
+msgstr "Жирный"
 
 msgid "Bold text"
 msgstr "Жирный текст"
 
-msgid "book"
-msgstr "книга"
-
 msgid "Book"
 msgstr "Книга"
+
+msgid "book"
+msgstr "книга"
 
 msgid "Book added to download list"
 msgstr "Книга добавлена в список загрузок"
@@ -312,11 +312,11 @@ msgstr "Название книги"
 msgid "Book: "
 msgstr "Книга: "
 
-msgid "Books"
-msgstr "Книги"
-
 msgid "books"
 msgstr "книги"
+
+msgid "Books"
+msgstr "Книги"
 
 msgid "Books read"
 msgstr "Книги прочитаны"
@@ -882,17 +882,17 @@ msgstr "Предустановки папки"
 msgid "Folders"
 msgstr "Папки"
 
-msgid "font"
-msgstr "шрифт"
-
 msgid "Font"
 msgstr "Шрифт"
 
-msgid "Font size"
-msgstr "Размер шрифта"
+msgid "font"
+msgstr "шрифт"
 
 msgid "font size"
 msgstr "размер шрифта"
+
+msgid "Font size"
+msgstr "Размер шрифта"
 
 msgid "Font size:"
 msgstr "Размер шрифта:"
@@ -1044,11 +1044,11 @@ msgstr "Установка"
 msgid "Interactive"
 msgstr "Интерактивный"
 
-msgid "items per page"
-msgstr "элементов на странице"
-
 msgid "Items per page"
 msgstr "Элементов на странице"
+
+msgid "items per page"
+msgstr "элементов на странице"
 
 msgid "Keep existing settings"
 msgstr "Оставить текущие настройки"
@@ -1319,6 +1319,15 @@ msgstr "Фоновое изображение не выбрано."
 
 msgid "No books found"
 msgstr "Книги не найдены"
+
+msgid "No books with author metadata found"
+msgstr "Книг с метаданными автора не найдено."
+
+msgid "No books with series metadata found"
+msgstr "Книг с метаданными серий не найдено."
+
+msgid "No books with tags metadata found"
+msgstr "Книг с метаданными тегов не найдено."
 
 msgid "No changelog entries found.\n\nNo releases are available for this channel."
 msgstr "Записи об изменениях не найдены.\n\nДля этого канала нет доступных выпусков."
@@ -2085,11 +2094,11 @@ msgstr "На этой неделе"
 msgid "This Week"
 msgstr "Эта неделя"
 
-msgid "This year"
-msgstr "В этом году"
-
 msgid "This Year"
 msgstr "Этот год"
+
+msgid "This year"
+msgstr "В этом году"
 
 msgid "Time"
 msgstr "Время"
@@ -2169,11 +2178,11 @@ msgstr "Подчёркивание над значком"
 msgid "Uniform covers"
 msgstr "Единый вид обложек"
 
-msgid "unknown"
-msgstr "неизвестно"
-
 msgid "Unknown"
 msgstr "Неизвестно"
+
+msgid "unknown"
+msgstr "неизвестно"
 
 msgid "Unknown Author"
 msgstr "Неизвестный автор"
@@ -2349,10 +2358,10 @@ msgstr "Zen"
 msgid "Zen highlight menu"
 msgstr "Меню выделения Zen"
 
-msgid "Zen mode"
+msgid "Zen Mode"
 msgstr "Режим Zen"
 
-msgid "Zen Mode"
+msgid "Zen mode"
 msgstr "Режим Zen"
 
 msgid "Zen OPDS"

@@ -279,20 +279,20 @@ msgstr "Negru"
 msgid "Blue"
 msgstr "Albastru"
 
-msgid "Bold"
-msgstr "Îngroșat"
-
 msgid "bold"
 msgstr "aldin"
+
+msgid "Bold"
+msgstr "Îngroșat"
 
 msgid "Bold text"
 msgstr "Text îngroșat"
 
-msgid "book"
-msgstr "carte"
-
 msgid "Book"
 msgstr "Carte"
+
+msgid "book"
+msgstr "carte"
 
 msgid "Book added to download list"
 msgstr "Carte adăugată în lista de descărcări"
@@ -312,11 +312,11 @@ msgstr "Titlul cărții"
 msgid "Book: "
 msgstr "Carte: "
 
-msgid "Books"
-msgstr "Cărți"
-
 msgid "books"
 msgstr "cărți"
+
+msgid "Books"
+msgstr "Cărți"
 
 msgid "Books read"
 msgstr "Cărți citite"
@@ -882,17 +882,17 @@ msgstr "Setări predefinite dosar"
 msgid "Folders"
 msgstr "Dosare"
 
-msgid "font"
-msgstr "font"
-
 msgid "Font"
 msgstr "Font"
 
-msgid "Font size"
-msgstr "Dimensiune font"
+msgid "font"
+msgstr "font"
 
 msgid "font size"
 msgstr "dimensiune font"
+
+msgid "Font size"
+msgstr "Dimensiune font"
 
 msgid "Font size:"
 msgstr "Dimensiune font:"
@@ -1044,11 +1044,11 @@ msgstr "Se instalează"
 msgid "Interactive"
 msgstr "Interactiv"
 
-msgid "items per page"
-msgstr "elemente pe pagină"
-
 msgid "Items per page"
 msgstr "Elemente pe pagină"
+
+msgid "items per page"
+msgstr "elemente pe pagină"
 
 msgid "Keep existing settings"
 msgstr "Păstrați setările existente"
@@ -1319,6 +1319,15 @@ msgstr "Nu a fost selectată nicio imagine de fundal."
 
 msgid "No books found"
 msgstr "Nu s-au găsit cărți"
+
+msgid "No books with author metadata found"
+msgstr "Nu s-au găsit cărți cu metadate ale autorului"
+
+msgid "No books with series metadata found"
+msgstr "Nu s-au găsit cărți cu metadate de serie"
+
+msgid "No books with tags metadata found"
+msgstr "Nu s-au găsit cărți cu metadate de etichete"
 
 msgid "No changelog entries found.\n\nNo releases are available for this channel."
 msgstr "Nu s-au găsit intrări în jurnalul modificărilor.\n\nNu există versiuni disponibile pentru acest canal."
@@ -2085,10 +2094,10 @@ msgstr "În această săptămână"
 msgid "This Week"
 msgstr "Săptămâna aceasta"
 
-msgid "This year"
+msgid "This Year"
 msgstr "Anul acesta"
 
-msgid "This Year"
+msgid "This year"
 msgstr "Anul acesta"
 
 msgid "Time"
@@ -2169,11 +2178,11 @@ msgstr "Subliniere deasupra pictogramei"
 msgid "Uniform covers"
 msgstr "Coperte uniforme"
 
-msgid "unknown"
-msgstr "necunoscut"
-
 msgid "Unknown"
 msgstr "Necunoscut"
+
+msgid "unknown"
+msgstr "necunoscut"
 
 msgid "Unknown Author"
 msgstr "Autor necunoscut"
@@ -2349,10 +2358,10 @@ msgstr "Zen"
 msgid "Zen highlight menu"
 msgstr "Meniu de evidențiere Zen"
 
-msgid "Zen mode"
+msgid "Zen Mode"
 msgstr "Mod Zen"
 
-msgid "Zen Mode"
+msgid "Zen mode"
 msgstr "Mod Zen"
 
 msgid "Zen OPDS"

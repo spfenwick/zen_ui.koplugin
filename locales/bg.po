@@ -288,20 +288,20 @@ msgstr "Черно"
 msgid "Blue"
 msgstr "Синьо"
 
-msgid "Bold"
-msgstr "Удебелен"
-
 msgid "bold"
 msgstr "получер"
+
+msgid "Bold"
+msgstr "Удебелен"
 
 msgid "Bold text"
 msgstr "Удебелен текст"
 
-msgid "book"
-msgstr "книга"
-
 msgid "Book"
 msgstr "Книга"
+
+msgid "book"
+msgstr "книга"
 
 msgid "Book added to download list"
 msgstr "Книгата е добавена в списъка за изтегляне"
@@ -321,11 +321,11 @@ msgstr "Заглавие на книга"
 msgid "Book: "
 msgstr "Книга: "
 
-msgid "Books"
-msgstr "Книги"
-
 msgid "books"
 msgstr "книги"
+
+msgid "Books"
+msgstr "Книги"
 
 msgid "Books read"
 msgstr "Прочетени книги"
@@ -891,17 +891,17 @@ msgstr "Предварителни настройки за папка"
 msgid "Folders"
 msgstr "Папки"
 
-msgid "font"
-msgstr "шрифт"
-
 msgid "Font"
 msgstr "Шрифт"
 
-msgid "Font size"
-msgstr "Размер на шрифта"
+msgid "font"
+msgstr "шрифт"
 
 msgid "font size"
 msgstr "размер на шрифта"
+
+msgid "Font size"
+msgstr "Размер на шрифта"
 
 msgid "Font size:"
 msgstr "Размер на шрифта:"
@@ -1053,11 +1053,11 @@ msgstr "Инсталиране"
 msgid "Interactive"
 msgstr "Интерактивно"
 
-msgid "items per page"
-msgstr "елемента на страница"
-
 msgid "Items per page"
 msgstr "Елементи на страница"
+
+msgid "items per page"
+msgstr "елемента на страница"
 
 msgid "Keep existing settings"
 msgstr "Запазване на текущите настройки"
@@ -1328,6 +1328,15 @@ msgstr "Не е избрано фоново изображение."
 
 msgid "No books found"
 msgstr "Не са намерени книги"
+
+msgid "No books with author metadata found"
+msgstr "Няма намерени книги с метаданни за автора"
+
+msgid "No books with series metadata found"
+msgstr "Няма намерени книги с метаданни за поредицата"
+
+msgid "No books with tags metadata found"
+msgstr "Няма намерени книги с метаданни за тагове"
 
 msgid "No changelog entries found.\n\nNo releases are available for this channel."
 msgstr "Не са намерени записи в списъка с промени.\n\nНяма налични издания за този канал."
@@ -2094,10 +2103,10 @@ msgstr "Тази седмица"
 msgid "This Week"
 msgstr "Тази седмица"
 
-msgid "This year"
+msgid "This Year"
 msgstr "Тази година"
 
-msgid "This Year"
+msgid "This year"
 msgstr "Тази година"
 
 msgid "Time"
@@ -2178,11 +2187,11 @@ msgstr "Подчертаване над иконата"
 msgid "Uniform covers"
 msgstr "Уеднаквяване на кориците"
 
-msgid "unknown"
-msgstr "неизвестно"
-
 msgid "Unknown"
 msgstr "Неизвестно"
+
+msgid "unknown"
+msgstr "неизвестно"
 
 msgid "Unknown Author"
 msgstr "Неизвестен автор"
@@ -2358,10 +2367,10 @@ msgstr "Zen"
 msgid "Zen highlight menu"
 msgstr "Меню за подчертаване Zen"
 
-msgid "Zen mode"
+msgid "Zen Mode"
 msgstr "Режим Zen"
 
-msgid "Zen Mode"
+msgid "Zen mode"
 msgstr "Режим Zen"
 
 msgid "Zen OPDS"
