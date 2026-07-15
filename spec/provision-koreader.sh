@@ -24,24 +24,24 @@ SOURCE="$CACHE_ROOT/$TARGET/source"
 if [[ ! -d "$SOURCE/.git" ]]; then
   mkdir -p "$(dirname "$SOURCE")"
   if [[ "$TARGET" == "master" ]]; then
-    git clone --recurse-submodules --depth=1 https://github.com/koreader/koreader.git "$SOURCE"
+    git clone --recurse-submodules --depth=1 https://github.com/koreader/koreader.git "$SOURCE" >&2
   else
-    git clone --recurse-submodules --depth=1 --branch "$REF" https://github.com/koreader/koreader.git "$SOURCE"
+    git clone --recurse-submodules --depth=1 --branch "$REF" https://github.com/koreader/koreader.git "$SOURCE" >&2
   fi
 fi
 
 if [[ "$TARGET" == "master" ]]; then
   (
     cd "$SOURCE"
-    git fetch --depth=1 origin "$REF"
-    git checkout --detach "$REF"
-    git submodule update --init --recursive
+    git fetch --depth=1 origin "$REF" >&2
+    git checkout --detach "$REF" >&2
+    git submodule update --init --recursive >&2
   )
 fi
 
 (
   cd "$SOURCE"
-  ./kodev build
+  ./kodev build >&2
 )
 
 RUNTIME="$(find "$SOURCE" \( -type f -o -type l \) -path '*/koreader/luajit' -perm -111 -print -quit | xargs -n1 dirname)"
