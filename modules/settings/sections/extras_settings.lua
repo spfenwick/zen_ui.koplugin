@@ -137,7 +137,7 @@ function M.build(ctx)
                 },
             },
         })
-        IconItem.decorate(items[#items], icons.settings_rakuyomi)
+        IconItem.decorate(items[#items], icons.reading)
     end
 
     local global_items = global_settings.build_extras_items(ctx)

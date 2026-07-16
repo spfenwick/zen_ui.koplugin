@@ -848,7 +848,7 @@ function M.build(ctx)
                 text = _("Buttons") .. " \u{25B8}",
                 keep_menu_open = true,
                 callback = showButtonsArrange,
-            }, icons.settings_buttons),
+            }, icons.action),
             {
                 text = _("Show brightness slider"),
                 checked_func = function() return config.quick_settings.show_frontlight == true end,
@@ -888,7 +888,7 @@ function M.build(ctx)
                         end,
                     })
                 end,
-            }, icons.settings_reset),
+            }, icons.restart),
         },
     }
 end

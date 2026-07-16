@@ -1362,7 +1362,7 @@ function M.build(ctx)
 
     IconItem.decorate(items[1], icons.settings_status)
     IconItem.decorate(items[2], icons.settings_layout)
-    IconItem.decorate(items[3], icons.settings_font)
+    IconItem.decorate(items[3], icons.title)
     IconItem.decorate(items[4], icons.settings_folders)
     IconItem.decorate(items[5], icons.settings_covers)
     IconItem.decorate(items[6], icons.settings_scroll)

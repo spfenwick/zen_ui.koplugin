@@ -99,12 +99,12 @@ function M.build(ctx)
         },
     })
 
-    IconItem.decorate(items[1], icons.settings_about)
+    IconItem.decorate(items[1], icons.details)
     IconItem.decorate(items[2], icons.settings_device)
     IconItem.decorate(items[3], icons.settings_setup)
     IconItem.decorate(items[4], icons.settings_bug)
     IconItem.decorate(items[5], icons.settings_advanced)
-    IconItem.decorate(items[6], icons.settings_updates)
+    IconItem.decorate(items[6], icons.update)
 
     return items
 end

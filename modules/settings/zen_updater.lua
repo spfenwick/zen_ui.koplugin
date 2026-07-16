@@ -1592,7 +1592,7 @@ function M.build_update_available_item(plugin)
         callback      = function()
             M.run_update(plugin)
         end,
-    }, icons.settings_updates)
+    }, icons.update)
 end
 
 --- Returns the "Check for updates" menu item for the About section.

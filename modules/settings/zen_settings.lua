@@ -81,7 +81,7 @@ function M.build(plugin)
                 end,
             })
         end,
-    }, icons.settings_quit))
+    }, icons.delete))
 
     -- -------------------------------------------------------------------------
     -- Item ordering
@@ -158,7 +158,7 @@ function M.build(plugin)
         IconItem.decorate({
             text = _("About"),
             sub_item_table = general_items,
-        }, icons.settings_about),
+        }, icons.details),
     }
 
     -- Insert banner if an update is already known.

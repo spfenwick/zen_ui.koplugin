@@ -84,9 +84,7 @@ return {
     settings_home     = "\u{F02DE}",
     settings_reader   = "\u{F14F7}",
     settings_global   = "\u{F484}",
-    settings_about    = "\u{F02FD}",  -- mdi-information
     settings_status   = "\u{F12F0}",
-    settings_font     = "\u{F04BB}",  -- mdi-format-title
     settings_folders  = "\u{F0256}",
     settings_covers   = "\u{F168B}",  -- mdi-view-module
     settings_scroll   = "\u{F0BB8}",
@@ -94,24 +92,14 @@ return {
     settings_background = "\u{F0E09}",
     settings_home_folder = "\u{F10B6}",
     settings_navbar   = "\u{F0837}",
-    settings_widgets  = "\u{F06D0}",  -- mdi-monitor
-    settings_presets  = "\u{F0193}",  -- mdi-content-save
-    settings_buttons  = "\u{F140B}",  -- mdi-gesture-tap-button
-    settings_reset    = "\u{F0709}",  -- mdi-restart
-    settings_lookup   = "\u{F0349}",  -- mdi-magnify
     settings_stats    = "\u{F012A}",
     settings_opds     = "\u{F0B7D}",
-    settings_rakuyomi = "\u{F0B63}",  -- mdi-book-open
-    settings_search   = "\u{F0349}",  -- mdi-magnify
-    settings_schedule = "\u{F0150}",  -- mdi-clock-outline
     settings_sleep    = "\u{F04B2}",
     settings_lockdown = "\u{F033E}",
     settings_device   = "\u{F04F7}",
     settings_setup    = "\u{F0C5A}",
     settings_bug      = "\u{F00E4}",
     settings_advanced = "\u{F0668}",  -- mdi-cog
-    settings_updates  = "\u{F01B}",   -- nf-fa-cloud-download
-    settings_quit     = "\u{F0156}",
 
     -- book status actions (book_status.lua)
     restart      = "\u{F0709}",  -- mdi-restart
@@ -119,6 +107,11 @@ return {
 
     -- misc
     update       = "\u{F01B}",   -- nf-fa-cloud-download
+    disable      = "\u{F04DB}",
+    downgrade    = "\u{F0CDC}",
+    upgrade      = "\u{F0CE2}",
+    enable       = "\u{F040A}",
+    remove       = "\u{F0374}",
     check        = "\u{2713}",   -- plain checkmark
     arrow_right  = "\u{25B8}",   -- triangular bullet
     go           = "\u{F124}",   -- nf-fa-location-arrow

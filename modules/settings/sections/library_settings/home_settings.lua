@@ -1462,8 +1462,8 @@ function M.build(ctx)
             },
             ]]
     }
-    IconItem.decorate(home_items[1], icons.settings_widgets)
-    IconItem.decorate(home_items[2], icons.settings_presets)
+    IconItem.decorate(home_items[1], icons.display)
+    IconItem.decorate(home_items[2], icons.save)
 
     return {
         text = _("Home"),

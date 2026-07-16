@@ -792,8 +792,8 @@ function M.build_extras_items(ctx)
         sleep_item,
         lockdown_item,
     }
-    IconItem.decorate(items[1], icons.settings_search)
-    IconItem.decorate(items[2], icons.settings_schedule)
+    IconItem.decorate(items[1], icons.search)
+    IconItem.decorate(items[2], icons.tbr)
     IconItem.decorate(items[3], icons.settings_sleep)
     IconItem.decorate(items[4], icons.settings_lockdown)
     return items

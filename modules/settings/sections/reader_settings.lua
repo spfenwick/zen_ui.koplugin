@@ -856,8 +856,8 @@ function M.build(ctx)
     })
 
     IconItem.decorate(items[1], icons.settings_status)
-    IconItem.decorate(items[2], icons.settings_font)
-    IconItem.decorate(items[3], icons.settings_lookup)
+    IconItem.decorate(items[2], icons.title)
+    IconItem.decorate(items[3], icons.search)
     IconItem.decorate(items[8], icons.settings_status)
 
     return items
