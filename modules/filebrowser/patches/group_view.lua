@@ -908,13 +908,17 @@ end
 -- data_type: "authors" or "series"
 -- groups: output of db_bookinfo.getGroupedByAuthor() / getGroupedBySeries()
 -------------------------------------------------------------------------------
-local function build_group_item_table(groups, data_type)
+local function group_empty_message(data_type)
     local _ = require("gettext")
-    local empty_message = ({
+    return ({
         authors = _("No books with author metadata found"),
         series = _("No books with series metadata found"),
         tags = _("No books with tags metadata found"),
     })[data_type] or _("No books found")
+end
+
+local function build_group_item_table(groups, data_type)
+    local empty_message = group_empty_message(data_type)
     local items = {}
     for _i, group in ipairs(groups) do
         local files
@@ -1474,7 +1478,7 @@ local function showDetailView(group_item, injectNavbar, tab_id)
     end
     if #book_items == 0 then
         table.insert(book_items, {
-            text = _("No books found"),
+            text = group_empty_message(tab_id),
             dim  = true,
             callback = function() end,
         })

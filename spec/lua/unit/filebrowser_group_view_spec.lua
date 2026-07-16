@@ -235,6 +235,31 @@ describe("file browser group views", function()
         end
     end)
 
+    it("names the group metadata when a detail page has no books", function()
+        install_group_view({
+            authors = { { author = "Ada", files = {} } },
+            series = { { series = "Earthsea", items = {} } },
+            tags = { { tag = "Science", files = {} } },
+        })
+
+        api.showAuthorsView()
+        api.showSeriesView()
+        api.showTagsView()
+
+        local empty_messages = {
+            authors = "No books with author metadata found",
+            series = "No books with series metadata found",
+            tags = "No books with tags metadata found",
+        }
+        for tab_id, message in pairs(empty_messages) do
+            local root = assert(find_menu(tab_id))
+            root.onMenuSelect(root, root.item_table[1])
+            local item = assert(find_menu(tab_id .. "_detail")).item_table[1]
+            assert.are.equal(message, item.text)
+            assert.is_true(item.dim)
+        end
+    end)
+
     it("persists reverse group sorting and rebuilds the open page", function()
         install_group_view({
             authors = {
