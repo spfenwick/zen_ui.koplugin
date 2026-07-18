@@ -18,6 +18,9 @@ msgstr "%1 min rămase în capitol"
 msgid "%d%% Read"
 msgstr "%d%% citit"
 
+msgid "%s books goal"
+msgstr "%s cărți obiectiv"
+
 msgid "%s goal"
 msgstr "%s gol"
 
@@ -213,11 +216,11 @@ msgstr "Cel puțin o filă trebuie să fie vizibilă"
 msgid "Author"
 msgstr "Autor"
 
-msgid "authors"
-msgstr "autori"
-
 msgid "Authors"
 msgstr "Autori"
+
+msgid "authors"
+msgstr "autori"
 
 msgid "Automatic suspend"
 msgstr "Suspendare automată"
@@ -288,11 +291,11 @@ msgstr "Îngroșat"
 msgid "Bold text"
 msgstr "Text îngroșat"
 
-msgid "Book"
-msgstr "Carte"
-
 msgid "book"
 msgstr "carte"
+
+msgid "Book"
+msgstr "Carte"
 
 msgid "Book added to download list"
 msgstr "Carte adăugată în lista de descărcări"
@@ -312,11 +315,11 @@ msgstr "Titlul cărții"
 msgid "Book: "
 msgstr "Carte: "
 
-msgid "books"
-msgstr "cărți"
-
 msgid "Books"
 msgstr "Cărți"
+
+msgid "books"
+msgstr "cărți"
 
 msgid "Books read"
 msgstr "Cărți citite"
@@ -644,6 +647,9 @@ msgstr "implicit"
 
 msgid "Default (black)"
 msgstr "Implicit (negru)"
+
+msgid "Default font size:"
+msgstr "Dimensiunea fontului implicit:"
 
 msgid "Default tab: "
 msgstr "Filă implicită: "
@@ -987,6 +993,9 @@ msgstr "Ține apăsat pentru a sări"
 msgid "Home"
 msgstr "Acasă"
 
+msgid "Home default font size"
+msgstr "Mărimea fontului implicită de acasă"
+
 msgid "Home Folder"
 msgstr "Dosar principal"
 
@@ -1188,11 +1197,11 @@ msgstr "min"
 msgid "Minute"
 msgstr "Minut"
 
-msgid "minutes"
-msgstr "minute"
-
 msgid "Minutes"
 msgstr "Minute"
+
+msgid "minutes"
+msgstr "minute"
 
 msgid "Monthly"
 msgstr "Lunar"
@@ -1440,11 +1449,11 @@ msgstr "Flux de pagini"
 msgid "Page x / y"
 msgstr "Pagina x / y"
 
-msgid "Pages"
-msgstr "Pagini"
-
 msgid "pages"
 msgstr "pag."
+
+msgid "Pages"
+msgstr "Pagini"
 
 msgid "Pages + Chapter Time + %"
 msgstr "Pagini + Timp capitol + %"
@@ -1454,6 +1463,9 @@ msgstr "Pagini și %"
 
 msgid "Pages read"
 msgstr "Pagini citite"
+
+msgid "Pages this week"
+msgstr "Pagini săptămâna aceasta"
 
 msgid "Pages today"
 msgstr "Pagini de azi"
@@ -1545,6 +1557,9 @@ msgstr "Închide"
 msgid "Quit KOReader"
 msgstr "Închide KOReader"
 
+msgid "Quote font size"
+msgstr "Dimensiunea fontului citat"
+
 msgid "Quotes widget"
 msgstr "Widget citate"
 
@@ -1581,10 +1596,10 @@ msgstr "Progres de lectură"
 msgid "Reading"
 msgstr "Se citește"
 
-msgid "Reading calendar"
+msgid "Reading Calendar"
 msgstr "Calendar de lectură"
 
-msgid "Reading Calendar"
+msgid "Reading calendar"
 msgstr "Calendar de lectură"
 
 msgid "Reading goals"
@@ -2001,6 +2016,12 @@ msgstr "Calendarul cu statistici nu este disponibil"
 msgid "Stats"
 msgstr "Statistici"
 
+msgid "Stats default font size"
+msgstr "Dimensiunea implicită a fontului pentru statistici"
+
+msgid "Stats font size"
+msgstr "Dimensiunea fontului statistici"
+
 msgid "Stats: Calendar"
 msgstr "Statistici: Calendar"
 
@@ -2079,10 +2100,10 @@ msgstr "Locul pentru toate cărțile dvs. %1"
 msgid "This change requires a restart to take effect."
 msgstr "Această modificare necesită o repornire pentru a intra în vigoare."
 
-msgid "This month"
+msgid "This Month"
 msgstr "Luna aceasta"
 
-msgid "This Month"
+msgid "This month"
 msgstr "Luna aceasta"
 
 msgid "This option is disabled when a home folder is the device storage root. Set home folders to narrower books folders first."
@@ -2094,10 +2115,10 @@ msgstr "În această săptămână"
 msgid "This Week"
 msgstr "Săptămâna aceasta"
 
-msgid "This Year"
+msgid "This year"
 msgstr "Anul acesta"
 
-msgid "This year"
+msgid "This Year"
 msgstr "Anul acesta"
 
 msgid "Time"
@@ -2106,8 +2127,14 @@ msgstr "Timp"
 msgid "Time Format"
 msgstr "Format oră"
 
+msgid "Time this week"
+msgstr "Este timpul săptămâna aceasta"
+
 msgid "Time to book end"
 msgstr "Timp până la finalul cărții"
+
+msgid "Time today"
+msgstr "Timpul de azi"
 
 msgid "Time/book"
 msgstr "Timp/carte"
@@ -2178,11 +2205,11 @@ msgstr "Subliniere deasupra pictogramei"
 msgid "Uniform covers"
 msgstr "Coperte uniforme"
 
-msgid "Unknown"
-msgstr "Necunoscut"
-
 msgid "unknown"
 msgstr "necunoscut"
+
+msgid "Unknown"
+msgstr "Necunoscut"
 
 msgid "Unknown Author"
 msgstr "Autor necunoscut"
@@ -2283,11 +2310,17 @@ msgstr "Folosește fontul implicit"
 msgid "Use default style"
 msgstr "Folosește stilul implicit"
 
+msgid "Use Home default font size"
+msgstr "Utilizați dimensiunea implicită a fontului principal"
+
 msgid "Use home folder"
 msgstr "Folosește dosarul principal"
 
 msgid "Use last folder"
 msgstr "Folosește ultimul dosar"
+
+msgid "Use Stats default font size"
+msgstr "Utilizați dimensiunea implicită a fontului Stats"
 
 msgid "username"
 msgstr "nume utilizator"

@@ -401,6 +401,13 @@ local function ensure_home_widget_cfg(dcfg)
     if stats_triplet.stat_style ~= "outline" and stats_triplet.stat_style ~= "none" then
         stats_triplet.stat_style = "divider"
     end
+    local stats_font_size = tonumber(stats_triplet.font_size)
+        or tonumber(stats_triplet.font_scale) and 18 * stats_triplet.font_scale / 100
+    local stats_font_override = stats_triplet.font_size_override == true
+    stats_triplet.font_size = stats_font_size and (stats_font_override or stats_font_size ~= 18)
+        and math.max(8, math.min(32, math.floor(stats_font_size + 0.5))) or nil
+    stats_triplet.font_size_override = stats_triplet.font_size and true or nil
+    stats_triplet.font_scale = nil
     local strip_custom = ensure_strip_module_cfg(dcfg, "strip_custom")
     if type(strip_custom.paths) ~= "table" then strip_custom.paths = {} end
     ensure_strip_module_cfg(dcfg, "strip_tbr")
@@ -443,6 +450,9 @@ local function ensure_home_cfg()
     dcfg.rows = Registry.normalizeRows(dcfg.rows, DEFAULT_ROW_ORDER, DEFAULT_ROW_ENABLED)
 
     if dcfg.show_status_bar == nil then dcfg.show_status_bar = true end
+    local font_size = tonumber(dcfg.font_size)
+    dcfg.font_size = font_size and math.max(8, math.min(32, math.floor(font_size + 0.5))) or 18
+    dcfg.font_size_override = dcfg.font_size_override == true
 
     if type(dcfg.middle_stats_triplet) ~= "table" then
         dcfg.middle_stats_triplet = { "today_pages", "today_duration", "streak" }
@@ -452,6 +462,11 @@ local function ensure_home_cfg()
 
     if type(dcfg.quotes) ~= "table" then dcfg.quotes = {} end
     if dcfg.quotes.show_author == nil then dcfg.quotes.show_author = true end
+    local quote_font_size = tonumber(dcfg.quotes.font_size)
+    local quote_font_override = dcfg.quotes.font_size_override == true
+    dcfg.quotes.font_size = quote_font_size and (quote_font_override or quote_font_size ~= 12)
+        and math.max(4, math.min(32, math.floor(quote_font_size + 0.5))) or nil
+    dcfg.quotes.font_size_override = dcfg.quotes.font_size and true or nil
 
     if type(dcfg.quotes.manual_index) ~= "number" then dcfg.quotes.manual_index = 1 end
 
@@ -578,6 +593,7 @@ local function collect_stats_fields(rows, dcfg)
             if not added then add("today_pages") end
         elseif id == "reading_goals" then
             local goals = dcfg.goals or {}
+            local metrics = type(goals.metrics) == "table" and goals.metrics or {}
             local periods = type(goals.periods) == "table" and goals.periods
                 or { goals.period == "weekly" and "weekly" or "daily" }
             for _j, period in ipairs(periods) do
@@ -587,6 +603,13 @@ local function collect_stats_fields(rows, dcfg)
                 add(period == "weekly" and "week_duration"
                     or period == "monthly" and "month_duration"
                     or period == "yearly" and "year_duration" or "today_duration")
+                if metrics[period] == "books" then
+                    if period == "monthly" then
+                        add("finished_this_month")
+                    elseif period == "yearly" then
+                        add("finished_this_year")
+                    end
+                end
             end
         end
     end
@@ -600,7 +623,7 @@ local function stats_fields_key(fields)
     local order = {
         "today_pages", "today_duration", "week_pages", "week_duration",
         "month_pages", "month_duration",
-        "year_pages", "year_duration", "streak",
+        "year_pages", "year_duration", "finished_this_month", "finished_this_year", "streak",
     }
     local out = {}
     for _i, key in ipairs(order) do
@@ -673,6 +696,15 @@ local function build_data_provider(cfg, dcfg)
             stats_cached = StatsDB.queryStats() or {}
         else
             stats_cached = {}
+        end
+        if fields and (fields.finished_this_month or fields.finished_this_year) then
+            local ok_library, LibraryDB = pcall(require, "common/db_library")
+            local counts = ok_library and LibraryDB and LibraryDB.getBookCounts
+                and LibraryDB.getBookCounts() or {}
+            stats_cached.finished_this_month = fields.finished_this_month
+                and (counts.finished_this_month or 0) or 0
+            stats_cached.finished_this_year = fields.finished_this_year
+                and (counts.finished_this_year or 0) or 0
         end
         return stats_cached
     end

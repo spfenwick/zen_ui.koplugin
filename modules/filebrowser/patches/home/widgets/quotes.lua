@@ -16,49 +16,25 @@ local function get_quote(ctx)
     return { text = "No quote available.", author = "" }
 end
 
-local function fit_quote_face(text, width, max_h)
-    local Screen = Device.screen
-    local min_px = 4
-    local max_px = 12
-    local chosen = Font:getFace("smallinfofont", Screen:scaleBySize(min_px))
-
-    for px = max_px, min_px, -1 do
-        local face = Font:getFace("smallinfofont", Screen:scaleBySize(px))
-        local probe = TextBoxWidget:new{
-            text = text,
-            width = width,
-            face = face,
-            alignment = "center",
-            height_adjust = true,
-            height_overflow_show_ellipsis = false,
-        }
-        local need_h = probe:getSize().h or 0
-        WidgetResources.free(probe)
-        if need_h <= max_h then
-            chosen = face
-            break
-        end
-    end
-
-    return chosen
-end
-
 return {
     id = "quotes",
     label = "Quotes widget",
-    size = { preferred_pct = 0.16, min_pct = 0.10, max_pct = 0.28, grow_priority = 3 },
+    size = { preferred_pct = 0.20, min_pct = 0.14, max_pct = 0.32, grow_priority = 3 },
     build = function(ctx)
         local width = ctx.width
         local height = ctx.height
         local quote = get_quote(ctx)
         local show_author = ctx.config.quotes and ctx.config.quotes.show_author ~= false
         local Screen = Device.screen
+        local quote_font_size = ctx.config.quotes and ctx.config.quotes.font_size
+            or ctx.config.font_size or 18
+        quote_font_size = math.max(4, math.min(32, tonumber(quote_font_size) or 12))
 
         local padding = Screen:scaleBySize(8)
         local content_w = math.max(30, width - padding * 2)
         local inner_h = math.max(20, height - 12)
         local quote_text = '"' .. (quote.text or "") .. '"'
-        local author_face = Font:getFace("smallinfofont", Screen:scaleBySize(10))
+        local author_face = Font:getFace("smallinfofont", Screen:scaleBySize(math.max(6, math.floor(quote_font_size * 5 / 6))))
         local author_h = 0
         if show_author and quote.author and quote.author ~= "" then
             local author_probe = TextWidget:new{ text = "A", face = author_face }
@@ -67,14 +43,14 @@ return {
             author_h = author_line_h + 5
         end
         local author_gap = author_h > 0 and 3 or 0
-        local quote_face = fit_quote_face(quote_text, content_w, math.max(10, inner_h - author_h - author_gap))
+        local quote_h = math.max(10, inner_h - author_h - author_gap)
         local quote_widget = TextBoxWidget:new{
             text = quote_text,
             width = content_w,
-            face = quote_face,
+            height = quote_h,
+            face = Font:getFace("smallinfofont", Screen:scaleBySize(quote_font_size)),
             alignment = "center",
-            height_adjust = true,
-            height_overflow_show_ellipsis = false,
+            height_overflow_show_ellipsis = true,
         }
         local quote_size = quote_widget:getSize()
         local author_widget
@@ -87,8 +63,8 @@ return {
             }
         end
         local author_size = author_widget and author_widget:getSize() or nil
-        local quote_h = quote_size.h or 0
-        local content_h = quote_h
+        local quote_height = quote_size.h or 0
+        local content_h = quote_height
         if author_widget then
             content_h = content_h + author_gap + (author_size.h or 0)
         end
@@ -103,7 +79,7 @@ return {
                 quote_widget:paintTo(bb, quote_x, quote_y)
                 if author_widget then
                     local author_x = x + math.floor((width - (author_size.w or 0)) / 2)
-                    local author_y = quote_y + quote_h + author_gap
+                    local author_y = quote_y + quote_height + author_gap
                     author_widget:paintTo(bb, author_x, author_y)
                 end
             end,

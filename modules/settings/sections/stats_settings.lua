@@ -79,7 +79,9 @@ function M.build(ctx)
     end
 
     local function graph_items(settings)
-        local graph = settings.widgets.options.trend_graph
+        local function graph()
+            return settings.widgets.options.trend_graph
+        end
         return {
             {
                 text = _("Metric"),
@@ -87,14 +89,14 @@ function M.build(ctx)
                     {
                         text = _("Pages"),
                         radio = true,
-                        checked_func = function() return graph.metric ~= "time" end,
-                        callback = function() graph.metric = "pages"; save(settings) end,
+                        checked_func = function() return graph().metric ~= "time" end,
+                        callback = function() graph().metric = "pages"; save(settings) end,
                     },
                     {
                         text = _("Time"),
                         radio = true,
-                        checked_func = function() return graph.metric == "time" end,
-                        callback = function() graph.metric = "time"; save(settings) end,
+                        checked_func = function() return graph().metric == "time" end,
+                        callback = function() graph().metric = "time"; save(settings) end,
                     },
                 },
             },
@@ -107,11 +109,48 @@ function M.build(ctx)
                         items[#items + 1] = {
                             text = tostring(item_range) .. _(" days"),
                             radio = true,
-                            checked_func = function() return graph.range_days == item_range end,
-                            callback = function() graph.range_days = item_range; save(settings) end,
+                            checked_func = function() return graph().range_days == item_range end,
+                            callback = function() graph().range_days = item_range; save(settings) end,
                         }
                     end
                     return items
+                end,
+            },
+        }
+    end
+
+    local function font_size_items(settings, id)
+        local function widget()
+            return settings.widgets.options[id]
+        end
+        return {
+            {
+                text_func = function()
+                    return string.format("%s %s", _("Font size:"), tostring(widget().font_size or settings.font_size or 15))
+                end,
+                keep_menu_open = true,
+                callback = function()
+                    local SpinWidget = require("ui/widget/spinwidget")
+                    UIManager:show(SpinWidget:new{
+                        title_text = label_for(id) .. " " .. _("font size"),
+                        value = widget().font_size or settings.font_size or 15,
+                        value_min = 6,
+                        value_max = 32,
+                        default_value = 15,
+                        callback = function(spin)
+                            widget().font_size = spin.value
+                            widget().font_size_override = true
+                            save(settings)
+                        end,
+                    })
+                end,
+            },
+            {
+                text = _("Use Stats default font size"),
+                callback = function()
+                    widget().font_size = nil
+                    widget().font_size_override = nil
+                    save(settings)
                 end,
             },
         }
@@ -166,6 +205,7 @@ function M.build(ctx)
                         return
                     end
                     save(settings)
+                    widgets = settings.widgets
                     update_dims()
                 end,
             }
@@ -179,6 +219,12 @@ function M.build(ctx)
             elseif item_id == "goal_progress" then
                 item.sub_item_table_func = function()
                     local items = goal_items()
+                    items._zen_arrange_done_func = function() end
+                    return items
+                end
+            elseif StatsSettings.hasFontSize(item_id) then
+                item.sub_item_table_func = function()
+                    local items = font_size_items(settings, item_id)
                     items._zen_arrange_done_func = function() end
                     return items
                 end
@@ -216,6 +262,35 @@ function M.build(ctx)
         return items
     end
 
+    local function default_font_size_item()
+        return {
+            text_func = function()
+                local settings = StatsSettings.load()
+                return string.format("%s %s", _("Default font size:"), tostring(settings.font_size or 15))
+            end,
+            keep_menu_open = true,
+            callback = function(touchmenu_instance)
+                local SpinWidget = require("ui/widget/spinwidget")
+                local settings = StatsSettings.load()
+                UIManager:show(SpinWidget:new{
+                    title_text = _("Stats default font size"),
+                    value = settings.font_size or 15,
+                    value_min = 6,
+                    value_max = 32,
+                    default_value = 15,
+                    callback = function(spin)
+                        settings.font_size = spin.value
+                        settings.font_size_override = true
+                        save(settings)
+                        if touchmenu_instance and touchmenu_instance.updateItems then
+                            touchmenu_instance:updateItems()
+                        end
+                    end,
+                })
+            end,
+        }
+    end
+
     return IconItem.decorate({
         text = _("Stats"),
         sub_item_table = {
@@ -224,6 +299,7 @@ function M.build(ctx)
                 keep_menu_open = true,
                 callback = arrange_widgets,
             },
+            default_font_size_item(),
             {
                 text = _("Stat separators"),
                 sub_item_table_func = style_items,

@@ -18,6 +18,9 @@ msgstr "%1 mins left in chapter"
 msgid "%d%% Read"
 msgstr "%d%% Read"
 
+msgid "%s books goal"
+msgstr "%s books goal"
+
 msgid "%s goal"
 msgstr "%s goal"
 
@@ -213,11 +216,11 @@ msgstr "At least one tab must be visible"
 msgid "Author"
 msgstr "Author"
 
-msgid "authors"
-msgstr "authors"
-
 msgid "Authors"
 msgstr "Authors"
+
+msgid "authors"
+msgstr "authors"
 
 msgid "Automatic suspend"
 msgstr "Automatic suspend"
@@ -288,11 +291,11 @@ msgstr "Bold"
 msgid "Bold text"
 msgstr "Bold text"
 
-msgid "Book"
-msgstr "Book"
-
 msgid "book"
 msgstr "book"
+
+msgid "Book"
+msgstr "Book"
 
 msgid "Book added to download list"
 msgstr "Book added to download list"
@@ -312,11 +315,11 @@ msgstr "Book Title"
 msgid "Book: "
 msgstr "Book: "
 
-msgid "books"
-msgstr "books"
-
 msgid "Books"
 msgstr "Books"
+
+msgid "books"
+msgstr "books"
 
 msgid "Books read"
 msgstr "Books read"
@@ -644,6 +647,9 @@ msgstr "default"
 
 msgid "Default (black)"
 msgstr "Default (black)"
+
+msgid "Default font size:"
+msgstr "Default font size:"
 
 msgid "Default tab: "
 msgstr "Default tab: "
@@ -987,6 +993,9 @@ msgstr "Hold to skip"
 msgid "Home"
 msgstr "Home"
 
+msgid "Home default font size"
+msgstr "Home default font size"
+
 msgid "Home Folder"
 msgstr "Home Folder"
 
@@ -1188,11 +1197,11 @@ msgstr "min"
 msgid "Minute"
 msgstr "Minute"
 
-msgid "minutes"
-msgstr "minutes"
-
 msgid "Minutes"
 msgstr "Minutes"
+
+msgid "minutes"
+msgstr "minutes"
 
 msgid "Monthly"
 msgstr "Monthly"
@@ -1440,11 +1449,11 @@ msgstr "Page stream"
 msgid "Page x / y"
 msgstr "Page x / y"
 
-msgid "Pages"
-msgstr "Pages"
-
 msgid "pages"
 msgstr "pages"
+
+msgid "Pages"
+msgstr "Pages"
 
 msgid "Pages + Chapter Time + %"
 msgstr "Pages + Chapter Time + %"
@@ -1454,6 +1463,9 @@ msgstr "Pages and %"
 
 msgid "Pages read"
 msgstr "Pages read"
+
+msgid "Pages this week"
+msgstr "Pages this week"
 
 msgid "Pages today"
 msgstr "Pages today"
@@ -1545,6 +1557,9 @@ msgstr "Quit"
 msgid "Quit KOReader"
 msgstr "Quit KOReader"
 
+msgid "Quote font size"
+msgstr "Quote font size"
+
 msgid "Quotes widget"
 msgstr "Quotes widget"
 
@@ -1581,11 +1596,11 @@ msgstr "Reader Progress"
 msgid "Reading"
 msgstr "Reading"
 
-msgid "Reading calendar"
-msgstr "Reading calendar"
-
 msgid "Reading Calendar"
 msgstr "Reading Calendar"
+
+msgid "Reading calendar"
+msgstr "Reading calendar"
 
 msgid "Reading goals"
 msgstr "Reading goals"
@@ -2001,6 +2016,12 @@ msgstr "Statistics calendar is unavailable"
 msgid "Stats"
 msgstr "Stats"
 
+msgid "Stats default font size"
+msgstr "Stats default font size"
+
+msgid "Stats font size"
+msgstr "Stats font size"
+
 msgid "Stats: Calendar"
 msgstr "Stats: Calendar"
 
@@ -2079,11 +2100,11 @@ msgstr "The place for all your books %1"
 msgid "This change requires a restart to take effect."
 msgstr "This change requires a restart to take effect."
 
-msgid "This month"
-msgstr "This month"
-
 msgid "This Month"
 msgstr "This Month"
+
+msgid "This month"
+msgstr "This month"
 
 msgid "This option is disabled when a home folder is the device storage root. Set home folders to narrower books folders first."
 msgstr "This option is disabled when a home folder is the device storage root. Set home folders to narrower books folders first."
@@ -2094,11 +2115,11 @@ msgstr "This week"
 msgid "This Week"
 msgstr "This Week"
 
-msgid "This Year"
-msgstr "This Year"
-
 msgid "This year"
 msgstr "This year"
+
+msgid "This Year"
+msgstr "This Year"
 
 msgid "Time"
 msgstr "Time"
@@ -2106,8 +2127,14 @@ msgstr "Time"
 msgid "Time Format"
 msgstr "Time Format"
 
+msgid "Time this week"
+msgstr "Time this week"
+
 msgid "Time to book end"
 msgstr "Time to book end"
+
+msgid "Time today"
+msgstr "Time today"
 
 msgid "Time/book"
 msgstr "Time/book"
@@ -2178,11 +2205,11 @@ msgstr "Underline above icon"
 msgid "Uniform covers"
 msgstr "Uniform covers"
 
-msgid "Unknown"
-msgstr "Unknown"
-
 msgid "unknown"
 msgstr "unknown"
+
+msgid "Unknown"
+msgstr "Unknown"
 
 msgid "Unknown Author"
 msgstr "Unknown Author"
@@ -2283,11 +2310,17 @@ msgstr "Use default font"
 msgid "Use default style"
 msgstr "Use default style"
 
+msgid "Use Home default font size"
+msgstr "Use Home default font size"
+
 msgid "Use home folder"
 msgstr "Use home folder"
 
 msgid "Use last folder"
 msgstr "Use last folder"
+
+msgid "Use Stats default font size"
+msgstr "Use Stats default font size"
 
 msgid "username"
 msgstr "username"

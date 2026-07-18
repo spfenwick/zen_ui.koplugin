@@ -17,6 +17,8 @@ describe("reading goals settings", function()
         assert.are.equal("time", goals.metric)
         assert.are.equal(900, goals.monthly_pages_target)
         assert.are.equal(1000, goals.yearly_time_target_min)
+        assert.are.equal(1, goals.monthly_books_target)
+        assert.are.equal(12, goals.yearly_books_target)
         assert.are.equal("time", goals.metrics.monthly)
 
         local legacy = Goals.normalize({ period = "weekly" })
@@ -37,6 +39,10 @@ describe("reading goals settings", function()
         assert.are.equal("Time", daily[3].text)
         assert.are.equal("Daily pages goal: 30", daily[4].text_func())
         assert.are.equal("Daily time goal (min): 30", daily[5].text_func())
+
+        local monthly = items[3].sub_item_table_func()
+        assert.are.equal("Books", monthly[4].text)
+        assert.are.equal("Monthly books goal: 1", monthly[7].text_func())
     end)
 end)
 
@@ -153,5 +159,45 @@ describe("reading goals widget", function()
         assert.is_true(popup_texts[string.format("Daily goal (%s)", os.date("%B %d"))])
         assert.is_true(popup_texts[string.format("Monthly goal (%s)", os.date("%B"))])
         assert.is_true(popup_texts[string.format("Yearly goal (%s)", os.date("%Y"))])
+    end)
+
+    it("uses the supplied section font size when it fits", function()
+        local widget = require("modules/filebrowser/patches/home/widgets/reading_goals")
+        widget.build({
+            width = 600,
+            height = 160,
+            font_size = 18,
+            config = { goals = { periods = { "daily" } } },
+            data = { stats = { today_pages = 1 } },
+        })
+
+        for _i, item in ipairs(created) do
+            if item.text == "Daily" and item.face and item.face.size == 18 then return end
+        end
+        assert.fail("Reading goals did not use the configured font size")
+    end)
+
+    it("shows completed books for monthly and yearly goals", function()
+        local widget = require("modules/filebrowser/patches/home/widgets/reading_goals")
+        widget.build({
+            width = 600,
+            height = 160,
+            config = {
+                goals = {
+                    periods = { "monthly", "yearly" },
+                    metrics = { monthly = "books", yearly = "books" },
+                    monthly_books_target = 2,
+                    yearly_books_target = 12,
+                },
+            },
+            data = { stats = { finished_this_month = 1, finished_this_year = 8 } },
+        })
+
+        local found = {}
+        for _i, item in ipairs(created) do
+            if item.text then found[item.text] = true end
+        end
+        assert.is_true(found["1 / 2 Books (50%)"])
+        assert.is_true(found["8 / 12 Books (67%)"])
     end)
 end)

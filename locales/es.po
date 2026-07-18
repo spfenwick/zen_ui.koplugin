@@ -18,6 +18,9 @@ msgstr "%1 min restantes en el capítulo"
 msgid "%d%% Read"
 msgstr "%d%% leído"
 
+msgid "%s books goal"
+msgstr "%s objetivo de libros"
+
 msgid "%s goal"
 msgstr "%s objetivo"
 
@@ -213,11 +216,11 @@ msgstr "Debe haber al menos una pestaña visible"
 msgid "Author"
 msgstr "Autor"
 
-msgid "authors"
-msgstr "autores"
-
 msgid "Authors"
 msgstr "Autores"
+
+msgid "authors"
+msgstr "autores"
 
 msgid "Automatic suspend"
 msgstr "Suspensión automática"
@@ -288,11 +291,11 @@ msgstr "Negrita"
 msgid "Bold text"
 msgstr "Texto en negrita"
 
-msgid "Book"
-msgstr "Libro"
-
 msgid "book"
 msgstr "libro"
+
+msgid "Book"
+msgstr "Libro"
 
 msgid "Book added to download list"
 msgstr "Libro añadido a la lista de descarga"
@@ -312,11 +315,11 @@ msgstr "Título del libro"
 msgid "Book: "
 msgstr "Libro: "
 
-msgid "books"
-msgstr "libros"
-
 msgid "Books"
 msgstr "Libros"
+
+msgid "books"
+msgstr "libros"
 
 msgid "Books read"
 msgstr "libros leídos"
@@ -644,6 +647,9 @@ msgstr "predeterminado"
 
 msgid "Default (black)"
 msgstr "Predeterminado (negro)"
+
+msgid "Default font size:"
+msgstr "Tamaño de fuente predeterminado:"
 
 msgid "Default tab: "
 msgstr "Pestaña predeterminada: "
@@ -987,6 +993,9 @@ msgstr "Mantén pulsado para omitir"
 msgid "Home"
 msgstr "Inicio"
 
+msgid "Home default font size"
+msgstr "Tamaño de fuente predeterminado de inicio"
+
 msgid "Home Folder"
 msgstr "Carpeta de inicio"
 
@@ -1188,11 +1197,11 @@ msgstr "mín."
 msgid "Minute"
 msgstr "Minuto"
 
-msgid "minutes"
-msgstr "minutos"
-
 msgid "Minutes"
 msgstr "Minutos"
+
+msgid "minutes"
+msgstr "minutos"
 
 msgid "Monthly"
 msgstr "Mensual"
@@ -1440,11 +1449,11 @@ msgstr "Flujo de páginas"
 msgid "Page x / y"
 msgstr "Página x / y"
 
-msgid "Pages"
-msgstr "paginas"
-
 msgid "pages"
 msgstr "págs."
+
+msgid "Pages"
+msgstr "paginas"
 
 msgid "Pages + Chapter Time + %"
 msgstr "Páginas + Tiempo de capítulo + %"
@@ -1454,6 +1463,9 @@ msgstr "Páginas y %"
 
 msgid "Pages read"
 msgstr "páginas leídas"
+
+msgid "Pages this week"
+msgstr "Páginas de esta semana"
 
 msgid "Pages today"
 msgstr "Paginas hoy"
@@ -1545,6 +1557,9 @@ msgstr "Salir"
 msgid "Quit KOReader"
 msgstr "Cerrar KOReader"
 
+msgid "Quote font size"
+msgstr "Tamaño de fuente de la cita"
+
 msgid "Quotes widget"
 msgstr "Widget de citas"
 
@@ -1581,10 +1596,10 @@ msgstr "Progreso de lectura"
 msgid "Reading"
 msgstr "Leyendo"
 
-msgid "Reading calendar"
+msgid "Reading Calendar"
 msgstr "Calendario de lectura"
 
-msgid "Reading Calendar"
+msgid "Reading calendar"
 msgstr "Calendario de lectura"
 
 msgid "Reading goals"
@@ -2001,6 +2016,12 @@ msgstr "El calendario de estadísticas no está disponible"
 msgid "Stats"
 msgstr "Estadísticas"
 
+msgid "Stats default font size"
+msgstr "Tamaño de fuente predeterminado de estadísticas"
+
+msgid "Stats font size"
+msgstr "Tamaño de fuente de estadísticas"
+
 msgid "Stats: Calendar"
 msgstr "Estad.: Calendario"
 
@@ -2079,11 +2100,11 @@ msgstr "El lugar para todos tus libros %1"
 msgid "This change requires a restart to take effect."
 msgstr "Este cambio requiere un reinicio para aplicarse."
 
-msgid "This month"
-msgstr "este mes"
-
 msgid "This Month"
 msgstr "Este mes"
+
+msgid "This month"
+msgstr "este mes"
 
 msgid "This option is disabled when a home folder is the device storage root. Set home folders to narrower books folders first."
 msgstr "Esta opción se desactiva cuando una carpeta de inicio es la raíz del almacenamiento del dispositivo. Primero establece carpetas de libros más específicas como carpetas de inicio."
@@ -2094,11 +2115,11 @@ msgstr "Esta semana"
 msgid "This Week"
 msgstr "Esta semana"
 
-msgid "This Year"
-msgstr "Este año"
-
 msgid "This year"
 msgstr "este año"
+
+msgid "This Year"
+msgstr "Este año"
 
 msgid "Time"
 msgstr "Hora"
@@ -2106,8 +2127,14 @@ msgstr "Hora"
 msgid "Time Format"
 msgstr "Formato de hora"
 
+msgid "Time this week"
+msgstr "tiempo esta semana"
+
 msgid "Time to book end"
 msgstr "Tiempo hasta terminar el libro"
+
+msgid "Time today"
+msgstr "hora hoy"
 
 msgid "Time/book"
 msgstr "Hora/reservar"
@@ -2178,11 +2205,11 @@ msgstr "Subrayado sobre el icono"
 msgid "Uniform covers"
 msgstr "Portadas uniformes"
 
-msgid "Unknown"
-msgstr "Desconocido"
-
 msgid "unknown"
 msgstr "desconocido"
+
+msgid "Unknown"
+msgstr "Desconocido"
 
 msgid "Unknown Author"
 msgstr "Autor desconocido"
@@ -2283,11 +2310,17 @@ msgstr "Usar fuente predeterminada"
 msgid "Use default style"
 msgstr "Usar estilo predeterminado"
 
+msgid "Use Home default font size"
+msgstr "Usar el tamaño de fuente predeterminado de Inicio"
+
 msgid "Use home folder"
 msgstr "Usar carpeta de inicio"
 
 msgid "Use last folder"
 msgstr "Usar última carpeta"
+
+msgid "Use Stats default font size"
+msgstr "Usar el tamaño de fuente predeterminado de Estadísticas"
 
 msgid "username"
 msgstr "nombre de usuario"

@@ -18,6 +18,9 @@ msgstr "%1 min do konce kapitoly"
 msgid "%d%% Read"
 msgstr "%d%% přečteno"
 
+msgid "%s books goal"
+msgstr "Cíl %s knih"
+
 msgid "%s goal"
 msgstr "Cíl %s"
 
@@ -213,11 +216,11 @@ msgstr "Alespoň jedna karta musí být viditelná"
 msgid "Author"
 msgstr "Autor"
 
-msgid "authors"
-msgstr "autoři"
-
 msgid "Authors"
 msgstr "Autoři"
+
+msgid "authors"
+msgstr "autoři"
 
 msgid "Automatic suspend"
 msgstr "Automaticky potlačit"
@@ -288,11 +291,11 @@ msgstr "Tučně"
 msgid "Bold text"
 msgstr "Tučný text"
 
-msgid "Book"
-msgstr "Kniha"
-
 msgid "book"
 msgstr "kniha"
+
+msgid "Book"
+msgstr "Kniha"
 
 msgid "Book added to download list"
 msgstr "Kniha přidána do seznamu pro stažení"
@@ -312,11 +315,11 @@ msgstr "Název knihy"
 msgid "Book: "
 msgstr "Kniha: "
 
-msgid "books"
-msgstr "knihy"
-
 msgid "Books"
 msgstr "Knihy"
+
+msgid "books"
+msgstr "knihy"
 
 msgid "Books read"
 msgstr "Přečtené knihy"
@@ -644,6 +647,9 @@ msgstr "výchozí"
 
 msgid "Default (black)"
 msgstr "Výchozí (černá)"
+
+msgid "Default font size:"
+msgstr "Výchozí velikost písma:"
 
 msgid "Default tab: "
 msgstr "Výchozí karta: "
@@ -987,6 +993,9 @@ msgstr "Přidržením vynechat"
 msgid "Home"
 msgstr "Domov"
 
+msgid "Home default font size"
+msgstr "Výchozí velikost písma Home"
+
 msgid "Home Folder"
 msgstr "Domovská složka"
 
@@ -1188,11 +1197,11 @@ msgstr "min"
 msgid "Minute"
 msgstr "Minuta"
 
-msgid "minutes"
-msgstr "zápis"
-
 msgid "Minutes"
 msgstr "Zápis"
+
+msgid "minutes"
+msgstr "zápis"
 
 msgid "Monthly"
 msgstr "Měsíční"
@@ -1440,11 +1449,11 @@ msgstr "Proud stránek"
 msgid "Page x / y"
 msgstr "Stránka x / y"
 
-msgid "Pages"
-msgstr "Stránky"
-
 msgid "pages"
 msgstr "stránky"
+
+msgid "Pages"
+msgstr "Stránky"
 
 msgid "Pages + Chapter Time + %"
 msgstr "Stránky + Čas kapitoly + %"
@@ -1454,6 +1463,9 @@ msgstr "Stránky a %"
 
 msgid "Pages read"
 msgstr "Stránky přečteny"
+
+msgid "Pages this week"
+msgstr "Stránky tento týden"
 
 msgid "Pages today"
 msgstr "Stránky dnes"
@@ -1545,6 +1557,9 @@ msgstr "Ukončit"
 msgid "Quit KOReader"
 msgstr "Ukončit KOReader"
 
+msgid "Quote font size"
+msgstr "Velikost písma nabídky"
+
 msgid "Quotes widget"
 msgstr "Widget citací"
 
@@ -1581,11 +1596,11 @@ msgstr "Postup čtení"
 msgid "Reading"
 msgstr "Čtení"
 
-msgid "Reading calendar"
-msgstr "Čtecí kalendář"
-
 msgid "Reading Calendar"
 msgstr "Čtení kalendáře"
+
+msgid "Reading calendar"
+msgstr "Čtecí kalendář"
 
 msgid "Reading goals"
 msgstr "Cíle čtení"
@@ -2001,6 +2016,12 @@ msgstr "Kalendář statistik není k dispozici"
 msgid "Stats"
 msgstr "Statistiky"
 
+msgid "Stats default font size"
+msgstr "Výchozí velikost písma statistiky"
+
+msgid "Stats font size"
+msgstr "Statistická velikost písma"
+
 msgid "Stats: Calendar"
 msgstr "Statistiky: Kalendář"
 
@@ -2079,10 +2100,10 @@ msgstr "Místo pro všechny vaše knihy %1"
 msgid "This change requires a restart to take effect."
 msgstr "Aby se tato změna projevila, je nutný restart."
 
-msgid "This month"
+msgid "This Month"
 msgstr "Tento měsíc"
 
-msgid "This Month"
+msgid "This month"
 msgstr "Tento měsíc"
 
 msgid "This option is disabled when a home folder is the device storage root. Set home folders to narrower books folders first."
@@ -2094,11 +2115,11 @@ msgstr "Tento týden"
 msgid "This Week"
 msgstr "Tento týden"
 
-msgid "This Year"
-msgstr "Tento rok"
-
 msgid "This year"
 msgstr "Letos"
+
+msgid "This Year"
+msgstr "Tento rok"
 
 msgid "Time"
 msgstr "Čas"
@@ -2106,8 +2127,14 @@ msgstr "Čas"
 msgid "Time Format"
 msgstr "Formát času"
 
+msgid "Time this week"
+msgstr "Čas tento týden"
+
 msgid "Time to book end"
 msgstr "Čas do konce knihy"
+
+msgid "Time today"
+msgstr "Dnešní čas"
 
 msgid "Time/book"
 msgstr "Čas/kniha"
@@ -2178,11 +2205,11 @@ msgstr "Podtržení nad ikonou"
 msgid "Uniform covers"
 msgstr "Jednotné obálky"
 
-msgid "Unknown"
-msgstr "Neznámý"
-
 msgid "unknown"
 msgstr "neznámý"
+
+msgid "Unknown"
+msgstr "Neznámý"
 
 msgid "Unknown Author"
 msgstr "Neznámý autor"
@@ -2283,11 +2310,17 @@ msgstr "Použít výchozí písmo"
 msgid "Use default style"
 msgstr "Použít výchozí styl"
 
+msgid "Use Home default font size"
+msgstr "Použít výchozí velikost písma Domů"
+
 msgid "Use home folder"
 msgstr "Použít domovskou složku"
 
 msgid "Use last folder"
 msgstr "Použít poslední složku"
+
+msgid "Use Stats default font size"
+msgstr "Použít výchozí velikost písma Statistiky"
 
 msgid "username"
 msgstr "jméno uživatele"

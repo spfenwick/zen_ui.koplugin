@@ -843,9 +843,11 @@ local function buildContent(blocks_config, data, page_w, h_padding, top_padding,
 
     local function card(opts)
         local height = opts.height or Screen:scaleBySize(74)
-        opts.value_size = opts.value_size
-            or Screen:scaleBySize(math.max(10, math.min(15, math.floor(height * 0.14))))
-        opts.label_size = Screen:scaleBySize(math.max(6, math.min(9, math.floor(height * 0.08))))
+        local font_size = tonumber(opts.font_size)
+        opts.value_size = font_size and sz(font_size)
+            or sz(math.max(10, math.min(15, math.floor(height * 0.14))))
+        opts.label_size = font_size and sz(math.max(6, math.floor(font_size * 0.6)))
+            or sz(math.max(6, math.min(9, math.floor(height * 0.08))))
         opts.header_size = opts.header and opts.label_size or opts.header_size
         if opts.streak and flame_icon_path then
             local value_widget = TextWidget:new{
@@ -872,65 +874,69 @@ local function buildContent(blocks_config, data, page_w, h_padding, top_padding,
 
     local function periodCards(block, body_h)
         local card_h = math.max(Screen:scaleBySize(36), body_h)
+        local function blockCard(opts)
+            opts.font_size = block.font_size
+            return card(opts)
+        end
         if block.id == "today" then
             return createCardRow(body_w, {
-                card{ width = c3_w, height = card_h, value = tostring(stats.today_pages or 0), label = _("Pages today") },
-                card{ width = c3_w, height = card_h, value = formatTime(stats.today_duration), label = _("Read today") },
-                card{ width = c3_w, height = card_h, value = tostring(stats.streak or 0), label = _("Day streak"), streak = true },
+                blockCard{ width = c3_w, height = card_h, value = tostring(stats.today_pages or 0), label = _("Pages today") },
+                blockCard{ width = c3_w, height = card_h, value = formatTime(stats.today_duration), label = _("Read today") },
+                blockCard{ width = c3_w, height = card_h, value = tostring(stats.streak or 0), label = _("Day streak"), streak = true },
             }, stat_style, card_gap)
         elseif block.id == "this_week" then
             local avg_p = (stats.week_pages or 0) > 0 and math.floor((stats.week_pages or 0) / 7) or 0
             local avg_t = (stats.week_duration or 0) > 0 and math.floor((stats.week_duration or 0) / 7) or 0
             return createCardRow(body_w, {
-                card{ width = c4_w, height = card_h, value_size = 22, value = tostring(stats.week_pages or 0), label = _("Pages") },
-                card{ width = c4_w, height = card_h, value_size = 22, value = tostring(avg_p), label = _("Pages/day") },
-                card{ width = c4_w, height = card_h, value_size = 22, value = formatTime(avg_t), label = _("Time/day") },
-                card{ width = c4_w, height = card_h, value_size = 22, value = formatTime(stats.week_duration), label = _("Total time") },
+                blockCard{ width = c4_w, height = card_h, value = tostring(stats.week_pages or 0), label = _("Pages") },
+                blockCard{ width = c4_w, height = card_h, value = tostring(avg_p), label = _("Pages/day") },
+                blockCard{ width = c4_w, height = card_h, value = formatTime(avg_t), label = _("Time/day") },
+                blockCard{ width = c4_w, height = card_h, value = formatTime(stats.week_duration), label = _("Total time") },
             }, stat_style, card_gap)
         elseif block.id == "this_month" then
             local avg_p = math.floor((stats.month_pages or 0) / days_this_month)
             local avg_t = math.floor((stats.month_duration or 0) / days_this_month)
             return createCardRow(body_w, {
-                card{ width = c4_w, height = card_h, value_size = 22, value = tostring(stats.month_pages or 0), label = _("Pages") },
-                card{ width = c4_w, height = card_h, value_size = 22, value = tostring(avg_p), label = _("Pages/day") },
-                card{ width = c4_w, height = card_h, value_size = 22, value = formatTime(avg_t), label = _("Time/day") },
-                card{ width = c4_w, height = card_h, value_size = 22, value = formatTime(stats.month_duration), label = _("Total time") },
+                blockCard{ width = c4_w, height = card_h, value = tostring(stats.month_pages or 0), label = _("Pages") },
+                blockCard{ width = c4_w, height = card_h, value = tostring(avg_p), label = _("Pages/day") },
+                blockCard{ width = c4_w, height = card_h, value = formatTime(avg_t), label = _("Time/day") },
+                blockCard{ width = c4_w, height = card_h, value = formatTime(stats.month_duration), label = _("Total time") },
             }, stat_style, card_gap)
         elseif block.id == "this_year" then
             local avg_t = math.floor((stats.year_duration or 0) / days_this_year)
             return createCardRow(body_w, {
-                card{ width = c4_w, height = card_h, value_size = 22, value = tostring(stats.year_pages or 0), label = _("Pages") },
-                card{ width = c4_w, height = card_h, value_size = 22, value = formatTime(avg_t), label = _("Time/day") },
-                card{ width = c4_w, height = card_h, value_size = 22, value = formatTime(stats.year_duration), label = _("Total time") },
-                card{ width = c4_w, height = card_h, value_size = 22, value = tostring(stats.books_this_year or 0), label = _("Books read") },
+                blockCard{ width = c4_w, height = card_h, value = tostring(stats.year_pages or 0), label = _("Pages") },
+                blockCard{ width = c4_w, height = card_h, value = formatTime(avg_t), label = _("Time/day") },
+                blockCard{ width = c4_w, height = card_h, value = formatTime(stats.year_duration), label = _("Total time") },
+                blockCard{ width = c4_w, height = card_h, value = tostring(stats.books_this_year or 0), label = _("Books read") },
             }, stat_style, card_gap)
         elseif block.id == "all_time" then
             return createCardRow(body_w, {
-                card{ width = c4_w, height = card_h, value_size = 22, value = tostring(stats.lifetime_pages or 0), label = _("Total pages") },
-                card{ width = c4_w, height = card_h, value_size = 22, value = formatTime(stats.avg_time_per_book), label = _("Time/book") },
-                card{ width = c4_w, height = card_h, value_size = 22, value = formatLongTime(stats.lifetime_read_time), label = _("Read time") },
-                card{ width = c4_w, height = card_h, value_size = 22, value = tostring(stats.books_finished or 0), label = _("Finished") },
+                blockCard{ width = c4_w, height = card_h, value = tostring(stats.lifetime_pages or 0), label = _("Total pages") },
+                blockCard{ width = c4_w, height = card_h, value = formatTime(stats.avg_time_per_book), label = _("Time/book") },
+                blockCard{ width = c4_w, height = card_h, value = formatLongTime(stats.lifetime_read_time), label = _("Read time") },
+                blockCard{ width = c4_w, height = card_h, value = tostring(stats.books_finished or 0), label = _("Finished") },
             }, stat_style, card_gap)
         elseif block.id == "personal_records" then
             return createCardRow(body_w, {
-                card{ width = c3_w, height = card_h, value_size = 22, header = _("Best day"), value = formatTime(stats.peak_day_duration), label = fmtPeakDay(stats.peak_day_ts) },
-                card{ width = c3_w, height = card_h, value_size = 22, header = _("Best week"), value = formatTime(stats.peak_week_duration), label = fmtPeakWeek(stats.peak_week_ts) },
-                card{ width = c3_w, height = card_h, value_size = 22, header = _("Best month"), value = formatLongTime(stats.peak_month_duration), label = fmtPeakMonth(stats.peak_month_ts) },
+                blockCard{ width = c3_w, height = card_h, header = _("Best day"), value = formatTime(stats.peak_day_duration), label = fmtPeakDay(stats.peak_day_ts) },
+                blockCard{ width = c3_w, height = card_h, header = _("Best week"), value = formatTime(stats.peak_week_duration), label = fmtPeakWeek(stats.peak_week_ts) },
+                blockCard{ width = c3_w, height = card_h, header = _("Best month"), value = formatLongTime(stats.peak_month_duration), label = fmtPeakMonth(stats.peak_month_ts) },
             }, stat_style, card_gap)
         elseif block.id == "library" then
             return createCardRow(body_w, {
-                card{ width = c3_w, height = card_h, value = tostring(stats.total_books or 0), label = _("Total books") },
-                card{ width = c3_w, height = card_h, value = tostring(stats.books_reading or 0), label = _("Reading") },
-                card{ width = c3_w, height = card_h, value = tostring(stats.books_finished or 0), label = _("Finished") },
+                blockCard{ width = c3_w, height = card_h, value = tostring(stats.total_books or 0), label = _("Total books") },
+                blockCard{ width = c3_w, height = card_h, value = tostring(stats.books_reading or 0), label = _("Reading") },
+                blockCard{ width = c3_w, height = card_h, value = tostring(stats.books_finished or 0), label = _("Finished") },
             }, stat_style, card_gap)
         elseif block.id == "current_book" then
             local book = data.current_book or {}
             local avg = book.avg_time_per_page or 0
             return createCardRow(body_w, {
-                card{ width = c4_w, height = card_h, value_size = 22, value = formatLongTime(book.total_time), label = _("Total time") },
-                card{ width = c4_w, height = card_h, value_size = 22, value = tostring(book.pages_read or 0), label = _("Pages read") },
-                card{ width = c4_w, height = card_h, value_size = 22, value = formatTime(avg), label = _("Time/page") },
-                card{ width = c4_w, height = card_h, value_size = 22, value = tostring(book.session_pages or 0), label = _("Session pages") },
+                blockCard{ width = c4_w, height = card_h, value = formatLongTime(book.total_time), label = _("Total time") },
+                blockCard{ width = c4_w, height = card_h, value = tostring(book.pages_read or 0), label = _("Pages read") },
+                blockCard{ width = c4_w, height = card_h, value = formatTime(avg), label = _("Time/page") },
+                blockCard{ width = c4_w, height = card_h, value = tostring(book.session_pages or 0), label = _("Session pages") },
             }, stat_style, card_gap)
         end
     end
@@ -988,11 +994,21 @@ local function buildContent(blocks_config, data, page_w, h_padding, top_padding,
     end
 
     local function goalBlock(height)
+        local config = PresetStore.getSettings("home")
+        if type(config) ~= "table" then config = {} end
+        local goals = type(config.goals) == "table" and config.goals or {}
+        local metrics = type(goals.metrics) == "table" and goals.metrics or {}
+        if metrics.monthly == "books" or metrics.yearly == "books" then
+            local counts = LibraryDB.getBookCounts()
+            stats.finished_this_month = counts.finished_this_month or 0
+            stats.finished_this_year = counts.finished_this_year or 0
+        end
         return HomeGoals.build{
             width = content_w,
             height = height,
+            font_size = stats_settings.font_size_override and stats_settings.font_size or nil,
             data = { stats = stats },
-            config = PresetStore.getSettings("home"),
+            config = config,
         }
     end
 
@@ -1050,6 +1066,7 @@ local function buildContent(blocks_config, data, page_w, h_padding, top_padding,
             installCalendarDaySummary(self_cal, stats_plugin, stat_style)
             Background.clearWhiteBackgrounds(self_cal, 40)
             refreshEmbeddedCalendarLayout(self_cal)
+            UIManager:setDirty(self_cal, "ui")
             return result
         end
         installCalendarDaySummary(calendar, stats_plugin, stat_style)

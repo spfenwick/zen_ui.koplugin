@@ -152,6 +152,13 @@ local function ensure_home_widget_cfg(dcfg)
     if stats_triplet.stat_style ~= "outline" and stats_triplet.stat_style ~= "none" then
         stats_triplet.stat_style = "divider"
     end
+    local stats_font_size = tonumber(stats_triplet.font_size)
+        or tonumber(stats_triplet.font_scale) and 18 * stats_triplet.font_scale / 100
+    local stats_font_override = stats_triplet.font_size_override == true
+    stats_triplet.font_size = stats_font_size and (stats_font_override or stats_font_size ~= 18)
+        and math.max(8, math.min(32, math.floor(stats_font_size + 0.5))) or nil
+    stats_triplet.font_size_override = stats_triplet.font_size and true or nil
+    stats_triplet.font_scale = nil
     local strip_custom = ensure_strip_cfg(dcfg, "strip_custom")
     if type(strip_custom.paths) ~= "table" then strip_custom.paths = {} end
     ensure_strip_cfg(dcfg, "strip_tbr")
@@ -168,6 +175,9 @@ local function ensure_cfg(_config)
     dcfg.rows = Registry.normalizeRows(dcfg.rows, DEFAULT_ORDER, DEFAULT_ENABLED)
 
     if dcfg.show_status_bar == nil then dcfg.show_status_bar = true end
+    local font_size = tonumber(dcfg.font_size)
+    dcfg.font_size = font_size and math.max(8, math.min(32, math.floor(font_size + 0.5))) or 18
+    dcfg.font_size_override = dcfg.font_size_override == true
 
     if type(dcfg.middle_stats_triplet) ~= "table" then
         dcfg.middle_stats_triplet = { "today_pages", "today_duration", "streak" }
@@ -177,6 +187,11 @@ local function ensure_cfg(_config)
 
     if type(dcfg.quotes) ~= "table" then dcfg.quotes = {} end
     if dcfg.quotes.show_author == nil then dcfg.quotes.show_author = true end
+    local quote_font_size = tonumber(dcfg.quotes.font_size)
+    local quote_font_override = dcfg.quotes.font_size_override == true
+    dcfg.quotes.font_size = quote_font_size and (quote_font_override or quote_font_size ~= 12)
+        and math.max(4, math.min(32, math.floor(quote_font_size + 0.5))) or nil
+    dcfg.quotes.font_size_override = dcfg.quotes.font_size and true or nil
 
     for _i, comp in ipairs(Registry.list()) do
         ensure_module_cfg(dcfg, comp.id)
@@ -1247,12 +1262,16 @@ function M.build(ctx)
     end
 
     local stats_field_options = {
-        { id = "today_pages", text = "Pages today" },
-        { id = "today_duration", text = "Read today" },
-        { id = "streak", text = "Day streak" },
-        { id = "week_pages", text = "Week pages" },
-        { id = "week_duration", text = "Week time" },
+        { id = "today_pages", text = _("Pages today") },
+        { id = "today_duration", text = _("Time today") },
+        { id = "streak", text = _("Day streak") },
+        { id = "week_pages", text = _("Pages this week") },
+        { id = "week_duration", text = _("Time this week") },
     }
+    local stats_field_labels = {}
+    for _i, option in ipairs(stats_field_options) do
+        stats_field_labels[option.id] = option.text
+    end
 
     local function build_stats_triplet_items()
         local stats_cfg = ensure_module_cfg(dcfg, "stats_triplet")
@@ -1264,6 +1283,35 @@ function M.build(ctx)
                 end,
                 callback = function()
                     stats_cfg.show_module_title = stats_cfg.show_module_title ~= true
+                    save_home("reinit")
+                end,
+            },
+            {
+                text_func = function()
+                    return string.format("%s %s", _("Font size:"), tostring(stats_cfg.font_size or dcfg.font_size))
+                end,
+                keep_menu_open = true,
+                callback = function(touchmenu_instance)
+                    local SpinWidget = require("ui/widget/spinwidget")
+                    UIManager:show(SpinWidget:new{
+                        title_text = _("Stats font size"),
+                        value = stats_cfg.font_size or dcfg.font_size,
+                        value_min = 8,
+                        value_max = 32,
+                        default_value = 18,
+                        callback = function(spin)
+                            stats_cfg.font_size = spin.value
+                            stats_cfg.font_size_override = true
+                            save_home("reinit")
+                        end,
+                    })
+                end,
+            },
+            {
+                text = _("Use Home default font size"),
+                callback = function()
+                    stats_cfg.font_size = nil
+                    stats_cfg.font_size_override = nil
                     save_home("reinit")
                 end,
             },
@@ -1310,7 +1358,8 @@ function M.build(ctx)
             items[#items + 1] = {
                 text_func = function()
                     local cur = dcfg.middle_stats_triplet[slot] or "today_pages"
-                    return _("Stat slot ") .. tostring(slot) .. ": " .. cur
+                    return _("Stat slot ") .. tostring(slot) .. ": "
+                        .. (stats_field_labels[cur] or stats_field_labels.today_pages)
                 end,
                 sub_item_table = (function()
                     local slot_items = {}
@@ -1345,6 +1394,35 @@ function M.build(ctx)
                 end,
                 callback = function()
                     quotes_cfg.show_module_title = quotes_cfg.show_module_title ~= true
+                    save_home("reinit")
+                end,
+            },
+            {
+                text_func = function()
+                    return string.format("%s %s", _("Font size:"), tostring(dcfg.quotes.font_size or dcfg.font_size))
+                end,
+                keep_menu_open = true,
+                callback = function()
+                    local SpinWidget = require("ui/widget/spinwidget")
+                    UIManager:show(SpinWidget:new{
+                        title_text = _("Quote font size"),
+                        value = dcfg.quotes.font_size or dcfg.font_size,
+                        value_min = 4,
+                        value_max = 32,
+                        default_value = 12,
+                        callback = function(spin)
+                            dcfg.quotes.font_size = spin.value
+                            dcfg.quotes.font_size_override = true
+                            save_home("reinit")
+                        end,
+                    })
+                end,
+            },
+            {
+                text = _("Use Home default font size"),
+                callback = function()
+                    dcfg.quotes.font_size = nil
+                    dcfg.quotes.font_size_override = nil
                     save_home("reinit")
                 end,
             },
@@ -1387,6 +1465,30 @@ function M.build(ctx)
             {
                 text = _("Presets"),
                 sub_item_table_func = build_preset_items,
+            },
+            {
+                text_func = function()
+                    return string.format("%s %s", _("Default font size:"), tostring(dcfg.font_size))
+                end,
+                keep_menu_open = true,
+                callback = function(touchmenu_instance)
+                    local SpinWidget = require("ui/widget/spinwidget")
+                    UIManager:show(SpinWidget:new{
+                        title_text = _("Home default font size"),
+                        value = dcfg.font_size,
+                        value_min = 8,
+                        value_max = 32,
+                        default_value = 18,
+                        callback = function(spin)
+                            dcfg.font_size = spin.value
+                            dcfg.font_size_override = true
+                            save_home("reinit")
+                            if touchmenu_instance and touchmenu_instance.updateItems then
+                                touchmenu_instance:updateItems()
+                            end
+                        end,
+                    })
+                end,
             },
             {
                 text = _("Show top status bar"),

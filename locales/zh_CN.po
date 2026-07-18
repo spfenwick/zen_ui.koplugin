@@ -18,6 +18,9 @@ msgstr "本章剩余 %1 分钟"
 msgid "%d%% Read"
 msgstr "已读 %d%%"
 
+msgid "%s books goal"
+msgstr "%s 书籍目标"
+
 msgid "%s goal"
 msgstr "%s目标"
 
@@ -213,11 +216,11 @@ msgstr "至少必须显示一个标签页"
 msgid "Author"
 msgstr "作者"
 
-msgid "authors"
-msgstr "位作者"
-
 msgid "Authors"
 msgstr "作者"
+
+msgid "authors"
+msgstr "位作者"
 
 msgid "Automatic suspend"
 msgstr "自动休眠"
@@ -288,11 +291,11 @@ msgstr "粗体"
 msgid "Bold text"
 msgstr "粗体文本"
 
-msgid "Book"
-msgstr "书籍"
-
 msgid "book"
 msgstr "本书"
+
+msgid "Book"
+msgstr "书籍"
 
 msgid "Book added to download list"
 msgstr "书籍已添加到下载列表"
@@ -312,11 +315,11 @@ msgstr "图书标题"
 msgid "Book: "
 msgstr "图书： "
 
-msgid "books"
-msgstr "本书"
-
 msgid "Books"
 msgstr "书库"
+
+msgid "books"
+msgstr "本书"
 
 msgid "Books read"
 msgstr "读过的书"
@@ -644,6 +647,9 @@ msgstr "默认"
 
 msgid "Default (black)"
 msgstr "默认（黑色）"
+
+msgid "Default font size:"
+msgstr "默认字体大小："
 
 msgid "Default tab: "
 msgstr "默认标签： "
@@ -987,6 +993,9 @@ msgstr "长按跳过"
 msgid "Home"
 msgstr "主页"
 
+msgid "Home default font size"
+msgstr "首页默认字体大小"
+
 msgid "Home Folder"
 msgstr "主文件夹"
 
@@ -1188,10 +1197,10 @@ msgstr "分钟"
 msgid "Minute"
 msgstr "分"
 
-msgid "minutes"
+msgid "Minutes"
 msgstr "分钟"
 
-msgid "Minutes"
+msgid "minutes"
 msgstr "分钟"
 
 msgid "Monthly"
@@ -1440,11 +1449,11 @@ msgstr "页面流"
 msgid "Page x / y"
 msgstr "第 x / y 页"
 
-msgid "Pages"
-msgstr "页数"
-
 msgid "pages"
 msgstr "页"
+
+msgid "Pages"
+msgstr "页数"
 
 msgid "Pages + Chapter Time + %"
 msgstr "页数 + 章节时间 + %"
@@ -1454,6 +1463,9 @@ msgstr "页数和 %"
 
 msgid "Pages read"
 msgstr "已读页数"
+
+msgid "Pages this week"
+msgstr "本周页面"
 
 msgid "Pages today"
 msgstr "今天的页面"
@@ -1545,6 +1557,9 @@ msgstr "退出"
 msgid "Quit KOReader"
 msgstr "退出 KOReader"
 
+msgid "Quote font size"
+msgstr "报价字体大小"
+
 msgid "Quotes widget"
 msgstr "引文小组件"
 
@@ -1581,11 +1596,11 @@ msgstr "阅读进度"
 msgid "Reading"
 msgstr "阅读中"
 
-msgid "Reading calendar"
-msgstr "读日历"
-
 msgid "Reading Calendar"
 msgstr "阅读日历"
+
+msgid "Reading calendar"
+msgstr "读日历"
 
 msgid "Reading goals"
 msgstr "阅读目标"
@@ -2001,6 +2016,12 @@ msgstr "统计日历不可用"
 msgid "Stats"
 msgstr "统计"
 
+msgid "Stats default font size"
+msgstr "统计默认字体大小"
+
+msgid "Stats font size"
+msgstr "统计字体大小"
+
 msgid "Stats: Calendar"
 msgstr "统计：日历"
 
@@ -2079,10 +2100,10 @@ msgstr "您所有书籍的存放位置 %1"
 msgid "This change requires a restart to take effect."
 msgstr "此更改需要重启才能生效。"
 
-msgid "This month"
+msgid "This Month"
 msgstr "本月"
 
-msgid "This Month"
+msgid "This month"
 msgstr "本月"
 
 msgid "This option is disabled when a home folder is the device storage root. Set home folders to narrower books folders first."
@@ -2094,10 +2115,10 @@ msgstr "本星期"
 msgid "This Week"
 msgstr "本周"
 
-msgid "This Year"
+msgid "This year"
 msgstr "今年"
 
-msgid "This year"
+msgid "This Year"
 msgstr "今年"
 
 msgid "Time"
@@ -2106,8 +2127,14 @@ msgstr "时间"
 msgid "Time Format"
 msgstr "时间格式"
 
+msgid "Time this week"
+msgstr "本周时间"
+
 msgid "Time to book end"
 msgstr "到读完本书的时间"
+
+msgid "Time today"
+msgstr "今天时间"
 
 msgid "Time/book"
 msgstr "时间/书籍"
@@ -2178,10 +2205,10 @@ msgstr "图标上方下划线"
 msgid "Uniform covers"
 msgstr "统一封面"
 
-msgid "Unknown"
+msgid "unknown"
 msgstr "未知"
 
-msgid "unknown"
+msgid "Unknown"
 msgstr "未知"
 
 msgid "Unknown Author"
@@ -2283,11 +2310,17 @@ msgstr "使用默认字体"
 msgid "Use default style"
 msgstr "使用默认样式"
 
+msgid "Use Home default font size"
+msgstr "使用主页默认字体大小"
+
 msgid "Use home folder"
 msgstr "使用主文件夹"
 
 msgid "Use last folder"
 msgstr "使用上次文件夹"
+
+msgid "Use Stats default font size"
+msgstr "使用统计默认字体大小"
 
 msgid "username"
 msgstr "用户名"

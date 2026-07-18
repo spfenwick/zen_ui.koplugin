@@ -40,6 +40,7 @@ local DEFAULT_HOME_PAGE = {
             strip_tbr = false,
         },
     },
+    font_size = 18,
     middle_stats_triplet = {
         "today_pages",
         "today_duration",
@@ -58,8 +59,10 @@ local DEFAULT_HOME_PAGE = {
         weekly_time_target_min = 210,
         monthly_pages_target = 900,
         monthly_time_target_min = 900,
+        monthly_books_target = 1,
         yearly_pages_target = 1000,
         yearly_time_target_min = 1000,
+        yearly_books_target = 12,
     },
     show_status_bar = false,
     modules = {
@@ -190,6 +193,7 @@ local BOOKSHELF_HOME_PAGE = {
             strip_tbr = false,
         },
     },
+    font_size = 18,
     middle_stats_triplet = {
         "today_pages",
         "today_duration",
@@ -208,8 +212,10 @@ local BOOKSHELF_HOME_PAGE = {
         weekly_time_target_min = 210,
         monthly_pages_target = 900,
         monthly_time_target_min = 900,
+        monthly_books_target = 1,
         yearly_pages_target = 1000,
         yearly_time_target_min = 1000,
+        yearly_books_target = 12,
     },
     show_status_bar = false,
     modules = {

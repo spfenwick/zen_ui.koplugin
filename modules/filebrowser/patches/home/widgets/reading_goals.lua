@@ -55,6 +55,7 @@ local function progress_bar(width, current, target, bar_h)
     end
     local bar_w = width
     local fill_w = math.floor(bar_w * pct)
+    if fill_w > 0 then fill_w = math.min(bar_w, math.max(bar_h, fill_w)) end
 
     local bar = {
         dimen = Geom:new{ w = bar_w, h = bar_h },
@@ -84,27 +85,27 @@ local function create_goal_summary_card(width, row)
         max_width = inner_w,
     }
     local value_face = Font:getFace("smallinfofont", Screen:scaleBySize(12))
-    local pages = TextWidget:new{
-        text = tostring(row.pages_current) .. " / " .. tostring(row.pages_target) .. " " .. _("pages"),
-        face = value_face,
-        max_width = math.floor(inner_w / 2),
+    local values = { align = "center" }
+    local stats = {
+        tostring(row.pages_current) .. " / " .. tostring(row.pages_target) .. " " .. _("pages"),
+        tostring(row.time_current) .. " / " .. tostring(row.time_target) .. " " .. _("min"),
     }
-    local time = TextWidget:new{
-        text = tostring(row.time_current) .. " / " .. tostring(row.time_target) .. " " .. _("min"),
-        face = value_face,
-        max_width = math.floor(inner_w / 2),
-    }
-    local values = HorizontalGroup:new{
-        align = "center",
-        CenterContainer:new{
-            dimen = Geom:new{ w = math.floor(inner_w / 2), h = pages:getSize().h },
-            pages,
-        },
-        CenterContainer:new{
-            dimen = Geom:new{ w = inner_w - math.floor(inner_w / 2), h = time:getSize().h },
-            time,
-        },
-    }
+    if row.books_target then
+        stats[#stats + 1] = tostring(row.books_current) .. " / " .. tostring(row.books_target) .. " " .. _("Books")
+    end
+    local value_w = math.floor(inner_w / #stats)
+    for _i, value in ipairs(stats) do
+        local text = TextWidget:new{
+            text = value,
+            face = value_face,
+            max_width = value_w,
+        }
+        values[#values + 1] = CenterContainer:new{
+            dimen = Geom:new{ w = value_w, h = text:getSize().h },
+            text,
+        }
+    end
+    values = HorizontalGroup:new(values)
     local content = VerticalGroup:new{
         LeftContainer:new{
             dimen = Geom:new{ w = inner_w, h = title:getSize().h },
@@ -210,6 +211,10 @@ return {
         if monthly_time_target_min < 1 then monthly_time_target_min = 1 end
         local yearly_time_target_min = tonumber(goals.yearly_time_target_min) or 1000
         if yearly_time_target_min < 1 then yearly_time_target_min = 1 end
+        local monthly_books_target = tonumber(goals.monthly_books_target) or 1
+        if monthly_books_target < 1 then monthly_books_target = 1 end
+        local yearly_books_target = tonumber(goals.yearly_books_target) or 12
+        if yearly_books_target < 1 then yearly_books_target = 1 end
 
         local goal_rows = {}
         local labels = {
@@ -225,7 +230,8 @@ return {
             yearly = string.format(_("%s goal (%s)"), labels.yearly, os.date("%Y")),
         }
         for _i, period in ipairs(periods) do
-            local metric = metrics[period] == "time" and "time"
+            local metric = (period == "monthly" or period == "yearly") and metrics[period] == "books"
+                and "books" or metrics[period] == "time" and "time"
                 or metrics[period] == "pages" and "pages" or legacy_metric
             local current, target
             if metric == "time" then
@@ -236,6 +242,10 @@ return {
                 target = period == "weekly" and weekly_time_target_min
                     or period == "monthly" and monthly_time_target_min
                     or period == "yearly" and yearly_time_target_min or daily_time_target_min
+            elseif metric == "books" then
+                current = period == "monthly" and (stats.finished_this_month or 0)
+                    or (stats.finished_this_year or 0)
+                target = period == "monthly" and monthly_books_target or yearly_books_target
             else
                 local pages = period == "weekly" and stats.week_pages
                     or period == "monthly" and stats.month_pages
@@ -247,7 +257,7 @@ return {
             end
             goal_rows[#goal_rows + 1] = {
                 label = labels[period], summary_label = summary_labels[period], current = current, target = target,
-                unit = metric == "time" and _("min") or _("pages"),
+                unit = metric == "time" and _("min") or metric == "books" and _("Books") or _("pages"),
                 pages_current = math.floor(period == "weekly" and stats.week_pages
                     or period == "monthly" and stats.month_pages
                     or period == "yearly" and stats.year_pages or stats.today_pages or 0),
@@ -260,11 +270,19 @@ return {
                 time_target = period == "weekly" and weekly_time_target_min
                     or period == "monthly" and monthly_time_target_min
                     or period == "yearly" and yearly_time_target_min or daily_time_target_min,
+                books_current = period == "monthly" and math.floor(stats.finished_this_month or 0)
+                    or period == "yearly" and math.floor(stats.finished_this_year or 0) or nil,
+                books_target = period == "monthly" and monthly_books_target
+                    or period == "yearly" and yearly_books_target or nil,
             }
         end
         local pad_h = Screen:scaleBySize(8)
         local content_w = math.max(20, width - pad_h * 2)
-        local max_px = math.max(6, math.min(10, math.floor(height / #goal_rows * 0.7)))
+        local configured_font_size = tonumber(ctx.font_size)
+            or type(ctx.config) == "table" and ctx.config.font_size_override == true
+                and tonumber(ctx.config.font_size)
+        local max_px = configured_font_size and math.max(6, math.min(32, configured_font_size))
+            or math.max(6, math.min(10, math.floor(height / #goal_rows * 0.7)))
         local min_px = 6
         local min_bar_w = math.max(24, math.floor(content_w * 0.16))
         local gap = math.max(2, math.floor(content_w * 0.01))
@@ -311,7 +329,7 @@ return {
         local line_probe = TextWidget:new{ text = "A", face = chosen_face }
         local line_h = line_probe:getSize().h or math.max(10, min_px)
         WidgetResources.free(line_probe)
-        local bar_h = math.max(4, math.min(7, math.floor(line_h * 0.45)))
+        local bar_h = math.max(6, math.min(12, math.floor(line_h * 0.65)))
 
         local left_w = math.max(1, left_text_w + 2)
         local right_w = math.max(1, right_text_w + 2)

@@ -18,6 +18,9 @@ msgstr "%1 min resterend in hoofdstuk"
 msgid "%d%% Read"
 msgstr "%d%% gelezen"
 
+msgid "%s books goal"
+msgstr "%s boekdoel"
+
 msgid "%s goal"
 msgstr "%s doel"
 
@@ -213,11 +216,11 @@ msgstr "Er moet minstens één tabblad zichtbaar zijn"
 msgid "Author"
 msgstr "Auteur"
 
-msgid "authors"
-msgstr "auteurs"
-
 msgid "Authors"
 msgstr "Auteurs"
+
+msgid "authors"
+msgstr "auteurs"
 
 msgid "Automatic suspend"
 msgstr "Automatische slaapstand"
@@ -288,11 +291,11 @@ msgstr "Vet"
 msgid "Bold text"
 msgstr "Vette tekst"
 
-msgid "Book"
-msgstr "Boek"
-
 msgid "book"
 msgstr "boek"
+
+msgid "Book"
+msgstr "Boek"
 
 msgid "Book added to download list"
 msgstr "Boek toegevoegd aan downloadlijst"
@@ -312,11 +315,11 @@ msgstr "Boektitel"
 msgid "Book: "
 msgstr "Boek: "
 
-msgid "books"
-msgstr "boeken"
-
 msgid "Books"
 msgstr "Boeken"
+
+msgid "books"
+msgstr "boeken"
 
 msgid "Books read"
 msgstr "Boeken gelezen"
@@ -644,6 +647,9 @@ msgstr "standaard"
 
 msgid "Default (black)"
 msgstr "Standaard (zwart)"
+
+msgid "Default font size:"
+msgstr "Standaard lettergrootte:"
 
 msgid "Default tab: "
 msgstr "Standaardtabblad: "
@@ -987,6 +993,9 @@ msgstr "Vasthouden om te overslaan"
 msgid "Home"
 msgstr "Startpagina"
 
+msgid "Home default font size"
+msgstr "Standaardlettergrootte voor thuisgebruik"
+
 msgid "Home Folder"
 msgstr "Startmap"
 
@@ -1188,11 +1197,11 @@ msgstr "min"
 msgid "Minute"
 msgstr "Minuut"
 
-msgid "minutes"
-msgstr "notulen"
-
 msgid "Minutes"
 msgstr "Notulen"
+
+msgid "minutes"
+msgstr "notulen"
 
 msgid "Monthly"
 msgstr "Maandelijks"
@@ -1440,11 +1449,11 @@ msgstr "Paginastroom"
 msgid "Page x / y"
 msgstr "Pagina x / y"
 
-msgid "Pages"
-msgstr "Pagina's"
-
 msgid "pages"
 msgstr "pag."
+
+msgid "Pages"
+msgstr "Pagina's"
 
 msgid "Pages + Chapter Time + %"
 msgstr "Pagina's + Hoofdstuktijd + %"
@@ -1454,6 +1463,9 @@ msgstr "Pagina's en %"
 
 msgid "Pages read"
 msgstr "Pagina's gelezen"
+
+msgid "Pages this week"
+msgstr "Pagina's deze week"
 
 msgid "Pages today"
 msgstr "Pagina's vandaag"
@@ -1545,6 +1557,9 @@ msgstr "Afsluiten"
 msgid "Quit KOReader"
 msgstr "KOReader sluiten"
 
+msgid "Quote font size"
+msgstr "Citeer de lettergrootte"
+
 msgid "Quotes widget"
 msgstr "Citatenwidget"
 
@@ -1581,10 +1596,10 @@ msgstr "Leesvoortgang"
 msgid "Reading"
 msgstr "Aan het lezen"
 
-msgid "Reading calendar"
+msgid "Reading Calendar"
 msgstr "Kalender lezen"
 
-msgid "Reading Calendar"
+msgid "Reading calendar"
 msgstr "Kalender lezen"
 
 msgid "Reading goals"
@@ -2001,6 +2016,12 @@ msgstr "Statistiekenkalender is niet beschikbaar"
 msgid "Stats"
 msgstr "Statistieken"
 
+msgid "Stats default font size"
+msgstr "Standaardlettergrootte voor statistieken"
+
+msgid "Stats font size"
+msgstr "Statistieken lettergrootte"
+
 msgid "Stats: Calendar"
 msgstr "Statistieken: Kalender"
 
@@ -2079,10 +2100,10 @@ msgstr "De map voor al je boeken %1"
 msgid "This change requires a restart to take effect."
 msgstr "Deze wijziging vereist een herstart om van kracht te worden."
 
-msgid "This month"
+msgid "This Month"
 msgstr "Deze maand"
 
-msgid "This Month"
+msgid "This month"
 msgstr "Deze maand"
 
 msgid "This option is disabled when a home folder is the device storage root. Set home folders to narrower books folders first."
@@ -2094,10 +2115,10 @@ msgstr "Deze week"
 msgid "This Week"
 msgstr "Deze week"
 
-msgid "This Year"
+msgid "This year"
 msgstr "Dit jaar"
 
-msgid "This year"
+msgid "This Year"
 msgstr "Dit jaar"
 
 msgid "Time"
@@ -2106,8 +2127,14 @@ msgstr "Tijd"
 msgid "Time Format"
 msgstr "Tijdnotatie"
 
+msgid "Time this week"
+msgstr "Tijd deze week"
+
 msgid "Time to book end"
 msgstr "Tijd tot einde van boek"
+
+msgid "Time today"
+msgstr "Tijd vandaag"
 
 msgid "Time/book"
 msgstr "Tijd/boek"
@@ -2178,11 +2205,11 @@ msgstr "Onderstreping boven pictogram"
 msgid "Uniform covers"
 msgstr "Uniforme omslagen"
 
-msgid "Unknown"
-msgstr "Onbekend"
-
 msgid "unknown"
 msgstr "onbekend"
+
+msgid "Unknown"
+msgstr "Onbekend"
 
 msgid "Unknown Author"
 msgstr "Onbekende auteur"
@@ -2283,11 +2310,17 @@ msgstr "Standaard lettertype gebruiken"
 msgid "Use default style"
 msgstr "Standaardstijl gebruiken"
 
+msgid "Use Home default font size"
+msgstr "Gebruik de standaardlettergrootte van Home"
+
 msgid "Use home folder"
 msgstr "Startmap gebruiken"
 
 msgid "Use last folder"
 msgstr "Laatste map gebruiken"
+
+msgid "Use Stats default font size"
+msgstr "Gebruik de standaardlettergrootte van Stats"
 
 msgid "username"
 msgstr "gebruikersnaam"

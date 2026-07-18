@@ -15,6 +15,21 @@ local DEFAULT_ENABLED = {
     calendar = true,
 }
 
+local TEXT_WIDGET_IDS = {
+    today = true,
+    this_week = true,
+    this_month = true,
+    this_year = true,
+    all_time = true,
+    personal_records = true,
+    library = true,
+    current_book = true,
+}
+
+function M.hasFontSize(id)
+    return TEXT_WIDGET_IDS[id] == true
+end
+
 function M.defaultWidget(id)
     if id == "trend_graph" then
         return { id = id, metric = "pages", range_days = 14 }
@@ -33,6 +48,14 @@ local function normalize_options(id, options)
         local range = tonumber(options.range_days) or 14
         widget.range_days = (range == 7 or range == 14 or range == 30 or range == 90) and range or 14
     end
+    if M.hasFontSize(id) then
+        local font_size = type(options) == "table" and tonumber(options.font_size)
+        local is_override = type(options) == "table" and options.font_size_override == true
+        if font_size and (is_override or font_size ~= 15) then
+            widget.font_size = math.max(6, math.min(32, math.floor(font_size + 0.5)))
+            widget.font_size_override = true
+        end
+    end
     return widget
 end
 
@@ -48,6 +71,7 @@ function M.defaultSettings()
             enabled = enabled,
             options = { trend_graph = M.defaultWidget("trend_graph") },
         },
+        font_size = 15,
         stat_style = "divider",
     }
 end
@@ -79,6 +103,12 @@ function M.normalize(settings)
         for id, value in pairs(DEFAULT_ENABLED) do enabled[id] = value end
     end
 
+    local legacy_font_scale = tonumber(settings.font_scale)
+    local font_size = tonumber(settings.font_size)
+    settings.font_size = font_size and math.max(6, math.min(32, math.floor(font_size + 0.5)))
+        or legacy_font_scale and math.max(6, math.min(32, math.floor(15 * legacy_font_scale / 100 + 0.5)))
+        or 15
+    settings.font_size_override = settings.font_size_override == true
     local options = {}
     for _i, id in ipairs(M.ALL_WIDGET_IDS) do
         options[id] = normalize_options(id, type(widgets.options) == "table" and widgets.options[id])
@@ -88,6 +118,7 @@ function M.normalize(settings)
     if settings.stat_style ~= "outline" and settings.stat_style ~= "none" then
         settings.stat_style = "divider"
     end
+    settings.font_scale = nil
     if type(settings.calendar_month) ~= "string" then settings.calendar_month = nil end
     return settings
 end
@@ -107,7 +138,9 @@ function M.enabledBlocks(settings)
         if settings.widgets.enabled[id] then
             local weight = M.widgetSlots(id)
             if slots + weight <= M.MAX_WIDGET_SLOTS then
-                blocks[#blocks + 1] = normalize_options(id, settings.widgets.options[id])
+                local block = normalize_options(id, settings.widgets.options[id])
+                if M.hasFontSize(id) then block.font_size = block.font_size or settings.font_size end
+                blocks[#blocks + 1] = block
                 slots = slots + weight
             end
         end

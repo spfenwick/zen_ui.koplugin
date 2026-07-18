@@ -18,6 +18,9 @@ msgstr "%1 phút còn lại trong chương"
 msgid "%d%% Read"
 msgstr "%d%% Đã đọc"
 
+msgid "%s books goal"
+msgstr "Mục tiêu sách %s"
+
 msgid "%s goal"
 msgstr "Mục tiêu %s"
 
@@ -213,11 +216,11 @@ msgstr "Phải hiển thị ít nhất một tab"
 msgid "Author"
 msgstr "Tác giả"
 
-msgid "authors"
-msgstr "tác giả"
-
 msgid "Authors"
 msgstr "Tác giả"
+
+msgid "authors"
+msgstr "tác giả"
 
 msgid "Automatic suspend"
 msgstr "Tạm tự động"
@@ -288,11 +291,11 @@ msgstr "In đậm"
 msgid "Bold text"
 msgstr "Văn bản in đậm"
 
-msgid "Book"
-msgstr "Sách"
-
 msgid "book"
 msgstr "sách"
+
+msgid "Book"
+msgstr "Sách"
 
 msgid "Book added to download list"
 msgstr "Sách đã được thêm vào danh sách tải xuống"
@@ -312,11 +315,11 @@ msgstr "Tên sách"
 msgid "Book: "
 msgstr "Sách: "
 
-msgid "books"
-msgstr "sách"
-
 msgid "Books"
 msgstr "Sách"
+
+msgid "books"
+msgstr "sách"
 
 msgid "Books read"
 msgstr "Sách đã đọc"
@@ -644,6 +647,9 @@ msgstr "mặc định"
 
 msgid "Default (black)"
 msgstr "Mặc định (đen)"
+
+msgid "Default font size:"
+msgstr "Cỡ chữ mặc định:"
 
 msgid "Default tab: "
 msgstr "Tab mặc định: "
@@ -987,6 +993,9 @@ msgstr "Giữ để bỏ qua"
 msgid "Home"
 msgstr "Trang chủ"
 
+msgid "Home default font size"
+msgstr "Kích thước phông chữ mặc định của trang chủ"
+
 msgid "Home Folder"
 msgstr "Thư mục Trang chủ"
 
@@ -1188,11 +1197,11 @@ msgstr "phút"
 msgid "Minute"
 msgstr "Phút"
 
-msgid "minutes"
-msgstr "phút"
-
 msgid "Minutes"
 msgstr "Phút"
+
+msgid "minutes"
+msgstr "phút"
 
 msgid "Monthly"
 msgstr "hàng tháng"
@@ -1440,11 +1449,11 @@ msgstr "Luồng trang"
 msgid "Page x / y"
 msgstr "Trang x / y"
 
-msgid "Pages"
-msgstr "Trang"
-
 msgid "pages"
 msgstr "trang"
+
+msgid "Pages"
+msgstr "Trang"
 
 msgid "Pages + Chapter Time + %"
 msgstr "Trang + Thời lượng chương + %"
@@ -1454,6 +1463,9 @@ msgstr "Trang và %"
 
 msgid "Pages read"
 msgstr "Trang đã đọc"
+
+msgid "Pages this week"
+msgstr "Các trang trong tuần này"
 
 msgid "Pages today"
 msgstr "Trang hôm nay"
@@ -1545,6 +1557,9 @@ msgstr "Thoát"
 msgid "Quit KOReader"
 msgstr "Thoát KOReader"
 
+msgid "Quote font size"
+msgstr "Cỡ chữ trích dẫn"
+
 msgid "Quotes widget"
 msgstr "Widget trích dẫn"
 
@@ -1581,10 +1596,10 @@ msgstr "Tiến trình đọc"
 msgid "Reading"
 msgstr "Đang đọc"
 
-msgid "Reading calendar"
+msgid "Reading Calendar"
 msgstr "Lịch đọc sách"
 
-msgid "Reading Calendar"
+msgid "Reading calendar"
 msgstr "Lịch đọc sách"
 
 msgid "Reading goals"
@@ -2001,6 +2016,12 @@ msgstr "Lịch thống kê không có sẵn"
 msgid "Stats"
 msgstr "Thống kê"
 
+msgid "Stats default font size"
+msgstr "Thống kê kích thước phông chữ mặc định"
+
+msgid "Stats font size"
+msgstr "Cỡ chữ thống kê"
+
 msgid "Stats: Calendar"
 msgstr "Thống kê: Lịch"
 
@@ -2079,10 +2100,10 @@ msgstr "Nơi lưu trữ tất cả sách của bạn %1"
 msgid "This change requires a restart to take effect."
 msgstr "Thay đổi này yêu cầu khởi động lại để có hiệu lực."
 
-msgid "This month"
+msgid "This Month"
 msgstr "Tháng này"
 
-msgid "This Month"
+msgid "This month"
 msgstr "Tháng này"
 
 msgid "This option is disabled when a home folder is the device storage root. Set home folders to narrower books folders first."
@@ -2094,10 +2115,10 @@ msgstr "Tuần này"
 msgid "This Week"
 msgstr "Tuần này"
 
-msgid "This Year"
+msgid "This year"
 msgstr "Năm nay"
 
-msgid "This year"
+msgid "This Year"
 msgstr "Năm nay"
 
 msgid "Time"
@@ -2106,8 +2127,14 @@ msgstr "Thời gian"
 msgid "Time Format"
 msgstr "Định dạng thời gian"
 
+msgid "Time this week"
+msgstr "Thời gian trong tuần này"
+
 msgid "Time to book end"
 msgstr "Thời gian đến hết sách"
+
+msgid "Time today"
+msgstr "Thời gian hôm nay"
 
 msgid "Time/book"
 msgstr "Thời gian/cuốn sách"
@@ -2178,11 +2205,11 @@ msgstr "Gạch chân trên biểu tượng"
 msgid "Uniform covers"
 msgstr "Bao bì đồng nhất"
 
-msgid "Unknown"
-msgstr "Không rõ"
-
 msgid "unknown"
 msgstr "không rõ"
+
+msgid "Unknown"
+msgstr "Không rõ"
 
 msgid "Unknown Author"
 msgstr "Tác giả không rõ"
@@ -2283,11 +2310,17 @@ msgstr "Sử dụng phông chữ mặc định"
 msgid "Use default style"
 msgstr "Sử dụng kiểu mặc định"
 
+msgid "Use Home default font size"
+msgstr "Sử dụng cỡ chữ mặc định của Trang chủ"
+
 msgid "Use home folder"
 msgstr "Sử dụng thư mục home"
 
 msgid "Use last folder"
 msgstr "Sử dụng thư mục cuối cùng"
+
+msgid "Use Stats default font size"
+msgstr "Sử dụng kích thước phông chữ mặc định của Thống kê"
 
 msgid "username"
 msgstr "tên người dùng"

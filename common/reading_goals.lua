@@ -18,11 +18,13 @@ local PERIODS = {
         id = "monthly", text = _("Monthly"),
         pages = { key = "monthly_pages_target", default = 900, max = 100000 },
         time = { key = "monthly_time_target_min", default = 900, max = 44640 },
+        books = { key = "monthly_books_target", default = 1, max = 1000 },
     },
     {
         id = "yearly", text = _("Yearly"),
         pages = { key = "yearly_pages_target", default = 1000, max = 1000000 },
         time = { key = "yearly_time_target_min", default = 1000, max = 525600 },
+        books = { key = "yearly_books_target", default = 12, max = 10000 },
     },
 }
 
@@ -48,10 +50,13 @@ function M.normalize(goals)
     goals.periods = periods
     if type(goals.metrics) ~= "table" then goals.metrics = {} end
     for _i, period in ipairs(PERIODS) do
-        if goals.metrics[period.id] ~= "time" and goals.metrics[period.id] ~= "pages" then
+        local metric = goals.metrics[period.id]
+        if metric ~= "time" and metric ~= "pages" and not (period.books and metric == "books") then
             goals.metrics[period.id] = legacy_metric
         end
-        for _j, target in ipairs({ period.pages, period.time }) do
+        local targets = { period.pages, period.time }
+        if period.books then targets[#targets + 1] = period.books end
+        for _j, target in ipairs(targets) do
             if type(goals[target.key]) ~= "number" then goals[target.key] = target.default end
         end
     end
@@ -72,8 +77,9 @@ function M.settingsItems(goals, save)
                 end
                 local function target_item(target)
                     local is_time = target == period.time
-                    local title = is_time
-                        and string.format(_("%s time goal (min)"), period.text)
+                    local is_books = target == period.books
+                    local title = is_time and string.format(_("%s time goal (min)"), period.text)
+                        or is_books and string.format(_("%s books goal"), period.text)
                         or string.format(_("%s pages goal"), period.text)
                     local label = title .. ": "
                     return {
@@ -96,7 +102,7 @@ function M.settingsItems(goals, save)
                         end,
                     }
                 end
-                return {
+                local period_items = {
                     {
                         text = _("Show goal"),
                         checked_func = function() return has_period(goals, period.id) end,
@@ -126,9 +132,19 @@ function M.settingsItems(goals, save)
                         checked_func = function() return goals.metrics[period.id] == "time" end,
                         callback = function() set_metric("time") end,
                     },
-                    target_item(period.pages),
-                    target_item(period.time),
                 }
+                if period.books then
+                    period_items[#period_items + 1] = {
+                        text = _("Books"),
+                        radio = true,
+                        checked_func = function() return goals.metrics[period.id] == "books" end,
+                        callback = function() set_metric("books") end,
+                    }
+                end
+                period_items[#period_items + 1] = target_item(period.pages)
+                period_items[#period_items + 1] = target_item(period.time)
+                if period.books then period_items[#period_items + 1] = target_item(period.books) end
+                return period_items
             end,
         }
     end
@@ -137,6 +153,9 @@ end
 
 function M.metricFor(goals, period)
     goals = M.normalize(goals)
+    if (period == "monthly" or period == "yearly") and goals.metrics[period] == "books" then
+        return "books"
+    end
     return goals.metrics[period] == "time" and "time" or "pages"
 end
 

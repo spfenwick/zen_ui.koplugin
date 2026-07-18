@@ -101,8 +101,11 @@ return {
         local cell_w = math.max(20, math.floor((width - gap_w * 2) / 3))
         local card_h = math.max(20, height)
         local Screen = Device.screen
-        local value_face = Font:getFace("smallinfofont", Screen:scaleBySize(math.max(10, math.min(18, math.floor(card_h * 0.13)))))
-        local label_face = Font:getFace("smallinfofont", Screen:scaleBySize(math.max(6, math.min(11, math.floor(card_h * 0.075)))))
+        local font_size = tonumber(module_cfg.font_size)
+            or tonumber(ctx.config.font_size) or 18
+        font_size = math.max(8, math.min(32, font_size))
+        local value_face = Font:getFace("smallinfofont", Screen:scaleBySize(font_size))
+        local label_face = Font:getFace("smallinfofont", Screen:scaleBySize(math.max(6, math.floor(font_size * 0.6))))
         local row = HorizontalGroup:new{ align = "center" }
 
         for _i, field in ipairs(fields) do

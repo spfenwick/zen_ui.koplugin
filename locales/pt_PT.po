@@ -18,6 +18,9 @@ msgstr "%1 min restantes no capítulo"
 msgid "%d%% Read"
 msgstr "%d%% lido"
 
+msgid "%s books goal"
+msgstr "%s meta de livros"
+
 msgid "%s goal"
 msgstr "%s meta"
 
@@ -213,11 +216,11 @@ msgstr "Pelo menos um separador tem de estar visível"
 msgid "Author"
 msgstr "Autor"
 
-msgid "authors"
-msgstr "autores"
-
 msgid "Authors"
 msgstr "Autores"
+
+msgid "authors"
+msgstr "autores"
 
 msgid "Automatic suspend"
 msgstr "Suspensão automática"
@@ -288,11 +291,11 @@ msgstr "Negrito"
 msgid "Bold text"
 msgstr "Texto a negrito"
 
-msgid "Book"
-msgstr "Livro"
-
 msgid "book"
 msgstr "livro"
+
+msgid "Book"
+msgstr "Livro"
 
 msgid "Book added to download list"
 msgstr "Livro adicionado à lista de transferências"
@@ -312,11 +315,11 @@ msgstr "Título do livro"
 msgid "Book: "
 msgstr "Livro: "
 
-msgid "books"
-msgstr "livros"
-
 msgid "Books"
 msgstr "Livros"
+
+msgid "books"
+msgstr "livros"
 
 msgid "Books read"
 msgstr "Livros lidos"
@@ -644,6 +647,9 @@ msgstr "predefinido"
 
 msgid "Default (black)"
 msgstr "Predefinido (preto)"
+
+msgid "Default font size:"
+msgstr "Tamanho de letra padrão:"
 
 msgid "Default tab: "
 msgstr "Separador predefinido: "
@@ -987,6 +993,9 @@ msgstr "Mantenha premido para saltar"
 msgid "Home"
 msgstr "Início"
 
+msgid "Home default font size"
+msgstr "Tamanho da fonte padrão inicial"
+
 msgid "Home Folder"
 msgstr "Pasta inicial"
 
@@ -1188,11 +1197,11 @@ msgstr "min"
 msgid "Minute"
 msgstr "Minuto"
 
-msgid "minutes"
-msgstr "minutos"
-
 msgid "Minutes"
 msgstr "Minutos"
+
+msgid "minutes"
+msgstr "minutos"
 
 msgid "Monthly"
 msgstr "Mensal"
@@ -1440,11 +1449,11 @@ msgstr "Fluxo de páginas"
 msgid "Page x / y"
 msgstr "Página x / y"
 
-msgid "Pages"
-msgstr "Páginas"
-
 msgid "pages"
 msgstr "págs."
+
+msgid "Pages"
+msgstr "Páginas"
 
 msgid "Pages + Chapter Time + %"
 msgstr "Páginas + Tempo de capítulo + %"
@@ -1454,6 +1463,9 @@ msgstr "Páginas e %"
 
 msgid "Pages read"
 msgstr "Páginas lidas"
+
+msgid "Pages this week"
+msgstr "Páginas esta semana"
 
 msgid "Pages today"
 msgstr "Páginas hoje"
@@ -1545,6 +1557,9 @@ msgstr "Fechar"
 msgid "Quit KOReader"
 msgstr "Fechar KOReader"
 
+msgid "Quote font size"
+msgstr "Citação do tamanho da letra"
+
 msgid "Quotes widget"
 msgstr "Widget de citações"
 
@@ -1581,10 +1596,10 @@ msgstr "Progresso de leitura"
 msgid "Reading"
 msgstr "A ler"
 
-msgid "Reading calendar"
+msgid "Reading Calendar"
 msgstr "Calendário de leitura"
 
-msgid "Reading Calendar"
+msgid "Reading calendar"
 msgstr "Calendário de leitura"
 
 msgid "Reading goals"
@@ -2001,6 +2016,12 @@ msgstr "O calendário de estatísticas não está disponível"
 msgid "Stats"
 msgstr "Estatísticas"
 
+msgid "Stats default font size"
+msgstr "Tamanho da fonte padrão das estatísticas"
+
+msgid "Stats font size"
+msgstr "Tamanho da fonte das estatísticas"
+
 msgid "Stats: Calendar"
 msgstr "Estat.: Calendário"
 
@@ -2079,10 +2100,10 @@ msgstr "O local para todos os seus livros %1"
 msgid "This change requires a restart to take effect."
 msgstr "Esta alteração requer um reinício para ter efeito."
 
-msgid "This month"
+msgid "This Month"
 msgstr "Este mês"
 
-msgid "This Month"
+msgid "This month"
 msgstr "Este mês"
 
 msgid "This option is disabled when a home folder is the device storage root. Set home folders to narrower books folders first."
@@ -2094,10 +2115,10 @@ msgstr "Esta semana"
 msgid "This Week"
 msgstr "Esta semana"
 
-msgid "This Year"
+msgid "This year"
 msgstr "Este ano"
 
-msgid "This year"
+msgid "This Year"
 msgstr "Este ano"
 
 msgid "Time"
@@ -2106,8 +2127,14 @@ msgstr "Hora"
 msgid "Time Format"
 msgstr "Formato de hora"
 
+msgid "Time this week"
+msgstr "Horário esta semana"
+
 msgid "Time to book end"
 msgstr "Tempo até ao fim do livro"
+
+msgid "Time today"
+msgstr "Hora hoje"
 
 msgid "Time/book"
 msgstr "Hora/livro"
@@ -2178,11 +2205,11 @@ msgstr "Sublinhado acima do ícone"
 msgid "Uniform covers"
 msgstr "Capas uniformes"
 
-msgid "Unknown"
-msgstr "Desconhecido"
-
 msgid "unknown"
 msgstr "desconhecido"
+
+msgid "Unknown"
+msgstr "Desconhecido"
 
 msgid "Unknown Author"
 msgstr "Autor desconhecido"
@@ -2283,11 +2310,17 @@ msgstr "Usar tipo de letra predefinido"
 msgid "Use default style"
 msgstr "Usar estilo predefinido"
 
+msgid "Use Home default font size"
+msgstr "Usar tamanho de letra padrão inicial"
+
 msgid "Use home folder"
 msgstr "Usar pasta inicial"
 
 msgid "Use last folder"
 msgstr "Usar última pasta"
+
+msgid "Use Stats default font size"
+msgstr "Utilize o tamanho de fonte padrão do Stats"
 
 msgid "username"
 msgstr "nome de utilizador"

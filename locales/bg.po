@@ -27,6 +27,9 @@ msgstr "%1 мин. до края на главата"
 msgid "%d%% Read"
 msgstr "%d%% Прочетено"
 
+msgid "%s books goal"
+msgstr "%s книги гол"
+
 msgid "%s goal"
 msgstr "%s гол"
 
@@ -222,11 +225,11 @@ msgstr "Поне един раздел трябва да е видим"
 msgid "Author"
 msgstr "Автор"
 
-msgid "authors"
-msgstr "автори"
-
 msgid "Authors"
 msgstr "Автори"
+
+msgid "authors"
+msgstr "автори"
 
 msgid "Automatic suspend"
 msgstr "Автоматично приспиване"
@@ -297,11 +300,11 @@ msgstr "Удебелен"
 msgid "Bold text"
 msgstr "Удебелен текст"
 
-msgid "Book"
-msgstr "Книга"
-
 msgid "book"
 msgstr "книга"
+
+msgid "Book"
+msgstr "Книга"
 
 msgid "Book added to download list"
 msgstr "Книгата е добавена в списъка за изтегляне"
@@ -321,11 +324,11 @@ msgstr "Заглавие на книга"
 msgid "Book: "
 msgstr "Книга: "
 
-msgid "books"
-msgstr "книги"
-
 msgid "Books"
 msgstr "Книги"
+
+msgid "books"
+msgstr "книги"
 
 msgid "Books read"
 msgstr "Прочетени книги"
@@ -653,6 +656,9 @@ msgstr "по подразбиране"
 
 msgid "Default (black)"
 msgstr "По подразбиране (черно)"
+
+msgid "Default font size:"
+msgstr "Размер на шрифта по подразбиране:"
 
 msgid "Default tab: "
 msgstr "Раздел по подразбиране: "
@@ -996,6 +1002,9 @@ msgstr "Задръжте за пропускане"
 msgid "Home"
 msgstr "Начало"
 
+msgid "Home default font size"
+msgstr "Размер на началния шрифт по подразбиране"
+
 msgid "Home Folder"
 msgstr "Начална папка"
 
@@ -1197,10 +1206,10 @@ msgstr "мин"
 msgid "Minute"
 msgstr "Минута"
 
-msgid "minutes"
+msgid "Minutes"
 msgstr "минути"
 
-msgid "Minutes"
+msgid "minutes"
 msgstr "минути"
 
 msgid "Monthly"
@@ -1449,11 +1458,11 @@ msgstr "Поток на страниците"
 msgid "Page x / y"
 msgstr "Страница x / y"
 
-msgid "Pages"
-msgstr "Страници"
-
 msgid "pages"
 msgstr "страници"
+
+msgid "Pages"
+msgstr "Страници"
 
 msgid "Pages + Chapter Time + %"
 msgstr "Страници + Време за главата + %"
@@ -1463,6 +1472,9 @@ msgstr "Страници и %"
 
 msgid "Pages read"
 msgstr "Прочетени страници"
+
+msgid "Pages this week"
+msgstr "Страници тази седмица"
 
 msgid "Pages today"
 msgstr "Страници днес"
@@ -1554,6 +1566,9 @@ msgstr "Затваряне"
 msgid "Quit KOReader"
 msgstr "Затваряне на KOReader"
 
+msgid "Quote font size"
+msgstr "Размер на шрифта на офертата"
+
 msgid "Quotes widget"
 msgstr "Уиджет за цитати"
 
@@ -1590,10 +1605,10 @@ msgstr "Прогрес в четеца"
 msgid "Reading"
 msgstr "Четене"
 
-msgid "Reading calendar"
+msgid "Reading Calendar"
 msgstr "Календар за четене"
 
-msgid "Reading Calendar"
+msgid "Reading calendar"
 msgstr "Календар за четене"
 
 msgid "Reading goals"
@@ -2010,6 +2025,12 @@ msgstr "Статистическият календар не е наличен"
 msgid "Stats"
 msgstr "Статистика"
 
+msgid "Stats default font size"
+msgstr "Статистически размер на шрифта по подразбиране"
+
+msgid "Stats font size"
+msgstr "Статистически размер на шрифта"
+
 msgid "Stats: Calendar"
 msgstr "Статистики: Календар"
 
@@ -2088,10 +2109,10 @@ msgstr "Мястото за всички ваши книги %1"
 msgid "This change requires a restart to take effect."
 msgstr "Тази промяна изисква рестартиране, за да влезе в сила."
 
-msgid "This month"
+msgid "This Month"
 msgstr "Този месец"
 
-msgid "This Month"
+msgid "This month"
 msgstr "Този месец"
 
 msgid "This option is disabled when a home folder is the device storage root. Set home folders to narrower books folders first."
@@ -2103,10 +2124,10 @@ msgstr "Тази седмица"
 msgid "This Week"
 msgstr "Тази седмица"
 
-msgid "This Year"
+msgid "This year"
 msgstr "Тази година"
 
-msgid "This year"
+msgid "This Year"
 msgstr "Тази година"
 
 msgid "Time"
@@ -2115,8 +2136,14 @@ msgstr "Време"
 msgid "Time Format"
 msgstr "Формат на часа"
 
+msgid "Time this week"
+msgstr "Време тази седмица"
+
 msgid "Time to book end"
 msgstr "Време до края на книгата"
+
+msgid "Time today"
+msgstr "Време днес"
 
 msgid "Time/book"
 msgstr "Време/книга"
@@ -2187,11 +2214,11 @@ msgstr "Подчертаване над иконата"
 msgid "Uniform covers"
 msgstr "Уеднаквяване на кориците"
 
-msgid "Unknown"
-msgstr "Неизвестно"
-
 msgid "unknown"
 msgstr "неизвестно"
+
+msgid "Unknown"
+msgstr "Неизвестно"
 
 msgid "Unknown Author"
 msgstr "Неизвестен автор"
@@ -2292,11 +2319,17 @@ msgstr "Използване на шрифт по подразбиране"
 msgid "Use default style"
 msgstr "Използване на стандартния стил"
 
+msgid "Use Home default font size"
+msgstr "Използвайте началния размер на шрифта по подразбиране"
+
 msgid "Use home folder"
 msgstr "Използване на началната папка"
 
 msgid "Use last folder"
 msgstr "Използване на последната папка"
+
+msgid "Use Stats default font size"
+msgstr "Използвайте размера на шрифта по подразбиране на Stats"
 
 msgid "username"
 msgstr "потребителско име"
