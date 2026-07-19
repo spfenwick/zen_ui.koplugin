@@ -2073,6 +2073,18 @@ local function apply_context_menu()
             end
 
             local dlg_title = dialog_cover_widget and "" or dialog_title
+            if type(item._zen_widget_settings) == "function" then
+                table.insert(buttons, {
+                    {
+                        text = icons.settings .. "  " .. _("Widget settings"),
+                        align = "left",
+                        callback = function()
+                            close_dialog()
+                            UIManager:nextTick(item._zen_widget_settings)
+                        end,
+                    },
+                })
+            end
             self_fc.file_dialog = ButtonDialog:new{
                 title = dlg_title ~= "" and dlg_title or nil,
                 title_align = "center",

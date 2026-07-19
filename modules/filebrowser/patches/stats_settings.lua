@@ -115,6 +115,7 @@ function M.normalize(settings)
         or legacy_font_scale and math.max(6, math.min(32, math.floor(15 * legacy_font_scale / 100 + 0.5)))
         or 15
     settings.font_size_override = settings.font_size_override == true
+    settings.edit_mode = settings.edit_mode == true
     local options = {}
     for _i, id in ipairs(M.ALL_WIDGET_IDS) do
         options[id] = normalize_options(id, type(widgets.options) == "table" and widgets.options[id])

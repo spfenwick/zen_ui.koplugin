@@ -2,6 +2,7 @@ describe("stats settings", function()
     local saved_settings
     local saved_default_font_size
     local saved_font_size
+    local saved_edit_mode
     local arrange_options
     local shown_widget
 
@@ -21,6 +22,7 @@ describe("stats settings", function()
             MAX_WIDGET_SLOTS = 6,
             load = function() return settings end,
             save = function(current)
+                saved_edit_mode = current.edit_mode
                 local widgets = current.widgets
                 local order, enabled = {}, {}
                 for _i, id in ipairs(widgets.order) do order[_i] = id end
@@ -72,8 +74,18 @@ describe("stats settings", function()
             settingsItems = function() return {} end,
         })
         ZenSpec.replace("common/shared_state", { get = function() end })
-        ZenSpec.replace("common/inline_icon_map", { settings_stats = "stats" })
-        ZenSpec.replace("common/ui/icon_menu_item", { decorate = function(item) return item end })
+        ZenSpec.replace("common/inline_icon_map", {
+            divider = "divider",
+            display = "widgets",
+            settings_stats = "stats",
+            title = "font",
+        })
+        ZenSpec.replace("common/ui/icon_menu_item", {
+            decorate = function(item, icon)
+                item.icon_glyph = icon
+                return item
+            end,
+        })
         ZenSpec.replace("common/ui/zen_arrange_list", {
             show = function(opts) arrange_options = opts end,
         })
@@ -82,12 +94,19 @@ describe("stats settings", function()
 
     it("persists each widget change while the menu remains open", function()
         local section = require("modules/settings/sections/stats_settings").build({})
+        assert.are.equal("widgets", section.sub_item_table[1].icon_glyph)
         section.sub_item_table[1].callback()
         arrange_options.item_table[1].callback()
         arrange_options.item_table[2].callback()
 
         assert.is_true(saved_settings.enabled.today)
         assert.is_true(saved_settings.enabled.this_week)
+    end)
+
+    it("uses the divider icon for stat separators", function()
+        local section = require("modules/settings/sections/stats_settings").build({})
+
+        assert.are.equal("divider", section.sub_item_table[4].icon_glyph)
     end)
 
     it("persists consecutive graph settings", function()
@@ -124,9 +143,25 @@ describe("stats settings", function()
 
     it("persists the default font size", function()
         local section = require("modules/settings/sections/stats_settings").build({})
-        section.sub_item_table[2].callback()
+        assert.are.equal("font", section.sub_item_table[3].icon_glyph)
+        section.sub_item_table[3].callback()
         shown_widget.callback({ value = 19 })
 
         assert.are.equal(19, saved_default_font_size)
+    end)
+
+    it("persists edit mode", function()
+        local section = require("modules/settings/sections/stats_settings").build({})
+        section.sub_item_table[2].callback()
+
+        assert.is_true(saved_edit_mode)
+    end)
+
+    it("opens a widget settings page", function()
+        local settings = require("modules/settings/sections/stats_settings")
+        settings.build({})
+
+        assert.is_true(settings.openWidgetSettings("trend_graph"))
+        assert.are.equal("Reading trend", arrange_options.title)
     end)
 end)

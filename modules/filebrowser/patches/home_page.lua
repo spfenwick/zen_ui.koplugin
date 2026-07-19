@@ -457,6 +457,7 @@ local function ensure_home_cfg()
     dcfg.rows = Registry.normalizeRows(dcfg.rows, DEFAULT_ROW_ORDER, DEFAULT_ROW_ENABLED)
 
     if dcfg.show_status_bar == nil then dcfg.show_status_bar = true end
+    dcfg.edit_mode = dcfg.edit_mode == true
     local font_size = tonumber(dcfg.font_size)
     dcfg.font_size = font_size and math.max(8, math.min(32, math.floor(font_size + 0.5))) or 18
     dcfg.font_size_override = dcfg.font_size_override == true
@@ -1898,7 +1899,9 @@ local function build_home_content(menu, dcfg, rows, data_provider)
     local TextWidget = require("ui/widget/textwidget")
     local LeftContainer = require("ui/widget/container/leftcontainer")
     local FrameContainer = require("ui/widget/container/framecontainer")
+    local InputContainer = require("ui/widget/container/inputcontainer")
     local Font = require("ui/font")
+    local GestureRange = require("ui/gesturerange")
 
     local prev_focus_key = menu._zen_home_focus_key
     menu._zen_home_focus_targets = {}
@@ -1978,7 +1981,7 @@ local function build_home_content(menu, dcfg, rows, data_provider)
         end
     end
 
-    local function show_book_context_menu(path, source)
+    local function show_book_context_menu(path, source, component_id)
         if type(path) ~= "string" or path == "" then return false end
         local fm = FileManager.instance
         local fc = fm and fm.file_chooser
@@ -1989,12 +1992,42 @@ local function build_home_content(menu, dcfg, rows, data_provider)
             _zen_home_context = true,
             _zen_disable_select = true,
             _zen_is_history = source == "recently_read",
+            _zen_widget_settings = dcfg.edit_mode == true and function()
+                return require("modules/settings/sections/library_settings/home_settings").openWidgetSettings(component_id)
+            end or nil,
             _zen_after_status_change = function(changed_path)
                 invalidate_home_book_cache(changed_path)
                 M.rebuildActive()
             end,
         })
         return true
+    end
+
+    local function open_widget_settings(id)
+        if dcfg.edit_mode ~= true then return false end
+        return require("modules/settings/sections/library_settings/home_settings").openWidgetSettings(id)
+    end
+
+    local function add_widget_settings_hold(widget, id, width, height)
+        if dcfg.edit_mode ~= true then return widget end
+        local tap = InputContainer:new{
+            dimen = Geom:new{ w = width, h = height },
+            ges_events = {
+                HoldWidgetSettings = {
+                    GestureRange:new{ ges = "hold", range = Geom:new{
+                        x = 0, y = 0, w = Screen:getWidth(), h = Screen:getHeight(),
+                    } },
+                },
+            },
+        }
+        tap.onHoldWidgetSettings = function(tap_self, _arg, ges)
+            if not (tap_self.dimen and ges and ges.pos and tap_self.dimen:contains(ges.pos)) then
+                return false
+            end
+            return open_widget_settings(id)
+        end
+        tap[1] = widget
+        return tap
     end
 
     local function shift_strip(source_key, count, order_key, direction, component_id)
@@ -2062,7 +2095,13 @@ local function build_home_content(menu, dcfg, rows, data_provider)
             config = dcfg,
             data = data_provider,
             openBook = open_book,
-            showBookMenu = show_book_context_menu,
+            showBookMenu = function(path, source)
+                return show_book_context_menu(path, source, comp.id)
+            end,
+            editMode = dcfg.edit_mode == true,
+            openWidgetSettings = function()
+                return open_widget_settings(comp.id)
+            end,
             shiftStrip = shift_strip,
             openTopMenu = open_top_menu,
             buildStatusRow = _zen_shared and _zen_shared.buildStatusRow,
@@ -2101,6 +2140,12 @@ local function build_home_content(menu, dcfg, rows, data_provider)
                     VerticalSpan:new{ width = title_gap_h },
                     widget,
                 }
+            end
+            if comp.id ~= "featured_custom" and comp.id ~= "featured_tbr"
+                    and comp.id ~= "featured_recent" and comp.id ~= "strip_custom"
+                    and comp.id ~= "strip_tbr" and comp.id ~= "strip_recent"
+                    and comp.id ~= "quotes" and comp.id ~= "reading_goals" then
+                final_widget = add_widget_settings_hold(final_widget, comp.id, content_w, h)
             end
             final_widget = wrap_home_focus_target(menu, {
                 key = "widget:" .. tostring(comp.id),

@@ -158,7 +158,7 @@ describe("home basic widgets", function()
 
     it("renders quote text and author and navigates in both tap zones", function()
         ZenSpec.unload("modules/filebrowser/patches/home/widgets/quotes")
-        local previous, next_quote = 0, 0
+        local previous, next_quote, opened_settings = 0, 0, 0
         local component = require("modules/filebrowser/patches/home/widgets/quotes")
         local widget = component.build({
             width = 400,
@@ -169,6 +169,11 @@ describe("home basic widgets", function()
                 prevQuote = function() previous = previous + 1 end,
                 nextQuote = function() next_quote = next_quote + 1 end,
             },
+            editMode = true,
+            openWidgetSettings = function()
+                opened_settings = opened_settings + 1
+                return true
+            end,
         })
         widget.dimen.x, widget.dimen.y = 10, 20
 
@@ -177,6 +182,8 @@ describe("home basic widgets", function()
         assert.is_true(widget:onTapQuote(nil, { pos = { x = 300, y = 40 } }))
         assert.are.same({ 1, 1 }, { previous, next_quote })
         assert.is_false(widget:onTapQuote(nil, { pos = { x = 700, y = 40 } }))
+        assert.is_true(widget:onHoldQuote(nil, { pos = { x = 40, y = 40 } }))
+        assert.are.equal(1, opened_settings)
         assert.is_true(has_text('"Read deeply."'))
         assert.is_true(has_text("\226\128\148 Zen Tester"))
         for _i, child in ipairs(created) do

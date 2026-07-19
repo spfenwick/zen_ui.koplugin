@@ -10,6 +10,14 @@ local IconItem = require("common/ui/icon_menu_item")
 
 local M = {}
 local DEFAULT_GOALS_FONT_SIZE = 11
+local open_widget_settings
+
+function M.openWidgetSettings(id)
+    if type(open_widget_settings) == "function" then
+        return open_widget_settings(id)
+    end
+    return false
+end
 
 local function label_for(id)
     local labels = {
@@ -302,19 +310,52 @@ function M.build(ctx)
         }
     end
 
+    open_widget_settings = function(id)
+        local settings = StatsSettings.load()
+        local items
+        if id == "trend_graph" then
+            items = graph_items(settings)
+        elseif id == "goal_progress" then
+            items = goal_items(settings)
+        elseif StatsSettings.hasFontSize(id) then
+            items = font_size_items(settings, id)
+        end
+        if type(items) ~= "table" or #items == 0 then
+            arrange_widgets()
+            return true
+        end
+        require("common/ui/zen_arrange_list").show{
+            title = label_for(id),
+            item_table = items,
+            hide_footer_cancel = true,
+        }
+        return true
+    end
+
     return IconItem.decorate({
         text = _("Stats"),
         sub_item_table = {
-            {
+            IconItem.decorate({
                 text = _("Widgets") .. " \u{25B8}",
                 keep_menu_open = true,
                 callback = arrange_widgets,
-            },
-            default_font_size_item(),
+            }, icons.display),
             {
+                text = _("Edit mode"),
+                checked_func = function()
+                    return StatsSettings.load().edit_mode == true
+                end,
+                callback = function()
+                    local settings = StatsSettings.load()
+                    settings.edit_mode = settings.edit_mode ~= true
+                    save(settings)
+                end,
+            },
+            IconItem.decorate(default_font_size_item(), icons.title),
+            IconItem.decorate({
                 text = _("Stat separators"),
                 sub_item_table_func = style_items,
-            },
+            }, icons.divider),
         },
     }, icons.settings_stats)
 end

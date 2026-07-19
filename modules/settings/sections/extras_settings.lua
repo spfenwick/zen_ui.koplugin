@@ -50,6 +50,11 @@ function M.build(ctx)
             })
         end
 
+        local opds_display_item = IconItem.decorate({
+            text = _("Display mode"),
+            sub_item_table = display_mode_items,
+        }, icons.eye)
+
         table.insert(items, {
             text = _("Zen OPDS"),
             help_text = _("Enable Zen UI enhancements to the OPDS browser: cover art, list view, hold menu, and navigation improvements."),
@@ -66,10 +71,7 @@ function M.build(ctx)
                         settings_apply.prompt_restart()
                     end,
                 },
-                {
-                    text = _("Display mode"),
-                    sub_item_table = display_mode_items,
-                },
+                opds_display_item,
             },
         })
         IconItem.decorate(items[#items], icons.settings_opds)

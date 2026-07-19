@@ -27,6 +27,8 @@ return {
     view_list    = "\u{F148B}",  -- mdi-view-list
     view_basic   = "\u{F0279}",  -- mdi-format-list-bulleted
     display      = "\u{F06D0}",  -- mdi-monitor
+    eye          = "\u{F0208}",  -- mdi-eye
+    divider      = "\u{F01D4}",  -- mdi-format-vertical-align-center
 
     -- sorting (context_menu.lua)
     sort         = "\u{F04BF}",  -- mdi-sort
@@ -58,6 +60,7 @@ return {
     icon         = "\u{F02F5}",
     plugin       = "\u{F06A5}",
     action       = "\u{F140B}",
+    settings       = "\u{F0493}",
 
     -- network / sync (opds.lua)
     search       = "\u{F0349}",  -- mdi-magnify
@@ -95,6 +98,9 @@ return {
     settings_stats    = "\u{F012A}",
     settings_opds     = "\u{F0B7D}",
     settings_sleep    = "\u{F04B2}",
+    schedule_brightness = "\u{F0599}",
+    schedule_night    = "\u{F0594}",  -- mdi-weather-night
+    schedule_warmth   = "\u{F0510}",
     settings_lockdown = "\u{F033E}",
     settings_device   = "\u{F04F7}",
     settings_setup    = "\u{F0C5A}",

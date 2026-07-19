@@ -387,6 +387,11 @@ return {
                         x = 0, y = 0, w = Screen:getWidth(), h = Screen:getHeight(),
                     } },
                 },
+                HoldReadingGoals = {
+                    GestureRange:new{ ges = "hold", range = Geom:new{
+                        x = 0, y = 0, w = Screen:getWidth(), h = Screen:getHeight(),
+                    } },
+                },
             },
         }
         tap.onTapReadingGoals = function(tap_self, _arg, ges)
@@ -396,6 +401,15 @@ return {
             if ctx.openTopMenu and ctx.openTopMenu(ges) then return true end
             show_goals_summary(goal_rows)
             return true
+        end
+        tap.onHoldReadingGoals = function(tap_self, _arg, ges)
+            if not (tap_self.dimen and ges and ges.pos and tap_self.dimen:contains(ges.pos)) then
+                return false
+            end
+            if ctx.editMode and ctx.openWidgetSettings then
+                return ctx.openWidgetSettings()
+            end
+            return false
         end
         tap[1] = body_frame
         return tap

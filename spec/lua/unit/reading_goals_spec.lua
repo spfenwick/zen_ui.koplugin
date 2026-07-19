@@ -123,6 +123,7 @@ describe("reading goals widget", function()
 
     it("stacks every selected goal period", function()
         local widget = require("modules/filebrowser/patches/home/widgets/reading_goals")
+        local opened_settings = 0
         local goal_widget = widget.build({
             width = 600,
             height = 160,
@@ -136,6 +137,11 @@ describe("reading goals widget", function()
                 today_pages = 1, week_pages = 2, month_pages = 3, year_pages = 4,
                 year_duration = 240,
             } },
+            editMode = true,
+            openWidgetSettings = function()
+                opened_settings = opened_settings + 1
+                return true
+            end,
         })
 
         local found = {}
@@ -151,6 +157,8 @@ describe("reading goals widget", function()
 
         goal_widget.dimen.x, goal_widget.dimen.y = 0, 0
         assert.is_true(goal_widget:onTapReadingGoals(nil, { pos = { x = 20, y = 20 } }))
+        assert.is_true(goal_widget:onHoldReadingGoals(nil, { pos = { x = 20, y = 20 } }))
+        assert.are.equal(1, opened_settings)
         assert.are.equal("Reading goals", shown.widgets[1].title)
         local popup_texts = {}
         for _i, item in ipairs(created) do

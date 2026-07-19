@@ -779,6 +779,11 @@ function M.build_extras_items(ctx)
     local sleep_item = global_items[5]
     local lockdown_item = global_items[6]
 
+    IconItem.decorate(night_schedule_item, icons.schedule_night)
+    IconItem.decorate(brightness_schedule_item, icons.schedule_brightness)
+    IconItem.decorate(warmth_schedule_item, icons.schedule_warmth)
+    IconItem.decorate(sleep_item, icons.settings_sleep)
+
     local items = {
         search_item,
         {
@@ -794,7 +799,6 @@ function M.build_extras_items(ctx)
     }
     IconItem.decorate(items[1], icons.search)
     IconItem.decorate(items[2], icons.tbr)
-    IconItem.decorate(items[3], icons.settings_sleep)
     IconItem.decorate(items[4], icons.settings_lockdown)
     return items
 end

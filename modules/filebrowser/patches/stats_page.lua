@@ -34,6 +34,7 @@ local LineGraph = require("common/ui/zen_line_graph")
 local StatsSettings = require("modules/filebrowser/patches/stats_settings")
 local PresetStore = require("config/preset_store")
 local HomeGoals = require("modules/filebrowser/patches/home/widgets/reading_goals")
+local icons = require("common/inline_icon_map")
 local utils = require("common/utils")
 local Screen = Device.screen
 local _ = require("gettext")
@@ -1406,7 +1407,22 @@ function StatsPage.create(createStatusRow, repaintTitleBar)
                 callback = function() showCalendarMonthMenu(block_idx) end,
             }}
         end
-        if #buttons == 0 then return end
+        local has_context = #buttons > 0
+        if not has_context and stats_settings.edit_mode == true then
+            return require("modules/settings/sections/stats_settings").openWidgetSettings(current.id)
+        end
+        if stats_settings.edit_mode == true then
+            buttons[#buttons + 1] = {{
+                text = icons.settings .. "  " .. _("Widget settings"),
+                callback = function()
+                    closeConfigDialog()
+                    UIManager:nextTick(function()
+                        require("modules/settings/sections/stats_settings").openWidgetSettings(current.id)
+                    end)
+                end,
+            }}
+        end
+        if #buttons == 0 then return false end
 
         menu._zen_block_dlg = ButtonDialog:new{
             title = _("Customize widget"),
@@ -1474,7 +1490,7 @@ function StatsPage.create(createStatusRow, repaintTitleBar)
         if content_y < 0 then return false end
         for _i, hit in ipairs(block_hits) do
             if content_y >= hit.y_start and content_y < hit.y_end then
-                if blocks_config[hit.block_idx].id == "calendar" then
+                if blocks_config[hit.block_idx].id == "calendar" and stats_settings.edit_mode ~= true then
                     showCalendarMonthMenu(hit.block_idx)
                 else
                     showBlockMenu(hit.block_idx)

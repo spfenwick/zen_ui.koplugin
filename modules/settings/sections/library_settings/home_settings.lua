@@ -11,6 +11,14 @@ local IconItem = require("common/ui/icon_menu_item")
 
 local M = {}
 local DEFAULT_GOALS_FONT_SIZE = 11
+local open_widget_settings
+
+function M.openWidgetSettings(id)
+    if type(open_widget_settings) == "function" then
+        return open_widget_settings(id)
+    end
+    return false
+end
 
 local DEFAULT_ORDER = {
     "datetime",
@@ -182,6 +190,7 @@ local function ensure_cfg(_config)
     dcfg.rows = Registry.normalizeRows(dcfg.rows, DEFAULT_ORDER, DEFAULT_ENABLED)
 
     if dcfg.show_status_bar == nil then dcfg.show_status_bar = true end
+    dcfg.edit_mode = dcfg.edit_mode == true
     local font_size = tonumber(dcfg.font_size)
     dcfg.font_size = font_size and math.max(8, math.min(32, math.floor(font_size + 0.5))) or 18
     dcfg.font_size_override = dcfg.font_size_override == true
@@ -1498,11 +1507,35 @@ function M.build(ctx)
         return items
     end
 
+    open_widget_settings = function(id)
+        local items = build_widget_settings_items(id)
+        if type(items) ~= "table" or #items == 0 then
+            arrange_widgets()
+            return true
+        end
+        require("common/ui/zen_arrange_list").show{
+            title = component_label(id),
+            item_table = items,
+            hide_footer_cancel = true,
+        }
+        return true
+    end
+
     local home_items = {
             {
                 text = _("Widgets") .. " \u{25B8}",
                 keep_menu_open = true,
                 callback = arrange_widgets,
+            },
+            {
+                text = _("Edit mode"),
+                checked_func = function()
+                    return dcfg.edit_mode == true
+                end,
+                callback = function()
+                    dcfg.edit_mode = dcfg.edit_mode ~= true
+                    save_home("reinit")
+                end,
             },
             {
                 text = _("Presets"),
@@ -1607,7 +1640,8 @@ function M.build(ctx)
             ]]
     }
     IconItem.decorate(home_items[1], icons.display)
-    IconItem.decorate(home_items[2], icons.save)
+    IconItem.decorate(home_items[3], icons.save)
+    IconItem.decorate(home_items[4], icons.title)
 
     return {
         text = _("Home"),
