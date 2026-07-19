@@ -21,6 +21,7 @@ local Device = require("device")
 local WidgetResources = require("common/widget_resources")
 local _ = require("gettext")
 local Screen = Device.screen
+local DEFAULT_FONT_SIZE = 11
 
 local function paint_pill(bb, x, y, w, h, color)
     if w <= 0 or h <= 0 then return end
@@ -278,9 +279,10 @@ return {
         end
         local pad_h = Screen:scaleBySize(8)
         local content_w = math.max(20, width - pad_h * 2)
-        local configured_font_size = tonumber(ctx.font_size)
-            or type(ctx.config) == "table" and ctx.config.font_size_override == true
-                and tonumber(ctx.config.font_size)
+        local module_cfg = ctx.module_cfg or {}
+        local configured_font_size = tonumber(module_cfg.font_size)
+            or tonumber(ctx.font_size)
+            or DEFAULT_FONT_SIZE
         local max_px = configured_font_size and math.max(6, math.min(32, configured_font_size))
             or math.max(6, math.min(10, math.floor(height / #goal_rows * 0.7)))
         local min_px = 6

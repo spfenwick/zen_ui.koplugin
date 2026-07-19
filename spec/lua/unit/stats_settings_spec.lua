@@ -8,11 +8,12 @@ describe("stats settings", function()
     before_each(function()
         local settings = {
             widgets = {
-                order = { "today", "this_week", "trend_graph" },
-                enabled = { today = false, this_week = false },
+                order = { "today", "this_week", "trend_graph", "goal_progress" },
+                enabled = { today = false, this_week = false, goal_progress = false },
                 options = {
                     this_week = { id = "this_week", font_size = 15 },
                     trend_graph = { id = "trend_graph", metric = "pages", range_days = 14 },
+                    goal_progress = { id = "goal_progress" },
                 },
             },
         }
@@ -26,6 +27,7 @@ describe("stats settings", function()
                 for id, value in pairs(widgets.enabled) do enabled[id] = value end
                 local graph = widgets.options.trend_graph
                 local this_week = widgets.options.this_week
+                local goal_progress = widgets.options.goal_progress
                 current.widgets = {
                     order = order,
                     enabled = enabled,
@@ -38,6 +40,10 @@ describe("stats settings", function()
                             id = graph.id,
                             metric = graph.metric,
                             range_days = graph.range_days,
+                        },
+                        goal_progress = {
+                            id = goal_progress.id,
+                            font_size = goal_progress.font_size,
                         },
                     },
                 }
@@ -56,9 +62,15 @@ describe("stats settings", function()
         })
         ZenSpec.replace("ui/widget/spinwidget", { new = function(_self, opts) return opts end })
         ZenSpec.replace("modules/filebrowser/patches/stats_settings", StatsSettings)
-        ZenSpec.replace("config/preset_store", {})
+        ZenSpec.replace("config/preset_store", {
+            getSettings = function() return { goals = {} } end,
+            saveSettings = function() end,
+        })
         ZenSpec.replace("modules/filebrowser/patches/home/home_presets", {})
-        ZenSpec.replace("common/reading_goals", {})
+        ZenSpec.replace("common/reading_goals", {
+            normalize = function(goals) return goals end,
+            settingsItems = function() return {} end,
+        })
         ZenSpec.replace("common/shared_state", { get = function() end })
         ZenSpec.replace("common/inline_icon_map", { settings_stats = "stats" })
         ZenSpec.replace("common/ui/icon_menu_item", { decorate = function(item) return item end })
@@ -93,10 +105,21 @@ describe("stats settings", function()
         local section = require("modules/settings/sections/stats_settings").build({})
         section.sub_item_table[1].callback()
         local font_items = arrange_options.item_table[2].sub_item_table_func()
-        font_items[1].callback()
+        local updates = 0
+        font_items[1].callback({ updateItems = function() updates = updates + 1 end })
         shown_widget.callback({ value = 17 })
 
         assert.are.equal(17, saved_font_size)
+        assert.are.equal(1, updates)
+    end)
+
+    it("offers Reading Goals font options", function()
+        local section = require("modules/settings/sections/stats_settings").build({})
+        section.sub_item_table[1].callback()
+        local font_items = arrange_options.item_table[4].sub_item_table_func()
+
+        assert.are.equal("Font size: 11", font_items[1].text_func())
+        assert.are.equal("Use default font size", font_items[2].text)
     end)
 
     it("persists the default font size", function()

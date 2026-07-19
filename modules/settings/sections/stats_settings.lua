@@ -9,6 +9,7 @@ local icons = require("common/inline_icon_map")
 local IconItem = require("common/ui/icon_menu_item")
 
 local M = {}
+local DEFAULT_GOALS_FONT_SIZE = 11
 
 local function label_for(id)
     local labels = {
@@ -123,49 +124,59 @@ function M.build(ctx)
         local function widget()
             return settings.widgets.options[id]
         end
+        local default_font_size = id == "goal_progress" and DEFAULT_GOALS_FONT_SIZE or settings.font_size or 15
         return {
             {
                 text_func = function()
-                    return string.format("%s %s", _("Font size:"), tostring(widget().font_size or settings.font_size or 15))
+                    return string.format("%s %s", _("Font size:"), tostring(widget().font_size or default_font_size))
                 end,
                 keep_menu_open = true,
-                callback = function()
+                callback = function(touchmenu_instance)
                     local SpinWidget = require("ui/widget/spinwidget")
                     UIManager:show(SpinWidget:new{
                         title_text = label_for(id) .. " " .. _("font size"),
-                        value = widget().font_size or settings.font_size or 15,
+                        value = widget().font_size or default_font_size,
                         value_min = 6,
                         value_max = 32,
-                        default_value = 15,
+                        default_value = default_font_size,
                         callback = function(spin)
                             widget().font_size = spin.value
                             widget().font_size_override = true
                             save(settings)
+                            if touchmenu_instance and touchmenu_instance.updateItems then
+                                touchmenu_instance:updateItems()
+                            end
                         end,
                     })
                 end,
             },
             {
-                text = _("Use Stats default font size"),
-                callback = function()
+                text = _("Use default font size"),
+                callback = function(touchmenu_instance)
                     widget().font_size = nil
                     widget().font_size_override = nil
                     save(settings)
+                    if touchmenu_instance and touchmenu_instance.updateItems then
+                        touchmenu_instance:updateItems()
+                    end
                 end,
             },
         }
     end
 
-    local function goal_items()
+    local function goal_items(settings)
+        local items = font_size_items(settings, "goal_progress")
         local home = PresetStore.getSettings("home")
         if type(home) ~= "table" or next(home) == nil then
             home = HomePresets.defaultHomePage()
         end
         home.goals = ReadingGoals.normalize(home.goals)
-        return ReadingGoals.settingsItems(home.goals, function()
+        local shared_items = ReadingGoals.settingsItems(home.goals, function()
             PresetStore.saveSettings("home", home)
             refresh_active_pages_on_menu_close()
         end)
+        for _i, item in ipairs(shared_items) do items[#items + 1] = item end
+        return items
     end
 
     local function arrange_widgets()
@@ -218,7 +229,7 @@ function M.build(ctx)
                 end
             elseif item_id == "goal_progress" then
                 item.sub_item_table_func = function()
-                    local items = goal_items()
+                    local items = goal_items(settings)
                     items._zen_arrange_done_func = function() end
                     return items
                 end

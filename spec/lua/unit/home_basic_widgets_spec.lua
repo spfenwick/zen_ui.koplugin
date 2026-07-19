@@ -181,7 +181,7 @@ describe("home basic widgets", function()
         assert.is_true(has_text("\226\128\148 Zen Tester"))
         for _i, child in ipairs(created) do
             if child.text == '"Read deeply."' then
-                assert.are.equal(0.35, child.line_height)
+                assert.are.equal(0.55, child.line_height)
             end
         end
     end)

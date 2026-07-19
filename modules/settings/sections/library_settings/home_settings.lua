@@ -10,6 +10,7 @@ local icons = require("common/inline_icon_map")
 local IconItem = require("common/ui/icon_menu_item")
 
 local M = {}
+local DEFAULT_GOALS_FONT_SIZE = 11
 
 local DEFAULT_ORDER = {
     "datetime",
@@ -159,6 +160,12 @@ local function ensure_home_widget_cfg(dcfg)
         and math.max(8, math.min(32, math.floor(stats_font_size + 0.5))) or nil
     stats_triplet.font_size_override = stats_triplet.font_size and true or nil
     stats_triplet.font_scale = nil
+    local reading_goals = ensure_module_cfg(dcfg, "reading_goals")
+    local goals_font_size = tonumber(reading_goals.font_size)
+    local goals_font_override = reading_goals.font_size_override == true
+    reading_goals.font_size = goals_font_size and (goals_font_override or goals_font_size ~= DEFAULT_GOALS_FONT_SIZE)
+        and math.max(8, math.min(32, math.floor(goals_font_size + 0.5))) or nil
+    reading_goals.font_size_override = reading_goals.font_size and true or nil
     local strip_custom = ensure_strip_cfg(dcfg, "strip_custom")
     if type(strip_custom.paths) ~= "table" then strip_custom.paths = {} end
     ensure_strip_cfg(dcfg, "strip_tbr")
@@ -1251,6 +1258,41 @@ function M.build(ctx)
                 callback = function()
                     goals_cfg.show_module_title = goals_cfg.show_module_title ~= true
                     save_home("reinit")
+                end,
+            },
+            {
+                text_func = function()
+                    return string.format("%s %s", _("Font size:"), tostring(goals_cfg.font_size or DEFAULT_GOALS_FONT_SIZE))
+                end,
+                keep_menu_open = true,
+                callback = function(touchmenu_instance)
+                    local SpinWidget = require("ui/widget/spinwidget")
+                    UIManager:show(SpinWidget:new{
+                        title_text = _("Reading goals font size"),
+                        value = goals_cfg.font_size or DEFAULT_GOALS_FONT_SIZE,
+                        value_min = 8,
+                        value_max = 32,
+                        default_value = DEFAULT_GOALS_FONT_SIZE,
+                        callback = function(spin)
+                            goals_cfg.font_size = spin.value
+                            goals_cfg.font_size_override = true
+                            save_home("reinit")
+                            if touchmenu_instance and touchmenu_instance.updateItems then
+                                touchmenu_instance:updateItems()
+                            end
+                        end,
+                    })
+                end,
+            },
+            {
+                text = _("Use default font size"),
+                callback = function(touchmenu_instance)
+                    goals_cfg.font_size = nil
+                    goals_cfg.font_size_override = nil
+                    save_home("reinit")
+                    if touchmenu_instance and touchmenu_instance.updateItems then
+                        touchmenu_instance:updateItems()
+                    end
                 end,
             },
         }

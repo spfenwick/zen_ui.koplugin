@@ -993,7 +993,7 @@ local function buildContent(blocks_config, data, page_w, h_padding, top_padding,
         }
     end
 
-    local function goalBlock(height)
+    local function goalBlock(height, block)
         local config = PresetStore.getSettings("home")
         if type(config) ~= "table" then config = {} end
         local goals = type(config.goals) == "table" and config.goals or {}
@@ -1006,7 +1006,7 @@ local function buildContent(blocks_config, data, page_w, h_padding, top_padding,
         return HomeGoals.build{
             width = content_w,
             height = height,
-            font_size = stats_settings.font_size_override and stats_settings.font_size or nil,
+            font_size = block.font_size or 11,
             data = { stats = stats },
             config = config,
         }
@@ -1115,7 +1115,7 @@ local function buildContent(blocks_config, data, page_w, h_padding, top_padding,
         if block.id == "trend_graph" then
             body = graphBlock(block, panel_body_h)
         elseif block.id == "goal_progress" then
-            body = goalBlock(block_h)
+            body = goalBlock(block_h, block)
         elseif block.id == "calendar" then
             local calendar
             body, calendar = calendarBlock(block_h)

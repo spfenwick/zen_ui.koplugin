@@ -161,20 +161,35 @@ describe("reading goals widget", function()
         assert.is_true(popup_texts[string.format("Yearly goal (%s)", os.date("%Y"))])
     end)
 
-    it("uses the supplied section font size when it fits", function()
+    it("uses its configured font size when it fits", function()
         local widget = require("modules/filebrowser/patches/home/widgets/reading_goals")
         widget.build({
             width = 600,
             height = 160,
-            font_size = 18,
-            config = { goals = { periods = { "daily" } } },
+            config = { font_size = 18, goals = { periods = { "daily" } } },
+            module_cfg = { font_size = 20 },
             data = { stats = { today_pages = 1 } },
         })
 
         for _i, item in ipairs(created) do
-            if item.text == "Daily" and item.face and item.face.size == 18 then return end
+            if item.text == "Daily" and item.face and item.face.size == 20 then return end
         end
-        assert.fail("Reading goals did not use the configured font size")
+        assert.fail("Reading goals did not use its configured font size")
+    end)
+
+    it("uses an eleven-point default font size", function()
+        local widget = require("modules/filebrowser/patches/home/widgets/reading_goals")
+        widget.build({
+            width = 600,
+            height = 160,
+            config = { font_size = 18, goals = { periods = { "daily" } } },
+            data = { stats = { today_pages = 1 } },
+        })
+
+        for _i, item in ipairs(created) do
+            if item.text == "Daily" and item.face and item.face.size == 11 then return end
+        end
+        assert.fail("Reading goals did not use its eleven-point default font size")
     end)
 
     it("shows completed books for monthly and yearly goals", function()

@@ -14,6 +14,7 @@ local utils = require("common/utils")
 local WidgetResources = require("common/widget_resources")
 
 local M = {}
+local DEFAULT_GOALS_FONT_SIZE = 11
 
 -- When a library background image is configured, home module frames must be
 -- transparent (nil fill) instead of opaque COLOR_WHITE, or they paint over the
@@ -408,6 +409,12 @@ local function ensure_home_widget_cfg(dcfg)
         and math.max(8, math.min(32, math.floor(stats_font_size + 0.5))) or nil
     stats_triplet.font_size_override = stats_triplet.font_size and true or nil
     stats_triplet.font_scale = nil
+    local reading_goals = ensure_module_cfg(dcfg, "reading_goals")
+    local goals_font_size = tonumber(reading_goals.font_size)
+    local goals_font_override = reading_goals.font_size_override == true
+    reading_goals.font_size = goals_font_size and (goals_font_override or goals_font_size ~= DEFAULT_GOALS_FONT_SIZE)
+        and math.max(8, math.min(32, math.floor(goals_font_size + 0.5))) or nil
+    reading_goals.font_size_override = reading_goals.font_size and true or nil
     local strip_custom = ensure_strip_module_cfg(dcfg, "strip_custom")
     if type(strip_custom.paths) ~= "table" then strip_custom.paths = {} end
     ensure_strip_module_cfg(dcfg, "strip_tbr")

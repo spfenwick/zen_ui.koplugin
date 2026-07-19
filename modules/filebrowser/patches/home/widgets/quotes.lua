@@ -31,8 +31,9 @@ return {
         quote_font_size = math.max(4, math.min(32, tonumber(quote_font_size) or 12))
 
         local padding = Screen:scaleBySize(8)
+        local vertical_padding = Screen:scaleBySize(8)
         local content_w = math.max(30, width - padding * 2)
-        local inner_h = math.max(20, height - 12)
+        local inner_h = math.max(20, height - vertical_padding * 2)
         local quote_text = '"' .. (quote.text or "") .. '"'
         local quote_face = Font:getFace("smallinfofont", Screen:scaleBySize(quote_font_size))
         local quote_line_height = 0.55
@@ -44,7 +45,10 @@ return {
         }
         local two_quote_lines_h = quote_probe:getSize().h or 0
         WidgetResources.free(quote_probe)
-        local author_face = Font:getFace("smallinfofont", Screen:scaleBySize(math.max(6, math.floor(quote_font_size * 5 / 6))))
+        local author_face = Font:getFace(
+            "smallinfofont",
+            Screen:scaleBySize(math.max(6, math.floor(quote_font_size * 9 / 10)))
+        )
         local author_h = 0
         if show_author and quote.author and quote.author ~= "" then
             local author_probe = TextWidget:new{ text = "A", face = author_face }
@@ -86,7 +90,7 @@ return {
             content_h = content_h + author_gap + (author_size.h or 0)
         end
         local available_h = math.max(0, height - content_h)
-        local content_top = math.min(available_h, Screen:scaleBySize(6))
+        local content_top = math.min(available_h, vertical_padding)
         local content = WidgetResources.managedPaintWidget{
             dimen = Geom:new{ w = width, h = height },
             resources = { quote_widget, author_widget },

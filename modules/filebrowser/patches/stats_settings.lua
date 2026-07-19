@@ -1,6 +1,7 @@
 local PresetStore = require("config/preset_store")
 
 local M = {}
+local DEFAULT_GOALS_FONT_SIZE = 11
 
 M.MAX_WIDGET_SLOTS = 6
 M.ALL_WIDGET_IDS = {
@@ -24,10 +25,15 @@ local TEXT_WIDGET_IDS = {
     personal_records = true,
     library = true,
     current_book = true,
+    goal_progress = true,
 }
 
 function M.hasFontSize(id)
     return TEXT_WIDGET_IDS[id] == true
+end
+
+local function default_font_size(id)
+    return id == "goal_progress" and DEFAULT_GOALS_FONT_SIZE or 15
 end
 
 function M.defaultWidget(id)
@@ -51,7 +57,7 @@ local function normalize_options(id, options)
     if M.hasFontSize(id) then
         local font_size = type(options) == "table" and tonumber(options.font_size)
         local is_override = type(options) == "table" and options.font_size_override == true
-        if font_size and (is_override or font_size ~= 15) then
+        if font_size and (is_override or font_size ~= default_font_size(id)) then
             widget.font_size = math.max(6, math.min(32, math.floor(font_size + 0.5)))
             widget.font_size_override = true
         end
@@ -139,7 +145,9 @@ function M.enabledBlocks(settings)
             local weight = M.widgetSlots(id)
             if slots + weight <= M.MAX_WIDGET_SLOTS then
                 local block = normalize_options(id, settings.widgets.options[id])
-                if M.hasFontSize(id) then block.font_size = block.font_size or settings.font_size end
+                if M.hasFontSize(id) then
+                    block.font_size = block.font_size or (id == "goal_progress" and DEFAULT_GOALS_FONT_SIZE or settings.font_size)
+                end
                 blocks[#blocks + 1] = block
                 slots = slots + weight
             end
