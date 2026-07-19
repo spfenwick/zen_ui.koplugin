@@ -1498,7 +1498,7 @@ local function _do_install(screen, plugin_root, plugins_dir)
 end
 
 --- Show the ZenScreen update UI for a known-available update and run the install.
---- Called from both the settings banner and the About > Check for updates item.
+--- Called from both the settings banner and the About > Update Zen UI item.
 local function _show_update_screen_and_install(plugin)
     local UIManager = require("ui/uimanager")
     local ZenScreen = require("common/ui/zen_screen")
@@ -1595,7 +1595,7 @@ function M.build_update_available_item(plugin)
     }, icons.update)
 end
 
---- Returns the "Check for updates" menu item for the About section.
+--- Returns the "Update Zen UI" menu item for the About section.
 --- When a newer version has already been detected the text changes to reflect
 --- the pending update and tapping it launches the download flow directly.
 function M.build_update_now_item(plugin)
@@ -1604,7 +1604,7 @@ function M.build_update_now_item(plugin)
             if M._has_update then
                 return "\u{F01B} " .. _("Update available")
             end
-            return _("Check for updates")
+            return _("Update Zen UI")
         end,
         keep_menu_open = true,
         callback = function()

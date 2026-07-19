@@ -77,4 +77,41 @@ describe("settings utilities", function()
         G_reader_settings:saveSetting("lastdir", "/books/last")
         assert.are.equal("/books/last", Utils.get_current_dir())
     end)
+
+    it("prefers the active interface IPv4 address", function()
+        ZenSpec.replace("ui/network/manager", { interface = "wlan0" })
+        ZenSpec.replace("ffi/posix_h", {})
+        local freed = false
+        local wlan0 = {
+            ifa_name = "wlan0",
+            ifa_addr = { sa_family = 2 },
+        }
+        local eth0 = {
+            ifa_name = "eth0",
+            ifa_addr = { sa_family = 2 },
+            ifa_next = wlan0,
+        }
+        ZenSpec.replace("ffi", {
+            C = {
+                AF_INET = 2,
+                NI_MAXHOST = 64,
+                NI_NUMERICHOST = 1,
+                getifaddrs = function(ifaddrs)
+                    ifaddrs[0] = eth0
+                    return 0
+                end,
+                getnameinfo = function(sockaddr, _size, host)
+                    host.value = sockaddr == eth0.ifa_addr and "192.168.1.10" or "192.168.1.20"
+                    return 0
+                end,
+                freeifaddrs = function() freed = true end,
+            },
+            new = function() return {} end,
+            sizeof = function() return 16 end,
+            string = function(value) return type(value) == "table" and value.value or value end,
+        })
+
+        assert.are.equal("192.168.1.20", Utils.get_device_ip_address())
+        assert.is_true(freed)
+    end)
 end)

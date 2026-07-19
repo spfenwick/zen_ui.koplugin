@@ -414,8 +414,8 @@ msgstr "Глава"
 msgid "Chapter Time + %"
 msgstr "Време за главата + %"
 
-msgid "Check for updates"
-msgstr "Проверка за актуализации"
+msgid "Update Zen UI"
+msgstr "Актуализиране на Zen UI"
 
 msgid "Check for updates automatically"
 msgstr "Автоматична проверка за актуализации"

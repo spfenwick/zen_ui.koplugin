@@ -105,7 +105,7 @@ return {
     settings_device   = "\u{F04F7}",
     settings_setup    = "\u{F0C5A}",
     settings_bug      = "\u{F00E4}",
-    settings_advanced = "\u{F0668}",  -- mdi-cog
+    settings_advanced = "\u{F1064}",
 
     -- book status actions (book_status.lua)
     restart      = "\u{F0709}",  -- mdi-restart

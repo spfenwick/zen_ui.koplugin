@@ -405,8 +405,8 @@ msgstr "Kapitola"
 msgid "Chapter Time + %"
 msgstr "Čas kapitoly + %"
 
-msgid "Check for updates"
-msgstr "Zkontrolovat aktualizace"
+msgid "Update Zen UI"
+msgstr "Aktualizovat Zen UI"
 
 msgid "Check for updates automatically"
 msgstr "Kontrolovat aktualizace automaticky"
