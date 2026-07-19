@@ -169,7 +169,15 @@ if [[ "$DEV_MODE" == true ]]; then
     for attempt in {1..120}; do
       reader_pid="$(find_luajit_child "$kodev_pid")"
       if [[ -n "$reader_pid" ]]; then
-        osascript -e "tell application \"System Events\" to set frontmost of (first process whose unix id is $reader_pid) to true" \
+        osascript \
+          -e "tell application \"System Events\"" \
+          -e "tell (first process whose unix id is $reader_pid)" \
+          -e 'if not (exists window 1) then error "KOReader window not ready"' \
+          -e 'set visible to true' \
+          -e 'set frontmost to true' \
+          -e 'perform action "AXRaise" of window 1' \
+          -e 'end tell' \
+          -e 'end tell' \
           >/dev/null 2>&1 && return
       fi
       sleep 0.5
