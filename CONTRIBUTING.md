@@ -80,6 +80,15 @@ To test changes:
 
 The [KOReader emulator](https://github.com/koreader/koreader/blob/master/doc/Building.md) is the fastest way to iterate without a physical device.
 
+For the local KOReader development build, set `KOREADER_DIR` in `.env`, then run:
+
+```sh
+./build.sh --dev
+```
+
+This builds the plugin, replaces its copy in `$KOREADER_DIR/plugins/`, and
+restarts the KOReader process launched by the previous `--dev` build.
+
 ### Automated tests
 
 Zen UI's tests live under `spec/` and run against KOReader's bundled LuaJIT.

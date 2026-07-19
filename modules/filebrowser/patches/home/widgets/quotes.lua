@@ -34,22 +34,39 @@ return {
         local content_w = math.max(30, width - padding * 2)
         local inner_h = math.max(20, height - 12)
         local quote_text = '"' .. (quote.text or "") .. '"'
+        local quote_face = Font:getFace("smallinfofont", Screen:scaleBySize(quote_font_size))
+        local quote_line_height = 0.55
+        local quote_probe = TextBoxWidget:new{
+            text = "A\nA",
+            width = content_w,
+            face = quote_face,
+            line_height = quote_line_height,
+        }
+        local two_quote_lines_h = quote_probe:getSize().h or 0
+        WidgetResources.free(quote_probe)
         local author_face = Font:getFace("smallinfofont", Screen:scaleBySize(math.max(6, math.floor(quote_font_size * 5 / 6))))
         local author_h = 0
         if show_author and quote.author and quote.author ~= "" then
             local author_probe = TextWidget:new{ text = "A", face = author_face }
             local author_line_h = author_probe:getSize().h or 0
             WidgetResources.free(author_probe)
-            author_h = author_line_h + 5
+            author_h = author_line_h
         end
-        local author_gap = author_h > 0 and 3 or 0
+        local author_gap = 0
         local quote_h = math.max(10, inner_h - author_h - author_gap)
+        if quote_h < two_quote_lines_h then
+            quote_line_height = math.max(0, math.min(
+                quote_line_height,
+                math.floor(quote_h / 2) / math.max(1, quote_face.size or 1) - 1
+            ))
+        end
         local quote_widget = TextBoxWidget:new{
             text = quote_text,
             width = content_w,
             height = quote_h,
-            face = Font:getFace("smallinfofont", Screen:scaleBySize(quote_font_size)),
+            face = quote_face,
             alignment = "center",
+            line_height = quote_line_height,
             height_overflow_show_ellipsis = true,
         }
         local quote_size = quote_widget:getSize()

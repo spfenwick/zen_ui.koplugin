@@ -5,6 +5,7 @@ ___pycache___
 .venv
 build
 .luarocks
+.dev-kodev.pid
 AGENTS.md
 CLAUDE.md
 copilot-instructions.md
@@ -12,3 +13,4 @@ __pycache__
 spec/.artifacts/
 spec/.cache/
 spec/.venv/
+.env

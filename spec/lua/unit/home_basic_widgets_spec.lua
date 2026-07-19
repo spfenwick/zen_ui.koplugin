@@ -179,6 +179,11 @@ describe("home basic widgets", function()
         assert.is_false(widget:onTapQuote(nil, { pos = { x = 700, y = 40 } }))
         assert.is_true(has_text('"Read deeply."'))
         assert.is_true(has_text("\226\128\148 Zen Tester"))
+        for _i, child in ipairs(created) do
+            if child.text == '"Read deeply."' then
+                assert.are.equal(0.35, child.line_height)
+            end
+        end
     end)
 
     it("renders the empty-history quote fallback without an author", function()
