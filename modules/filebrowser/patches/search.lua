@@ -2,6 +2,7 @@ local function apply_search()
     local FileManagerFileSearcher = require("apps/filemanager/filemanagerfilesearcher")
     local InputDialog = require("ui/widget/inputdialog")
     local UIManager = require("ui/uimanager")
+    local Device = require("device")
     local paths = require("common/paths")
     local _ = require("gettext")
 
@@ -73,6 +74,22 @@ local function apply_search()
                 },
             },
         }
+
+        -- Physical Home button: close the search box (before results are shown,
+        -- e.g. while still typing) and return to the default navbar tab.
+        if Device:hasKeys() then
+            search_dialog.key_events = search_dialog.key_events or {}
+            search_dialog.key_events.Home = { { "Home" } }
+        end
+
+        function search_dialog:onHome()
+            UIManager:close(search_dialog)
+            local open_default = rawget(_G, "__ZEN_UI_NAVBAR_OPEN_DEFAULT_TAB")
+            if type(open_default) == "function" then
+                open_default()
+            end
+            return true
+        end
 
         -- Override onTap: always close the full dialog (keyboard + dialog) on outside tap
         function search_dialog:onTap(arg, ges)
