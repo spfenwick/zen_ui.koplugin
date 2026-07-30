@@ -1,6 +1,6 @@
 return {
     name = "zen_ui",
-    version = "2.5.4",
+    version = "2.5.5",
     fullname = "Zen UI",
     description = "A clean, minimal UI for KOReader",
 }
